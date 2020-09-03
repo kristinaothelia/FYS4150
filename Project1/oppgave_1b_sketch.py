@@ -21,10 +21,10 @@ def make_A():
     b_diag = b*np.ones(N)
     c_diag = c*np.ones(N-1)
 
-    diagonals = [a_diag, b_diag, c_diag]
-    A = diags(diagonals, [-1,0,1], shape=(N,N)).toarray() #what does [-1,0,1] do???
+    #diagonals = [a_diag, b_diag, c_diag]
+    #A = diags(diagonals, [-1,0,1], shape=(N,N)).toarray() #what does [-1,0,1] do???
 
-    return A, a_diag, b_diag, c_diag, N
+    return a_diag, b_diag, c_diag, N
 
 
 def forward(a, b, c, f):
@@ -60,7 +60,7 @@ def backward(v, ff, c, bb):
 
 
 #matrix A and diagonal vectors
-A, a, b, c, N = make_A()
+a, b, c, N = make_A()
 a[0] = 0
 c[-1] = 0
 
