@@ -93,7 +93,7 @@ def backward2(v, ff):
 
     return v
 
-def Gauss(v):
+def Gauss(v, a, b, c):
     #Gauss elimination
     bb, ff = forward_thomas(a,b,c,f)
     bb[0] = b[0]
@@ -120,6 +120,21 @@ def plot(u, v, x):
     plt.show()
 
 
+def relative_error(N_values, epsilon, v, a, b, c):
+    #ERROR 1d)
+    for j in range(len(N_values)):
+        a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
+        u, v, f, x = initialize(int(N_values[j]))
+        v = Gauss(v, a, b, c)
+        epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
+
+    plt.plot(N_values, epsilon, 'o-')
+    plt.xlabel("N")
+    plt.show()
+
+    print(epsilon)
+
+
 if __name__ == "__main__":
 
     ### Running program: example for the thomas solver ###
@@ -129,7 +144,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Project 1")
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-t', '--thomas', action="store_true", help="Thomas solver")
+    group.add_argument('-t', '--thomas',    action="store_true", help="Thomas solver")
     group.add_argument('-s', '--symmetric', action="store_true", help="symmetric solver")
 
     parser.add_argument('-a', type=int, nargs='?', default= -1,  help = "value beneath the diagonal")
@@ -159,16 +174,23 @@ if __name__ == "__main__":
 
     u, v, f, x = initialize(N)
 
+    N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
+    epsilon = np.zeros(len(N_values))
+
+
     if T:
         start = time.time()
-        v     = Gauss(v)
+        v     = Gauss(v, a, b, c)
         end   = time.time()
         print("Time of execution: ", end-start)
         plot(u, v, x)
-        
+        error = relative_error(N_values, epsilon, v, a, b, c)
+
     if S:
+        # Må fikse plot så tittel osv blir riktig til hver oppgave
         start = time.time()
         v     = symmetric(v)
         end   = time.time()
         print("Time of execution: ", end-start)
         plot(u, v, x)
+        error = relative_error(N_values, epsilon, v, a, b, c)
