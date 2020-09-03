@@ -24,9 +24,6 @@ def make_A():
     a_diag[0] = 0
     c_diag[-1] = 0
 
-    #diagonals = [a_diag, b_diag, c_diag]
-    #A = diags(diagonals, [-1,0,1], shape=(N,N)).toarray() #what does [-1,0,1] do???
-
     return a_diag, b_diag, c_diag, N
 
 
@@ -52,7 +49,6 @@ def backward(v, ff, c, bb):
     Gauss elimination: backward substitution.
     """
     i = N-1
-    print(N)
     while i>=2:
         #print(i)
         v[i-1] = (ff[i-1] - c[i-1]*v[i])/bb[i-1]
@@ -60,6 +56,27 @@ def backward(v, ff, c, bb):
     return v
 
 
+def forward2(d, f):
+    dd = np.zeros_like(d)
+    ff = np.zeros_like(f)
+
+    for i in range(1, N-1):
+        dd[i] = (i+1)/i
+        ff[i] = f[i] + ((i-1)*ff[i-1])/i
+
+    return dd, ff
+
+
+def backward2(v, ff):
+    i = N-1
+    #print(v)
+    while i>=2:
+        #print(i)
+        v[i-1] = (i-1)/i*(ff[i-1] + v[i])
+        i -= 1
+
+    #print(v)
+    return v
 
 
 #matrix A and diagonal vectors
@@ -78,14 +95,30 @@ f = h**2*100*np.exp(-10*x)
 #initalize u (analyrical solution)
 u = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)
 
-#Gauss elimination
-bb, ff = forward(a,b,c,f)
-bb[0] = b[0]
-ff[0] = f[0]
-v = backward(v, ff, c, bb)
+def Gauss(v):
+    #Gauss elimination
+    bb, ff = forward(a,b,c,f)
+    bb[0] = b[0]
+    ff[0] = f[0]
+    v = backward(v, ff, c, bb)
+    return v
 
-#Specialized algorithm (name?)
+def need_better_name(v):
+    #Specialized algorithm (name?)
+    d = b
+    dd, ff = forward2(d, f)
+    dd[0] = 2
+    ff[0] = f[0]
+    print(dd)
+    v = backward2(v, ff)
+    #v[-1] = ff[-2]/dd[-2]
+    return v
 
+
+#v = Gauss(v)
+v = need_better_name(v)
+
+#print(v)
 
 plt.plot(x, v, label='v(x), numerical')
 plt.plot(x, u, label='u(x), closed solution')
