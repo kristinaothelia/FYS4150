@@ -73,8 +73,8 @@ def backward2(v, ff):
     return v
 
 
-def Gauss(v):
-    #Gauss elimination
+def Gauss(v, a, b, c):
+    #Gauss elimination, b)
     bb, ff = forward(a,b,c,f)
     bb[0] = b[0]
     ff[0] = f[0]
@@ -82,7 +82,7 @@ def Gauss(v):
     return v
 
 def need_better_name(v):
-    #Specialized algorithm (name?)
+    #Specialized algorithm (name?) b)
     d = b
     dd, ff = forward2(d, f)
     dd[0] = 2
@@ -120,8 +120,7 @@ N = int(sys.argv[4])
 a, b, c, N = make_A(a, b, c, N)
 
 u, v, f, x = initalize(N)
-
-v = Gauss(v)
+v = Gauss(v, a, b, c)
 #v = need_better_name(v)
 
 """
@@ -134,11 +133,17 @@ plt.show()
 """
 
 #ERROR 1d)
-N_values = [10, 100, 1e3]
+N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8]
 epsilon = np.zeros(len(N_values))
 for j in range(len(N_values)):
+    a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
     u, v, f, x = initalize(int(N_values[j]))
-    epsilon[j] = np.max(np.log10(np.abs((v[1:-1]-u[1:-1])/u[1:-1])))
+    v = Gauss(v, a, b, c)
+    print(v)
+    epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
 
-#plt.plot(epsilon)
-#plt.show()
+plt.plot(N_values, epsilon, 'o-')
+plt.xlabel("N")
+plt.show()
+
+print(epsilon)
