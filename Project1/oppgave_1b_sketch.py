@@ -21,6 +21,9 @@ def make_A():
     b_diag = b*np.ones(N)
     c_diag = c*np.ones(N-1)
 
+    a_diag[0] = 0
+    c_diag[-1] = 0
+
     #diagonals = [a_diag, b_diag, c_diag]
     #A = diags(diagonals, [-1,0,1], shape=(N,N)).toarray() #what does [-1,0,1] do???
 
@@ -61,39 +64,31 @@ def backward(v, ff, c, bb):
 
 #matrix A and diagonal vectors
 a, b, c, N = make_A()
-a[0] = 0
-c[-1] = 0
-
-#print(A)
-#print(N)
-
 
 #initialize v
 v = np.zeros(N+2)   #include start/end points
 v[0] = 0
 v[-1] = 0
-#print(v)
-
 
 #initialize f
 x = np.linspace(0,1, N+2)
-#print(x)
-h = 1/(N+1)
-f_function = h**2*100*np.exp(-10*x)
+h = 1/(N+1)  #step size
+f = h**2*100*np.exp(-10*x)
 
+#initalize u (analyrical solution)
+u = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)
 
-bb, ff = forward(a,b,c,f_function)
+#Gauss elimination
+bb, ff = forward(a,b,c,f)
 bb[0] = b[0]
-ff[0] = f_function[0]
+ff[0] = f[0]
 v = backward(v, ff, c, bb)
 
-v_closed = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)  #analytical solution
-
-#print(v[0])
+#Specialized algorithm (name?)
 
 
 plt.plot(x, v, label='v(x), numerical')
-plt.plot(x, v_closed, label='u(x), closed solution')
+plt.plot(x, u, label='u(x), closed solution')
 plt.xlabel("x", fontsize=16)
 plt.title("Gaussian elimination, N = %g" % N, fontsize=14)
 plt.legend()
