@@ -5,11 +5,17 @@ import matplotlib.pyplot as plt
 
 
 def make_A():
-    #command line arguments
-    a = float(sys.argv[1])  #beneath diagonal
-    b = float(sys.argv[2])  #diagonal
-    c = float(sys.argv[3])  #above diagonal
-    N = int(sys.argv[4])    #size of the NxN matrix
+    """
+    Generates a diagonal matrix. Takes four command line arguments.
+    a: beneath diagonal
+    b: diagonal
+    c: above diagonal
+    N: size of NxN matrix
+    """
+    a = float(sys.argv[1])
+    b = float(sys.argv[2])
+    c = float(sys.argv[3])
+    N = int(sys.argv[4])
 
     a_diag = a*np.ones(N-1)
     b_diag = b*np.ones(N)
@@ -22,6 +28,9 @@ def make_A():
 
 
 def forward(a, b, c, f):
+    """
+    Gauss elimination: forward substitution.
+    """
     bb = np.zeros_like(b)  #b tilde
     ff = np.zeros_like(f)  #f tlide
 
@@ -36,6 +45,9 @@ def forward(a, b, c, f):
 
 
 def backward(v, ff, c, bb):
+    """
+    Gauss elimination: backward substitution.
+    """
     i = N-1
     print(N)
     while i>=2:
@@ -44,8 +56,8 @@ def backward(v, ff, c, bb):
         i -= 1
     return v
 
-def plaot(u, v, x):
-    return None
+
+
 
 #matrix A and diagonal vectors
 A, a, b, c, N = make_A()
@@ -75,12 +87,14 @@ bb[0] = b[0]
 ff[0] = f_function[0]
 v = backward(v, ff, c, bb)
 
-v_closed = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)
+v_closed = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)  #analytical solution
 
 #print(v[0])
 
 
-plt.plot(x, v, label='numerical')
-plt.plot(x, v_closed, label='closed solution')
+plt.plot(x, v, label='v(x), numerical')
+plt.plot(x, v_closed, label='u(x), closed solution')
+plt.xlabel("x", fontsize=16)
+plt.title("Gaussian elimination, N = %g" % N, fontsize=14)
 plt.legend()
 plt.show()
