@@ -1,10 +1,9 @@
 import numpy as np
 import sys
-from scipy.sparse import diags
 import matplotlib.pyplot as plt
 
 
-def make_A():
+def make_A(a, b, c, N):
     """
     Generates a diagonal matrix. Takes four command line arguments.
     a: beneath diagonal
@@ -12,11 +11,6 @@ def make_A():
     c: above diagonal
     N: size of NxN matrix
     """
-    a = float(sys.argv[1])
-    b = float(sys.argv[2])
-    c = float(sys.argv[3])
-    N = int(sys.argv[4])
-
     a_diag = a*np.ones(N-1)
     b_diag = b*np.ones(N)
     c_diag = c*np.ones(N-1)
@@ -79,22 +73,6 @@ def backward2(v, ff):
     return v
 
 
-#matrix A and diagonal vectors
-a, b, c, N = make_A()
-
-#initialize v
-v = np.zeros(N+2)   #include start/end points
-v[0] = 0
-v[-1] = 0
-
-#initialize f
-x = np.linspace(0,1, N+2)
-h = 1/(N+1)  #step size
-f = h**2*100*np.exp(-10*x)
-
-#initalize u (analyrical solution)
-u = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)
-
 def Gauss(v):
     #Gauss elimination
     bb, ff = forward(a,b,c,f)
@@ -114,15 +92,53 @@ def need_better_name(v):
     #v[-1] = ff[-2]/dd[-2]
     return v
 
+def initalize(N):
+    """
+    initialize v, f and u
+    """
+    #initialize v
+    v = np.zeros(N+2)   #include start/end points
+    v[0] = 0
+    v[-1] = 0
 
-#v = Gauss(v)
-v = need_better_name(v)
+    #initialize f
+    x = np.linspace(0,1, N+2)
+    h = 1/(N+1)  #step size
+    f = h**2*100*np.exp(-10*x)
 
-#print(v)
+    #initalize u (analyrical solution)
+    u = 1 - (1 - np.exp(-10))*x - np.exp(-10*x)
 
+    return u, v, f, x
+
+#MAIN
+#matrix A and diagonal vectors
+a = float(sys.argv[1])
+b = float(sys.argv[2])
+c = float(sys.argv[3])
+N = int(sys.argv[4])
+a, b, c, N = make_A(a, b, c, N)
+
+u, v, f, x = initalize(N)
+
+v = Gauss(v)
+#v = need_better_name(v)
+
+"""
 plt.plot(x, v, label='v(x), numerical')
 plt.plot(x, u, label='u(x), closed solution')
 plt.xlabel("x", fontsize=16)
 plt.title("Gaussian elimination, N = %g" % N, fontsize=14)
 plt.legend()
 plt.show()
+"""
+
+#ERROR 1d)
+N_values = [10, 100, 1e3]
+epsilon = np.zeros(len(N_values))
+for j in range(len(N_values)):
+    u, v, f, x = initalize(int(N_values[j]))
+    epsilon[j] = np.max(np.log10(np.abs((v[1:-1]-u[1:-1])/u[1:-1])))
+
+#plt.plot(epsilon)
+#plt.show()
