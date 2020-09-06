@@ -4,7 +4,7 @@ import numpy             as np
 import pandas            as pd
 import matplotlib.pyplot as plt
 
-from numba        import jit
+from numba        import jit       ### brukes foreløpig ikke (fikk feilmeldinger)
 from scipy.sparse import diags
 from scipy.linalg import lu, solve
 
@@ -126,6 +126,10 @@ def special(v):
     return v
 
 def LU_dec(a, b, c, N, f):
+    """
+    LU decomposition
+    """
+
     #make tridiagonal matrix
     diagonals = [a, b, c]
     A = diags(diagonals, [-1, 0, 1], shape=(N,N)).toarray()
@@ -135,34 +139,48 @@ def LU_dec(a, b, c, N, f):
     return u
 
 
-def plot(u, v, x, solver_name=""):
+def plot(u, v, x, solver_name='', save=False):
     """
     Function that plots the numerical and closed solution
     """
 
     plt.plot(x, v, label='v(x), numerical')
     plt.plot(x, u, label='u(x), closed solution')
-    plt.xlabel("x", fontsize=16)
-    plt.title("Gaussian elimination: %s, N = %g" % (solver_name, N), fontsize=14)
+    plt.xlabel('x', fontsize=14)
+    #plt.ylabel()          what should we call this? f(x) maybe? or nathing..
+    #plt.title('Gaussian elimination: %s, N = %g' % (solver_name, N), fontsize=14)
+    plt.title('Gaussian elimination: %s \n a = %g | b = %g | c = %g | N = %g'
+           % (solver_name, a_i, b_i, c_i, n_i), fontsize=14)
     plt.legend()
+
+    if save == True:
+        plt.savefig('Results/%s_a[%g]_b[%g]_c[%g]_n[%g].png' % (solver_name, a_i, b_i, c_i, n_i))
+
     plt.show()
 
-
-def relative_error(N_values, epsilon):
+def relative_error(N_values, epsilon, solver_name='', save=False):
     """
     Function that calculates the relative error
     """
     for j in range(len(N_values)):
-        a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
+        #a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
+        # its correct to change -1, 2, -1 to general a_i, b_i, c_i right?
+        a, b, c, N = make_A(a_i, b_i, c_i, int(N_values[j]))
         u, v, f, x = initialize(int(N_values[j]))
         v = Gauss(v, a, b, c, f, N)
         epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
 
     # Plotting the relative error vs. N
-    plt.title('The relative error')
+    plt.title('The relative error (%s)' %solver_name)
     plt.plot(N_values, epsilon, 'o-')
-    plt.xlabel('N')
-    plt.ylabel(r'$\epsilon$')
+    plt.xscale('log')
+    plt.xlabel('n')            # or ''grid points, N''?
+    plt.ylabel(r'$\epsilon$')  # or ''relative error, eps''?
+
+    if save == True:
+        ### new values for n, so the input n is irrelevant, correct?
+        plt.savefig('Results/Error_%s_a[%g]_b[%g]_c[%g].png' % (solver_name, a_i, b_i, c_i))
+
     plt.show()
 
     return epsilon
@@ -170,27 +188,29 @@ def relative_error(N_values, epsilon):
 
 if __name__ == "__main__":
 
-    ### Running program: examples for the thomas solver ###
+    ### Running program: examples for the thomas solver (skal i readme / pdf fil) ###
     # python oppgave_1b_sketch_ANNA.py -t           | Runs with default values
     # python oppgave_1b_sketch_ANNA.py -t -a 4 -b 5 | Runs with a=4 and b=5, c and n default 
     # python oppgave_1b_sketch_ANNA.py -t -n 10 -E  | Runs with n=10 and calculates relative errors
 
     parser = argparse.ArgumentParser(description='Project 1 in FYS4150 - Computational Physics')
 
-    # Creating mutually exclusive group (only 1 of the arguments allowed)
+    # Creating mutually exclusive group (only 1 of the arguments allowed at each time)
+    # Mutually exclusive arguments must be optional
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-t', '--thomas',    action="store_true", help="Thomas solver")
     group.add_argument('-s', '--special',   action="store_true", help="Special solver")
-    group.add_argument('-LU', '--LU_decomposition', action="store_true", help="LU decomposition (scipy)")
+    group.add_argument('-l', '--LU',        action="store_true", help="Lower Upper decomposition")
 
-    # Optional arguments, default values are set
-    parser.add_argument('-a', type=int, nargs='?', default= -1,  help = "value beneath the diagonal")
-    parser.add_argument('-b', type=int, nargs='?', default= 2,   help = "value for the diagonal")
-    parser.add_argument('-c', type=int, nargs='?', default= -1,  help = "value above the diagonal")
-    parser.add_argument('-n', type=int, nargs='?', default= 100, help = "value for the NxN matrix")
+    # Optional arguments for input values, default values are set
+    parser.add_argument('-a', type=int, nargs='?', default= -1,  help="value beneath the diagonal")
+    parser.add_argument('-b', type=int, nargs='?', default= 2,   help="value for the diagonal")
+    parser.add_argument('-c', type=int, nargs='?', default= -1,  help="value above the diagonal")
+    parser.add_argument('-n', type=int, nargs='?', default= 100, help="value for the NxN matrix")
 
     # Optional argument for calculating the relative error
-    parser.add_argument('-E', action='store_true',  help = "if provided, the relative error is calculated")
+    parser.add_argument('-E', action='store_true',  help = "calculates the relative error \
+                                                            (use with the thomas or special solver)")
 
     # If not provided a mutual exclusive argument, print help message
     if len(sys.argv) <= 1:
@@ -200,7 +220,7 @@ if __name__ == "__main__":
 
     T   = args.thomas
     S   = args.special
-    LU  = args.LU_decomposition
+    LU  = args.LU
 
     err = args.E; a_i = args.a; b_i = args.b; c_i = args.c; n_i = args.n
 
@@ -217,7 +237,9 @@ if __name__ == "__main__":
     u, v, f, x = initialize(N)
 
     # Values for the relative error exercise
-    N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6]
+    # MUST REMEMBER TO RUN WITH PLOT (SAVE) FOR [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
+    # FOR EITHER THOMAS OR SPECIAL TO GET PLOT AND TABLE VALUES
+    N_values = [1e1, 1e2, 1e3, 1e4]
     epsilon  = np.zeros(len(N_values))
 
 
@@ -230,17 +252,17 @@ if __name__ == "__main__":
         run_time = end-start
 
         print('Time of execution: %.10f s' %run_time)
-        plot(u, v, x, solver_name='Thomas')
+        plot(u, v, x, solver_name='Thomas', save=True)
 
         if err:
             print('')
             print(30*'-');print('Calculating the relative error');print(30*'-')
             print('')
-            error    = relative_error(N_values, epsilon)
+            error    = relative_error(N_values, epsilon, 'thomas', save=True)
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
-            print(df.to_string(index=False)); print('')
-            print('The relative errors:\n', error)  # unødvendig å printe igjen?
+            print(df.to_string(index=False))
+            #print('The relative errors:\n', error)  # unødvendig å printe igjen?
 
     elif S:
         print(14*'-'); print('Special Solver');print(14*'-');print('')
@@ -251,17 +273,17 @@ if __name__ == "__main__":
         run_time = end-start
 
         print("Time of execution: %.10f" %run_time)
-        plot(u, v, x, solver_name='Special')
+        plot(u, v, x, solver_name='Special', save=True)
 
         if err:
             print('')
             print(30*'-');print('Calculating the relative error');print(30*'-')
             print('')
-            error    = relative_error(N_values, epsilon)
+            error    = relative_error(N_values, epsilon, 'special', save=True)
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False)); print('')
-            print('The relative errors:', error)  # unødvendig å printe igjen?
+            #print('The relative errors:', error)  # unødvendig å printe igjen?
 
     elif LU:
         print(9*'-'); print('LU Solver');print(9*'-');print('')
@@ -277,6 +299,8 @@ if __name__ == "__main__":
         run_time   = end-start
 
         print("Time of execution: %.10f" %run_time)
-        plot(u, v_LU, x, solver_name='LU')
+        plot(u, v_LU, x, solver_name='LU', save=True)
 
-        # should we calculate the error here as well??
+        if err:
+            print('\nThe relative error can only be calculated \
+                   \nfor the <<thomas>> and <<special>> solver')
