@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from numba        import jit
 from scipy.sparse import diags
+from scipy.linalg import lu, solve
 
 
 def initialize(N):
@@ -123,6 +124,15 @@ def special(v):
     ff[0] = f[0]
     v = backward_special(v, ff)
     return v
+
+def LU_dec(a, b, c, N, f):
+    #make tridiagonal matrix
+    diagonals = [a, b, c]
+    A = diags(diagonals, [-1, 0, 1], shape=(N,N)).toarray()
+    P, L, U = lu(A)
+    y = solve(L, f)
+    u = solve(U, y)
+    return u
 
 
 def plot(u, v, x, solver_name=""):
@@ -251,7 +261,22 @@ if __name__ == "__main__":
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False)); print('')
-            print('The relative errors:', error)
+            print('The relative errors:', error)  # unødvendig å printe igjen?
 
-    #elif LU:
-    #    print('LU solver')
+    elif LU:
+        print(9*'-'); print('LU Solver');print(9*'-');print('')
+
+        a, b, c, N = make_A(a_i, b_i, c_i, n_i)
+        u, v, f, x = initialize(N)
+
+        v_LU       = np.zeros_like(v)
+
+        start      = time.time()
+        v_LU[1:-1] = LU_dec(a, b, c, N, f[1:-1])
+        end        = time.time()
+        run_time   = end-start
+
+        print("Time of execution: %.10f" %run_time)
+        plot(u, v_LU, x, solver_name='LU')
+
+        # should we calculate the error here as well??
