@@ -148,7 +148,6 @@ def plot(u, v, x, solver_name='', save=False):
     plt.plot(x, u, label='u(x), closed solution')
     plt.xlabel('x', fontsize=14)
     #plt.ylabel()          what should we call this? f(x) maybe? or nathing..
-    #plt.title('Gaussian elimination: %s, N = %g' % (solver_name, N), fontsize=14)
     plt.title('Gaussian elimination: %s \n a = %g | b = %g | c = %g | N = %g'
            % (solver_name, a_i, b_i, c_i, n_i), fontsize=14)
     plt.legend()
@@ -168,7 +167,8 @@ def relative_error(N_values, epsilon, solver_name='', save=False):
         # its correct to change -1, 2, -1 to general a_i, b_i, c_i right?
         a, b, c, N = make_A(a_i, b_i, c_i, int(N_values[j]))
         u, v, f, x = initialize(int(N_values[j]))
-        v = Gauss(v, a, b, c, f, N)
+        if solver_name=='thomas':
+            v = Gauss(v, a, b, c, f, N)
         epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
 
     # Plotting the relative error vs. N
@@ -233,8 +233,6 @@ if __name__ == "__main__":
     u, v, f, x = initialize(N)
 
     # Values for the relative error exercise
-    # MUST REMEMBER TO RUN WITH PLOT (SAVE) FOR [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
-    # FOR EITHER THOMAS OR SPECIAL TO GET PLOT AND TABLE VALUES
     N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
     epsilon  = np.zeros(len(N_values))
 
@@ -258,7 +256,6 @@ if __name__ == "__main__":
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False))
-            #print('The relative errors:\n', error)  # unødvendig å printe igjen?
 
     elif S:
         print(14*'-'); print('Special Solver');print(14*'-');print('')
@@ -279,7 +276,6 @@ if __name__ == "__main__":
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False)); print('')
-            #print('The relative errors:', error)  # unødvendig å printe igjen?
 
     elif LU:
         print(9*'-'); print('LU Solver');print(9*'-');print('')
