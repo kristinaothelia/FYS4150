@@ -161,6 +161,7 @@ def plot(u, v, x, solver_name='', save=False):
 def relative_error(N_values, epsilon, solver_name='', save=False):
     """
     Function that calculates the relative error
+    Only works for the thomas method
     """
     for j in range(len(N_values)):
         #a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
@@ -187,11 +188,6 @@ def relative_error(N_values, epsilon, solver_name='', save=False):
 
 
 if __name__ == "__main__":
-
-    ### Running program: examples for the thomas solver (skal i readme / pdf fil) ###
-    # python oppgave_1b_sketch_ANNA.py -t           | Runs with default values
-    # python oppgave_1b_sketch_ANNA.py -t -a 4 -b 5 | Runs with a=4 and b=5, c and n default 
-    # python oppgave_1b_sketch_ANNA.py -t -n 10 -E  | Runs with n=10 and calculates relative errors
 
     parser = argparse.ArgumentParser(description='Project 1 in FYS4150 - Computational Physics')
 
