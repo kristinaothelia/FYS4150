@@ -147,11 +147,11 @@ def plot(u, v, x, solver_name='', save=False):
     plt.plot(x, v, label='v(x), numerical')
     plt.plot(x, u, label='u(x), closed solution')
     plt.xlabel('x', fontsize=14)
-    #plt.ylabel()          what should we call this? f(x) maybe? or nathing.. [I vote nathing]
+    #plt.ylabel()          what should we call this? f(x) maybe? or nathing..
+    #plt.title('Gaussian elimination: %s, N = %g' % (solver_name, N), fontsize=14)
     plt.title('Gaussian elimination: %s \n a = %g | b = %g | c = %g | N = %g'
            % (solver_name, a_i, b_i, c_i, n_i), fontsize=14)
     plt.legend()
-    plt.axis((0,1, 0,1))
 
     if save == True:
         plt.savefig('Results/%s_a[%g]_b[%g]_c[%g]_n[%g].png' % (solver_name, a_i, b_i, c_i, n_i))
@@ -161,15 +161,13 @@ def plot(u, v, x, solver_name='', save=False):
 def relative_error(N_values, epsilon, solver_name='', save=False):
     """
     Function that calculates the relative error
-    Only works for the thomas method
     """
     for j in range(len(N_values)):
         #a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
         # its correct to change -1, 2, -1 to general a_i, b_i, c_i right?
         a, b, c, N = make_A(a_i, b_i, c_i, int(N_values[j]))
         u, v, f, x = initialize(int(N_values[j]))
-        if solver_name=='thomas':
-            v = Gauss(v, a, b, c, f, N)
+        v = Gauss(v, a, b, c, f, N)
         epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
 
     # Plotting the relative error vs. N
@@ -189,6 +187,11 @@ def relative_error(N_values, epsilon, solver_name='', save=False):
 
 
 if __name__ == "__main__":
+
+    ### Running program: examples for the thomas solver (skal i readme / pdf fil) ###
+    # python oppgave_1b_sketch_ANNA.py -t           | Runs with default values
+    # python oppgave_1b_sketch_ANNA.py -t -a 4 -b 5 | Runs with a=4 and b=5, c and n default
+    # python oppgave_1b_sketch_ANNA.py -t -n 10 -E  | Runs with n=10 and calculates relative errors
 
     parser = argparse.ArgumentParser(description='Project 1 in FYS4150 - Computational Physics')
 
@@ -234,7 +237,9 @@ if __name__ == "__main__":
     u, v, f, x = initialize(N)
 
     # Values for the relative error exercise
-    N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
+    # MUST REMEMBER TO RUN WITH PLOT (SAVE) FOR [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
+    # FOR EITHER THOMAS OR SPECIAL TO GET PLOT AND TABLE VALUES
+    N_values = [1e1, 1e2, 1e3, 1e4]
     epsilon  = np.zeros(len(N_values))
 
 
@@ -245,7 +250,6 @@ if __name__ == "__main__":
         v        = Gauss(v, a, b, c, f, N)
         end      = time.time()
         run_time = end-start
-        print("max:", np.max(u))
 
         print('Time of execution: %.10f s' %run_time)
         plot(u, v, x, solver_name='Thomas', save=True)
@@ -258,6 +262,7 @@ if __name__ == "__main__":
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False))
+            #print('The relative errors:\n', error)  # unødvendig å printe igjen?
 
     elif S:
         print(14*'-'); print('Special Solver');print(14*'-');print('')
@@ -266,7 +271,6 @@ if __name__ == "__main__":
         v        = special(v)
         end      = time.time()
         run_time = end-start
-        print("max:", np.max(u))
 
         print("Time of execution: %.10f" %run_time)
         plot(u, v, x, solver_name='Special', save=True)
@@ -279,12 +283,13 @@ if __name__ == "__main__":
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False)); print('')
+            #print('The relative errors:', error)  # unødvendig å printe igjen?
 
     elif LU:
         print(9*'-'); print('LU Solver');print(9*'-');print('')
 
-        #a, b, c, N = make_A(a_i, b_i, c_i, n_i)   disse kan nok fjernes
-        #u, v, f, x = initialize(N)
+        a, b, c, N = make_A(a_i, b_i, c_i, n_i)
+        u, v, f, x = initialize(N)
 
         v_LU       = np.zeros_like(v)
 
@@ -292,8 +297,6 @@ if __name__ == "__main__":
         v_LU[1:-1] = LU_dec(a, b, c, N, f[1:-1])
         end        = time.time()
         run_time   = end-start
-
-        print("max:", np.max(v_LU))
 
         print("Time of execution: %.10f" %run_time)
         plot(u, v_LU, x, solver_name='LU', save=True)
