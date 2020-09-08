@@ -239,7 +239,7 @@ if __name__ == "__main__":
     # Values for the relative error exercise
     # MUST REMEMBER TO RUN WITH PLOT (SAVE) FOR [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
     # FOR EITHER THOMAS OR SPECIAL TO GET PLOT AND TABLE VALUES
-    N_values = [1e1, 1e2, 1e3, 1e4]
+    N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
     epsilon  = np.zeros(len(N_values))
 
 
