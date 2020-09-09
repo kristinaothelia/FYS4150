@@ -146,10 +146,10 @@ def plot(u, v, x, solver_name='', save=False):
 
     plt.plot(x, v, label='v(x), numerical')
     plt.plot(x, u, label='u(x), closed solution')
-    plt.xlabel('x', fontsize=14)
+    plt.xlabel('x', fontsize=16)
     #plt.ylabel()          what should we call this? f(x) maybe? or nathing.. [I vote nathing]
     plt.title('Gaussian elimination: %s \n a = %g | b = %g | c = %g | N = %g'
-           % (solver_name, a_i, b_i, c_i, n_i), fontsize=14)
+           % (solver_name, a_i, b_i, c_i, n_i), fontsize=16)
     plt.legend()
     plt.axis((0,1, 0,1))
 
@@ -173,11 +173,11 @@ def relative_error(N_values, epsilon, solver_name='', save=False):
         epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
 
     # Plotting the relative error vs. N
-    plt.title('The relative error (%s)' %solver_name)
+    plt.title('The relative error (%s)' %solver_name, fontsize=16)
     plt.plot(N_values, epsilon, 'o-')
     plt.xscale('log')
-    plt.xlabel('n')            # or ''grid points, N''?
-    plt.ylabel(r'$\epsilon$')  # or ''relative error, eps''?
+    plt.xlabel('n', fontsize=16)            # or ''grid points, N''?
+    plt.ylabel(r'$\epsilon$', fontsize=16)  # or ''relative error, eps''?
 
     if save == True:
         ### new values for n, so the input n is irrelevant, correct?
