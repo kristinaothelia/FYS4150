@@ -29,3 +29,6 @@ optional arguments:
 
 #### Runs with n=10 and calculates relative errors
 * python prosjekt1.py -t -n 10 -E
+
+
+All figures are by default saved in the Result folder.
