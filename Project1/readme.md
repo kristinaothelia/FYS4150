@@ -3,7 +3,7 @@
 
 ### usage: prosjekt1.py [-h] [-t | -s | -l] [-a [A]] [-b [B]] [-c [C]] [-n [N]] [-E]
 
-
+All figures are saved in the Result folder.
 
 ### **Examples for the Thomas solver:**
 
