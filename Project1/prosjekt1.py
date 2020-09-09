@@ -4,7 +4,7 @@ import numpy             as np
 import pandas            as pd
 import matplotlib.pyplot as plt
 
-from numba        import jit       ### brukes foreløpig ikke (fikk feilmeldinger)
+
 from scipy.sparse import diags
 from scipy.linalg import lu, solve
 
@@ -21,7 +21,7 @@ def initialize(N):
 
     #Initialize f
     x = np.linspace(0,1, N+2)
-    h = 1/(N+1)  #step size
+    h = 1/(N+1)                 #step size
     f = h**2*100*np.exp(-10*x)
 
     #Initalize u (analytical solution)
@@ -130,7 +130,7 @@ def LU_dec(a, b, c, N, f):
     LU decomposition
     """
 
-    #make tridiagonal matrix
+    #Make tridiagonal matrix
     diagonals = [a, b, c]
     A = diags(diagonals, [-1, 0, 1], shape=(N,N)).toarray()
     P, L, U = lu(A)
@@ -146,12 +146,11 @@ def plot(u, v, x, solver_name='', save=False):
 
     plt.plot(x, v, label='v(x), numerical')
     plt.plot(x, u, label='u(x), closed solution')
-    plt.xlabel('x', fontsize=14)
-    #plt.ylabel()          what should we call this? f(x) maybe? or nathing..
-    #plt.title('Gaussian elimination: %s, N = %g' % (solver_name, N), fontsize=14)
+    plt.xlabel('x', fontsize=16)
     plt.title('Gaussian elimination: %s \n a = %g | b = %g | c = %g | N = %g'
-           % (solver_name, a_i, b_i, c_i, n_i), fontsize=14)
+           % (solver_name, a_i, b_i, c_i, n_i), fontsize=16)
     plt.legend()
+    plt.axis((0,1, 0,1))
 
     if save == True:
         plt.savefig('Results/%s_a[%g]_b[%g]_c[%g]_n[%g].png' % (solver_name, a_i, b_i, c_i, n_i))
@@ -161,24 +160,24 @@ def plot(u, v, x, solver_name='', save=False):
 def relative_error(N_values, epsilon, solver_name='', save=False):
     """
     Function that calculates the relative error
+    Only works for the thomas method; solver_name='thomas'
+    May be expanded easily for other solvers
     """
     for j in range(len(N_values)):
-        #a, b, c, N = make_A(-1, 2, -1, int(N_values[j]))
-        # its correct to change -1, 2, -1 to general a_i, b_i, c_i right?
         a, b, c, N = make_A(a_i, b_i, c_i, int(N_values[j]))
         u, v, f, x = initialize(int(N_values[j]))
-        v = Gauss(v, a, b, c, f, N)
+        if solver_name=='thomas':
+            v = Gauss(v, a, b, c, f, N)
         epsilon[j] = np.max(np.log(np.abs((v[1:-2]-u[1:-2])/u[1:-2])))
 
     # Plotting the relative error vs. N
-    plt.title('The relative error (%s)' %solver_name)
+    plt.title('The relative error (%s)' %solver_name, fontsize=16)
     plt.plot(N_values, epsilon, 'o-')
     plt.xscale('log')
-    plt.xlabel('n')            # or ''grid points, N''?
-    plt.ylabel(r'$\epsilon$')  # or ''relative error, eps''?
+    plt.xlabel('n', fontsize=16)            # grid points
+    plt.ylabel(r'$\epsilon$', fontsize=16)  # relative error
 
     if save == True:
-        ### new values for n, so the input n is irrelevant, correct?
         plt.savefig('Results/Error_%s_a[%g]_b[%g]_c[%g].png' % (solver_name, a_i, b_i, c_i))
 
     plt.show()
@@ -187,11 +186,6 @@ def relative_error(N_values, epsilon, solver_name='', save=False):
 
 
 if __name__ == "__main__":
-
-    ### Running program: examples for the thomas solver (skal i readme / pdf fil) ###
-    # python oppgave_1b_sketch_ANNA.py -t           | Runs with default values
-    # python oppgave_1b_sketch_ANNA.py -t -a 4 -b 5 | Runs with a=4 and b=5, c and n default
-    # python oppgave_1b_sketch_ANNA.py -t -n 10 -E  | Runs with n=10 and calculates relative errors
 
     parser = argparse.ArgumentParser(description='Project 1 in FYS4150 - Computational Physics')
 
@@ -210,7 +204,7 @@ if __name__ == "__main__":
 
     # Optional argument for calculating the relative error
     parser.add_argument('-E', action='store_true',  help = "calculates the relative error \
-                                                            (use with the thomas or special solver)")
+                                                            (usage: thomas solver)")
 
     # If not provided a mutual exclusive argument, print help message
     if len(sys.argv) <= 1:
@@ -237,9 +231,7 @@ if __name__ == "__main__":
     u, v, f, x = initialize(N)
 
     # Values for the relative error exercise
-    # MUST REMEMBER TO RUN WITH PLOT (SAVE) FOR [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
-    # FOR EITHER THOMAS OR SPECIAL TO GET PLOT AND TABLE VALUES
-    N_values = [1e1, 1e2, 1e3, 1e4]
+    N_values = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
     epsilon  = np.zeros(len(N_values))
 
 
@@ -250,6 +242,7 @@ if __name__ == "__main__":
         v        = Gauss(v, a, b, c, f, N)
         end      = time.time()
         run_time = end-start
+        print("max:", np.max(u))
 
         print('Time of execution: %.10f s' %run_time)
         plot(u, v, x, solver_name='Thomas', save=True)
@@ -262,7 +255,6 @@ if __name__ == "__main__":
             table    = {'N':N_values,'error':error}
             df       = pd.DataFrame(table, columns=['N','error'])
             print(df.to_string(index=False))
-            #print('The relative errors:\n', error)  # unødvendig å printe igjen?
 
     elif S:
         print(14*'-'); print('Special Solver');print(14*'-');print('')
@@ -271,25 +263,17 @@ if __name__ == "__main__":
         v        = special(v)
         end      = time.time()
         run_time = end-start
+        print("max:", np.max(u))
 
         print("Time of execution: %.10f" %run_time)
         plot(u, v, x, solver_name='Special', save=True)
 
         if err:
-            print('')
-            print(30*'-');print('Calculating the relative error');print(30*'-')
-            print('')
-            error    = relative_error(N_values, epsilon, 'special', save=True)
-            table    = {'N':N_values,'error':error}
-            df       = pd.DataFrame(table, columns=['N','error'])
-            print(df.to_string(index=False)); print('')
-            #print('The relative errors:', error)  # unødvendig å printe igjen?
+            print('\nThe relative error can only be calculated \
+                   \nwhen used with the thomas solver')
 
     elif LU:
         print(9*'-'); print('LU Solver');print(9*'-');print('')
-
-        a, b, c, N = make_A(a_i, b_i, c_i, n_i)
-        u, v, f, x = initialize(N)
 
         v_LU       = np.zeros_like(v)
 
@@ -298,9 +282,11 @@ if __name__ == "__main__":
         end        = time.time()
         run_time   = end-start
 
+        print("max:", np.max(v_LU))
+
         print("Time of execution: %.10f" %run_time)
         plot(u, v_LU, x, solver_name='LU', save=True)
 
         if err:
             print('\nThe relative error can only be calculated \
-                   \nfor the <<thomas>> and <<special>> solver')
+                   \nwhen used with the thomas solver')
