@@ -7,7 +7,7 @@ usage: prosjekt1.py [-h] [-t | -s | -l] [-a [A]] [-b [B]] [-c [C]] [-n [N]] [-E]
 
 Project 1 in FYS4150 - Computational Physics
 
-optional arguments:
+optional arguments:  
   -h, --help     show this help message and exit
   -t, --thomas   Thomas solver
   -s, --special  Special solver
