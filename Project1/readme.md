@@ -8,15 +8,15 @@ usage: prosjekt1.py [-h] [-t | -s | -l] [-a [A]] [-b [B]] [-c [C]] [-n [N]] [-E]
 Project 1 in FYS4150 - Computational Physics
 
 optional arguments:  
-  -h, --help     show this help message and exit
-  -t, --thomas   Thomas solver
-  -s, --special  Special solver
-  -l, --LU       Lower Upper decomposition
-  -a [A]         value beneath the diagonal
-  -b [B]         value for the diagonal
-  -c [C]         value above the diagonal
-  -n [N]         value for the NxN matrix
-  -E             calculates the relative error (usage: thomas solver)
+  -h, --help     show this help message and exit  
+  -t, --thomas   Thomas solver  
+  -s, --special  Special solver  
+  -l, --LU       Lower Upper decomposition  
+  -a [A]         value beneath the diagonal  
+  -b [B]         value for the diagonal  
+  -c [C]         value above the diagonal  
+  -n [N]         value for the NxN matrix  
+  -E             calculates the relative error (usage: thomas solver)  
 
 --------------------------------------------------------------
 ### **Examples of how to run the code with the thomas solver**
