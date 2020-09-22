@@ -44,17 +44,17 @@ def MaxNonDiag(A, n):
 def Jacobi(A, n, epsilon=1e-8):
 
 	max_it     = 1000  #n**3?
-	iterations = 0 
+	iterations = 0
 
 	A = np.array(A)
 	R = np.eye(n)
 
 	#maxnondiag, k, l = MaxNonDiag(A,n)
 	maxnondiag = 0.0
-	#for i in range(n):
-	#	for j in range(i+1, n):
-	#		if abs(A[i,j]) > maxnondiag:
-	#			maxnondiag = abs(A[i,j])
+	for i in range(n):
+		for j in range(i+1, n):
+			if abs(A[i,j]) > maxnondiag:
+				maxnondiag = abs(A[i,j])
 
 
 	# FEILMELDING!!!!!
@@ -66,7 +66,7 @@ def Jacobi(A, n, epsilon=1e-8):
 		maxnondiag = 0.0
 		k = 0
 		l = 0
-		maxnondiag = MaxNonDiag(A,n)
+		maxnondiag, k, l = MaxNonDiag(A,n)
 		A, R       = Jacobi_rotation(A, R, k, l, n)
 		iterations += 1
 
@@ -101,7 +101,7 @@ def Jacobi_rotation(A, R, k, l, n):
 
 	A[k,k] = c**2 * a_kk - 2 * c * s * A[k,l] + s**2 * a_ll
 	A[l,l] = s**2 * a_kk + 2 * c * s * A[k,l] + c**2 * a_ll
-	A[k,l] = 0 
+	A[k,l] = 0
 	A[l,k] = 0
 
 	for i in range(n):
@@ -128,27 +128,39 @@ def Jacobi_rotation(A, R, k, l, n):
 
 if __name__ == "__main__":
 
-	N = 100
+	N = 3
 
 	rho_0 = 0   # rho min
-	rho_N = 1   # rho max 
+	rho_N = 1   # rho max
 
 	h = (rho_N-rho_0)/N    # step length
 
 	diag = 2/h**2
 	non_diag = -1/h**2
-	
+
 	A = Toeplitz(N, diag, non_diag)
-	print(A)
+	#print(A)
 
 	# diagonalize and obtain eigenvalues, not necessarily sorted
 	EigValues_np, EigVectors_np = np.linalg.eig(A)
 	#print(EigValues_np, EigVectors_np)
 
+	#testing with numpy
+	#if v = eigenvector and lam=eigen value, then they should work like
+	#Av = lam*v
+	print(A@EigVectors_np[:,0])               #Av
+	print(EigValues_np[0]*EigVectors_np[:,0]) #lam*v
 
 	EigenVal, EigenVec, iterations = Jacobi(A, N, epsilon=0.0001)
-	print(iterations)
+	#print(iterations)
+	print("-------------------------")
 
+	#testing with own method
+	print(A@EigenVec[:,0])
+	print(EigenVal[0]*EigenVec[:,0])
+
+
+	"""
 	# sort eigenvectors and eigenvalues
 	permute      = EigenVal.argsort()
 	EigenValues  = EigenVal[permute]
@@ -158,6 +170,7 @@ if __name__ == "__main__":
 	for i in range(3):
 		print(EigenValues[i])
 
-	# For plotting 
+	# For plotting
 	#x = np.linspace(1,N,N-1)
 	#x = diag + 2*non_diag*np.cos((x*np.pi)/(N))
+	"""
