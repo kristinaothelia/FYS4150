@@ -61,6 +61,23 @@ def Jacobi(A, n, epsilon=1e-8, max_it=1e4):
 	return EigenVal, EigenVec, iterations
 
 
+def analytical_eigenpairs(n, d, a):
+	"""
+	Computes the analytical values for the eigenpair for buckling beam
+	problem.
+	"""
+	j = np.linspace(1, n)  #j = 1,2,...,(n-1)
+	lam = d + 2*a*np.cos(j*np.pi/n)
+	u = np.zeros([n, n])
+	for j in range(1, n):
+		for i in range(1, n-1):
+			u[j,i] = np.sin(i*j*np.pi/n)
+		u[j,:] /= np.linalg.norm(u[j,:])   #normalizing
+	return lam, u
+
+
+
+
 
 def Jacobi_rotation(A, R, k, l, n):
 	'''
@@ -116,7 +133,7 @@ if __name__ == "__main__":
 
 	# how many tranformations are needed?
 	# estimate max_it as function of dimensionality N
-	N 	   = 10
+	N 	   = 50
 	max_it = N**3
 
 	rho_0 = 0   # rho min
@@ -132,16 +149,16 @@ if __name__ == "__main__":
 
 	# diagonalize and obtain eigenvalues, not necessarily sorted
 	#EigValues_np, EigVectors_np = np.linalg.eig(A)  # eigenvectors are negative
-	EigValues_np, EigVectors_np = np.linalg.eigh(A)
+	EigValues_np, EigVectors_np = np.linalg.eig(A)
 
 	# sort eigenvectors and eigenvalues
 	permute         = EigValues_np.argsort()
 	EigenValues_np  = EigValues_np[permute]
 	EigenVectors_np = EigVectors_np[:,permute]
-	print(EigenValues_np)
+	#print(EigenValues_np)
 	#print(EigenVectors_np)
 
-	
+
 	#testing with numpy
 	#if v = eigenvector and lam=eigen value, then they should work like
 	#Av = lam*v
@@ -155,28 +172,40 @@ if __name__ == "__main__":
 	#testing with own method
 	#print(A@EigenVec[:,0], 'test')
 	#print(EigenVal[0]*EigenVec[:,0])
-	
+
 	# sort eigenvectors and eigenvalues
 	permute      = EigenVal.argsort()
 	EigenValues  = EigenVal[permute]
 	EigenVectors = EigenVec[:,permute]
-	print(EigenValues)
+	#print("-------------")
+	#print(EigenValues)
 
 
-	FirstEigvector_np   = EigenVectors_np[:,0]  
+	FirstEigvector_np   = EigenVectors_np[:,0]
 	FirstEigvector_Jac  = EigenVectors[:,0]
-	SecondEigvector_np  = EigenVectors_np[:,1]  
+	SecondEigvector_np  = EigenVectors_np[:,1]
 	SecondEigvector_Jac = EigenVectors[:,1]
 
+	"""
 	print('Comparing eigenvector for the lowest eigenvalue')
 	print(FirstEigvector_np)
 	print(FirstEigvector_Jac)
+	"""
+
+	###ANALYTICAL test
+	lam_eigen, u_eigen = analytical_eigenpairs(N, diag, non_diag)  #first level 1, not 0
+
+	FirstEigvector_analytical = u_eigen[1,:]
+	SecondEigvector_analytical = u_eigen[2,:]
 
 	# Plotting the eigenvector for the lowest eigenvalue
-	plt.plot(FirstEigvector_np**2, label='analytical')
-	plt.plot(FirstEigvector_Jac**2, label='Jacobi')
-	#plt.plot(SecondEigvector_np**2, label='analytical')
-	#plt.plot(SecondEigvector_Jac**2, label='Jacobi')
+	rho = np.linspace(rho_0, rho_N, len(FirstEigvector_np))
+	#plt.plot(rho, FirstEigvector_np, label='numpy')
+	plt.plot(rho, FirstEigvector_analytical, label='analytical 1')
+	plt.plot(rho, FirstEigvector_Jac, label='Jacobi 1')
+	#plt.plot(rho, SecondEigvector_np, label='numpy')
+	plt.plot(rho, SecondEigvector_analytical, label='analytical 2')
+	plt.plot(rho, SecondEigvector_Jac, label='Jacobi 2')
 	plt.legend()
 	plt.show()
 
