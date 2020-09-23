@@ -187,7 +187,7 @@ if __name__ == "__main__":
 	print(A@EigenVec[:,0])
 	print(EigenVal[0]*EigenVec[:,0])
 
-	"""
+
 	# sort eigenvectors and eigenvalues
 	permute      = EigenVal.argsort()
 	EigenValues  = EigenVal[permute]
@@ -200,4 +200,3 @@ if __name__ == "__main__":
 	# For plotting
 	#x = np.linspace(1,N,N-1)
 	#x = diag + 2*non_diag*np.cos((x*np.pi)/(N))
-	"""

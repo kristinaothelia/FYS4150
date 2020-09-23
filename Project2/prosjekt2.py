@@ -32,6 +32,8 @@ def MaxNonDiag(A, n):
 
 			if abs(A[i,j]) > maxnondiag:
 				maxnondiag = abs(A[i,j])
+				#l = i
+				#k = j
 				k = i
 				l = j
 
@@ -39,25 +41,37 @@ def MaxNonDiag(A, n):
 	return maxnondiag, k, l
 
 
-def Jacobi(A, n, epsilon=1e-8, max_it=1e4):
+def Jacobi(A, n, epsilon=1e-8):
 
-	#max_it     = n**3
+	max_it     = 1000  #n**3?
 	iterations = 0
 
 	A = np.array(A)
 	R = np.eye(n)
 
-	maxnondiag, k, l = MaxNonDiag(A,n)
+	#maxnondiag, k, l = MaxNonDiag(A,n)
+	maxnondiag = 0.0
+	for i in range(n):
+		for j in range(i+1, n):
+			if abs(A[i,j]) > maxnondiag:
+				maxnondiag = abs(A[i,j])
+
+
+	# FEILMELDING!!!!!
+	#File "prosjekt2.py", line 62, in Jacobi
+    #while (maxnondiag < epsilon) and (iterations <= max_it):
+	#TypeError: '<' not supported between instances of 'tuple' and 'float'
 
 	while (maxnondiag > epsilon) and (iterations <= max_it):
-
+		maxnondiag = 0.0
+		k = 0
+		l = 0
 		maxnondiag, k, l = MaxNonDiag(A,n)
-		A, R             = Jacobi_rotation(A, R, k, l, n)
+		A, R       = Jacobi_rotation(A, R, k, l, n)
 		iterations += 1
 
 	EigenVec = R
 	EigenVal = np.diag(A)
-
 	return EigenVal, EigenVec, iterations
 
 
@@ -114,10 +128,7 @@ def Jacobi_rotation(A, R, k, l, n):
 
 if __name__ == "__main__":
 
-	# how many tranformations are needed?
-	# estimate max_it as function of dimensionality N
-	N 	   = 10
-	max_it = N**3
+	N = 3
 
 	rho_0 = 0   # rho min
 	rho_N = 1   # rho max
@@ -131,57 +142,30 @@ if __name__ == "__main__":
 	#print(A)
 
 	# diagonalize and obtain eigenvalues, not necessarily sorted
-	#EigValues_np, EigVectors_np = np.linalg.eig(A)  # eigenvectors are negative
-	EigValues_np, EigVectors_np = np.linalg.eigh(A)
+	EigValues_np, EigVectors_np = np.linalg.eig(A)
+	#print(EigValues_np, EigVectors_np)
 
-	# sort eigenvectors and eigenvalues
-	permute         = EigValues_np.argsort()
-	EigenValues_np  = EigValues_np[permute]
-	EigenVectors_np = EigVectors_np[:,permute]
-	print(EigenValues_np)
-	#print(EigenVectors_np)
-
-	
 	#testing with numpy
 	#if v = eigenvector and lam=eigen value, then they should work like
 	#Av = lam*v
-	#print(A@EigVectors_np[:,0], 'test')               #Av
-	#print(EigValues_np[0]*EigVectors_np[:,0]) #lam*v
+	print(A@EigVectors_np[:,0])               #Av
+	print(EigValues_np[0]*EigVectors_np[:,0]) #lam*v
 
-	EigenVal, EigenVec, iterations = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
+	EigenVal, EigenVec, iterations = Jacobi(A, N, epsilon=0.0001)
 	#print(iterations)
-	#print("-------------------------")
+	print("-------------------------")
 
 	#testing with own method
-	#print(A@EigenVec[:,0], 'test')
-	#print(EigenVal[0]*EigenVec[:,0])
-	
+	print(A@EigenVec[:,0])
+	print(EigenVal[0]*EigenVec[:,0])
+
+
+	"""
 	# sort eigenvectors and eigenvalues
 	permute      = EigenVal.argsort()
 	EigenValues  = EigenVal[permute]
 	EigenVectors = EigenVec[:,permute]
-	print(EigenValues)
 
-
-	FirstEigvector_np   = EigenVectors_np[:,0]  
-	FirstEigvector_Jac  = EigenVectors[:,0]
-	SecondEigvector_np  = EigenVectors_np[:,1]  
-	SecondEigvector_Jac = EigenVectors[:,1]
-
-	print('Comparing eigenvector for the lowest eigenvalue')
-	print(FirstEigvector_np)
-	print(FirstEigvector_Jac)
-
-	# Plotting the eigenvector for the lowest eigenvalue
-	plt.plot(FirstEigvector_np**2, label='analytical')
-	plt.plot(FirstEigvector_Jac**2, label='Jacobi')
-	#plt.plot(SecondEigvector_np**2, label='analytical')
-	#plt.plot(SecondEigvector_Jac**2, label='Jacobi')
-	plt.legend()
-	plt.show()
-
-
-	"""
 	# now plot the results for the three lowest lying eigenstates
 	for i in range(3):
 		print(EigenValues[i])
