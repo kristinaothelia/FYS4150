@@ -1,9 +1,9 @@
 import sys, time, argparse
 
 import numpy             as np
-import pandas            as pd
 import matplotlib.pyplot as plt
 
+# should imports be under name/main?
 
 # http://arma.sourceforge.net/docs.html#eig_sym
 # http://compphysics.github.io/ComputationalPhysics/doc/pub/eigvalues/pdf/eigvalues-print.pdf
@@ -77,8 +77,6 @@ def analytical_eigenpairs(n, d, a):
 
 
 
-
-
 def Jacobi_rotation(A, R, k, l, n):
 	'''
 
@@ -131,91 +129,101 @@ def Jacobi_rotation(A, R, k, l, n):
 
 if __name__ == "__main__":
 
-	# how many tranformations are needed?
-	# estimate max_it as function of dimensionality N
-	N 	   = 50
+	parser = argparse.ArgumentParser(description='Project 2 in FYS4150 - Computational Physics')
+
+ 	# Creating mutually exclusive group (only 1 of the arguments allowed at each time)
+	# Mutually exclusive arguments must be optional
+	group = parser.add_mutually_exclusive_group()
+	group.add_argument('-B', '--beam',    action="store_true", help="The buckling beam problem")
+	group.add_argument('-Q', '--quantum', action="store_true", help="Quantum mechanics")
+
+	# Optional arguments for input values, default values are set
+	parser.add_argument('-n', type=int, nargs='?', default= 100,  help="dimensionality of matrix")
+
+
+	# If not provided a mutual exclusive argument, print help message
+	if len(sys.argv) <= 1:
+		sys.argv.append('--help')
+
+	args  = parser.parse_args()
+
+	BucklingBeam       = args.beam
+	QuantumMechanics   = args.quantum
+
+	#N 	   = args.n
+	N = 10
 	max_it = N**3
 
-	rho_0 = 0   # rho min
-	rho_N = 1   # rho max
+	rho0 = 0   # rho min
+	rhoN = 1   # rho max
 
-	h = (rho_N-rho_0)/N    # step length
+	h = (rhoN-rho0)/N     # step length
 
 	diag = 2/h**2
 	non_diag = -1/h**2
 
-	A = Toeplitz(N, diag, non_diag)
-	#print(A)
+	if BucklingBeam:
 
-	# diagonalize and obtain eigenvalues, not necessarily sorted
-	#EigValues_np, EigVectors_np = np.linalg.eig(A)  # eigenvectors are negative
-	EigValues_np, EigVectors_np = np.linalg.eig(A)
+		A = Toeplitz(N, diag, non_diag)
 
-	# sort eigenvectors and eigenvalues
-	permute         = EigValues_np.argsort()
-	EigenValues_np  = EigValues_np[permute]
-	EigenVectors_np = EigVectors_np[:,permute]
-	#print(EigenValues_np)
-	#print(EigenVectors_np)
+		# diagonalize and obtain eigenvalues, not necessarily sorted
+		#EigValues_np, EigVectors_np = np.linalg.eig(A)  # eigenvectors are negative
+		EigValues_np, EigVectors_np = np.linalg.eig(A)
 
-
-	#testing with numpy
-	#if v = eigenvector and lam=eigen value, then they should work like
-	#Av = lam*v
-	#print(A@EigVectors_np[:,0], 'test')               #Av
-	#print(EigValues_np[0]*EigVectors_np[:,0]) #lam*v
-
-	EigenVal, EigenVec, iterations = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
-	#print(iterations)
-	#print("-------------------------")
-
-	#testing with own method
-	#print(A@EigenVec[:,0], 'test')
-	#print(EigenVal[0]*EigenVec[:,0])
-
-	# sort eigenvectors and eigenvalues
-	permute      = EigenVal.argsort()
-	EigenValues  = EigenVal[permute]
-	EigenVectors = EigenVec[:,permute]
-	#print("-------------")
-	#print(EigenValues)
+		# sort eigenvectors and eigenvalues
+		permute         = EigValues_np.argsort()
+		EigenValues_np  = EigValues_np[permute]
+		EigenVectors_np = EigVectors_np[:,permute]
+		#print(EigenValues_np)
+		#print(EigenVectors_np)
 
 
-	FirstEigvector_np   = EigenVectors_np[:,0]
-	FirstEigvector_Jac  = EigenVectors[:,0]
-	SecondEigvector_np  = EigenVectors_np[:,1]
-	SecondEigvector_Jac = EigenVectors[:,1]
+		#testing with numpy
+		#if v = eigenvector and lam=eigen value, then they should work like
+		#Av = lam*v
+		#print(A@EigVectors_np[:,0], 'test')               #Av
+		#print(EigValues_np[0]*EigVectors_np[:,0]) #lam*v
 
-	"""
-	print('Comparing eigenvector for the lowest eigenvalue')
-	print(FirstEigvector_np)
-	print(FirstEigvector_Jac)
-	"""
+		EigenVal, EigenVec, iterations = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
+		#print(iterations)
+		#print("-------------------------")
 
-	###ANALYTICAL test
-	lam_eigen, u_eigen = analytical_eigenpairs(N, diag, non_diag)  #first level 1, not 0
+		#testing with own method
+		#print(A@EigenVec[:,0], 'test')
+		#print(EigenVal[0]*EigenVec[:,0])
 
-	FirstEigvector_analytical = u_eigen[1,:]
-	SecondEigvector_analytical = u_eigen[2,:]
-
-	# Plotting the eigenvector for the lowest eigenvalue
-	rho = np.linspace(rho_0, rho_N, len(FirstEigvector_np))
-	#plt.plot(rho, FirstEigvector_np, label='numpy')
-	plt.plot(rho, FirstEigvector_analytical, label='analytical 1')
-	plt.plot(rho, FirstEigvector_Jac, label='Jacobi 1')
-	#plt.plot(rho, SecondEigvector_np, label='numpy')
-	plt.plot(rho, SecondEigvector_analytical, label='analytical 2')
-	plt.plot(rho, SecondEigvector_Jac, label='Jacobi 2')
-	plt.legend()
-	plt.show()
+		# sort eigenvectors and eigenvalues
+		permute      = EigenVal.argsort()
+		EigenValues  = EigenVal[permute]
+		EigenVectors = EigenVec[:,permute]
+		#print("-------------")
+		#print(EigenValues)
 
 
-	"""
-	# now plot the results for the three lowest lying eigenstates
-	for i in range(3):
-		print(EigenValues[i])
+		FirstEigvector_np   = EigenVectors_np[:,0]
+		FirstEigvector_Jac  = EigenVectors[:,0]
+		SecondEigvector_np  = EigenVectors_np[:,1]
+		SecondEigvector_Jac = EigenVectors[:,1]
 
-	# For plotting
-	#x = np.linspace(1,N,N-1)
-	#x = diag + 2*non_diag*np.cos((x*np.pi)/(N))
-	"""
+		"""
+		print('Comparing eigenvector for the lowest eigenvalue')
+		print(FirstEigvector_np)
+		print(FirstEigvector_Jac)
+		"""
+
+		###ANALYTICAL test
+		lam_eigen, u_eigen = analytical_eigenpairs(N, diag, non_diag)  #first level 1, not 0??
+
+		FirstEigvector_analytical = u_eigen[1,:]
+		SecondEigvector_analytical = u_eigen[2,:]
+
+		# Plotting the eigenvector for the lowest eigenvalue
+		rho = np.linspace(rho_0, rho_N, len(FirstEigvector_np))
+		#plt.plot(rho, FirstEigvector_np, label='numpy')
+		plt.plot(rho, FirstEigvector_analytical, label='analytical 1')
+		plt.plot(rho, FirstEigvector_Jac, label='Jacobi 1')
+		#plt.plot(rho, SecondEigvector_np, label='numpy')
+		plt.plot(rho, SecondEigvector_analytical, label='analytical 2')
+		plt.plot(rho, SecondEigvector_Jac, label='Jacobi 2')
+		plt.legend()
+		plt.show()
