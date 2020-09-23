@@ -110,26 +110,113 @@ def Jacobi_rotation(A, R, k, l, n):
 	return A, R
 
 
+# Here we set up the harmonic oscillator potential
+def potential(r, electron=1, w=None):
+	if electron == 1:
+		return r*r
+	elif electron == 2:
+		return w**2 * r**2 + 1/r
 
+
+def potential_values(Dim, RMin, RMax, Step):
+	#Calculate array of potential values
+	v = np.zeros(Dim)
+	r = np.linspace(RMin,RMax,Dim)
+	lOrbital = 0
+	OrbitalFactor = lOrbital * (lOrbital + 1.0)
+	for i in range(Dim):
+		r[i] = RMin + (i+1) * Step
+		v[i] = potential(r[i]) + OrbitalFactor/(r[i]*r[i])
+	return v
+
+def rho(N, rho0, rhoN, h, lOrbital=0, electron=1, w=0.01):
+	v = np.zeros(N)
+	r = np.linspace(rho0,rhoN,N)
+	OrbitalFactor = lOrbital * (lOrbital + 1.0)
+
+	if electron == 1:
+		# 2d) 3D, 1 electron
+		for i in range(N):
+			r[i] = rho0 + (i+1) * h
+			v[i] = potential(r[i], electron) + OrbitalFactor/(r[i]*r[i])
+			#v[i] = r[i]**2 + OrbitalFactor/(r[i]**2)
+	elif electron == 2:
+		# 2e) 3D, 2 electron
+		for i in range(N):
+			r[i] = rho0 + (i+1) * h
+			v[i] = potential(r[i], electron, w) + OrbitalFactor/(r[i]*r[i])
+
+	return v
 
 if __name__ == "__main__":
 
 	# how many tranformations are needed?
 	# estimate max_it as function of dimensionality N
-	N 	   = 10
+	N 	   = 400
 	max_it = N**3
 
-	rho_0 = 0   # rho min
-	rho_N = 1   # rho max
+	rho_0 = 0    # rho min
+	rho_N = 10   # rho max
 
 	h = (rho_N-rho_0)/N    # step length
+	#h = 10/(N+1)
 
 	diag = 2/h**2
 	non_diag = -1/h**2
 
-	A = Toeplitz(N, diag, non_diag)
-	#print(A)
+	ex = 3
 
+	if ex == 1:
+		# for exercise 2b
+		A = Toeplitz(N, diag, non_diag)
+		#print(A)
+	elif ex == 2:
+		# for exercise 2d
+		#rho_values = potential_values(N, rho_0, rho_N, h)
+		rho_values = rho(N, rho_0, rho_N, h, lOrbital=0, electron=1)
+		new_diag   = diag+rho_values
+		A = Toeplitz(N, new_diag, non_diag)
+
+		# diagonalize and obtain eigenvalues, not necessarily sorted
+		EigValues, EigVectors = np.linalg.eig(A)
+		#EigValues, EigVectors, iterations = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
+
+		# sort eigenvectors and eigenvalues
+		permute = EigValues.argsort()
+		EigValues = EigValues[permute]
+		EigVectors = EigVectors[:,permute]
+
+		# now plot the results for the three lowest lying eigenstates
+		for i in range(3):
+		    print(EigValues[i])
+
+	elif ex == 3:
+		# for exercise 2e
+		#rho_values = potential_values(N, rho_0, rho_N, h)
+		omega_list = [0.01, 0.5, 1, 5]
+
+		for w in range(len(omega_list)):
+			omega = omega_list[w]
+			print(omega)
+			rho_values = rho(N, rho_0, rho_N, h, lOrbital=0, electron=2, w=omega)
+			new_diag   = diag+rho_values
+			A = Toeplitz(N, new_diag, non_diag)
+
+			# diagonalize and obtain eigenvalues, not necessarily sorted
+			EigValues, EigVectors = np.linalg.eig(A)
+			#EigValues, EigVectors, iterations = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
+
+			# sort eigenvectors and eigenvalues
+			permute = EigValues.argsort()
+			EigValues = EigValues[permute]
+			EigVectors = EigVectors[:,permute]
+
+			# now plot the results for the three lowest lying eigenstates
+			for i in range(3):
+			    print(EigValues[i])
+
+
+	'''
 	# diagonalize and obtain eigenvalues, not necessarily sorted
 	#EigValues_np, EigVectors_np = np.linalg.eig(A)  # eigenvectors are negative
 	EigValues_np, EigVectors_np = np.linalg.eigh(A)
@@ -141,20 +228,8 @@ if __name__ == "__main__":
 	print(EigenValues_np)
 	#print(EigenVectors_np)
 
-	
-	#testing with numpy
-	#if v = eigenvector and lam=eigen value, then they should work like
-	#Av = lam*v
-	#print(A@EigVectors_np[:,0], 'test')               #Av
-	#print(EigValues_np[0]*EigVectors_np[:,0]) #lam*v
 
 	EigenVal, EigenVec, iterations = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
-	#print(iterations)
-	#print("-------------------------")
-
-	#testing with own method
-	#print(A@EigenVec[:,0], 'test')
-	#print(EigenVal[0]*EigenVec[:,0])
 	
 	# sort eigenvectors and eigenvalues
 	permute      = EigenVal.argsort()
@@ -175,10 +250,9 @@ if __name__ == "__main__":
 	# Plotting the eigenvector for the lowest eigenvalue
 	plt.plot(FirstEigvector_np**2, label='analytical')
 	plt.plot(FirstEigvector_Jac**2, label='Jacobi')
-	#plt.plot(SecondEigvector_np**2, label='analytical')
-	#plt.plot(SecondEigvector_Jac**2, label='Jacobi')
 	plt.legend()
 	plt.show()
+	'''
 
 
 	"""
