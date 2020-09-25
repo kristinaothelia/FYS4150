@@ -43,7 +43,7 @@ def AnalyticalEigenpairs(n, d, a):
 
 def SortEigenpairs(EigVal, EigVec):
 	"""
-	Function that sorts eigenvectors and eigenvalues.
+	Function that sorts eigenvectors and eigenvalues
 	"""
 
 	permute = EigVal.argsort()
@@ -72,8 +72,8 @@ def MaxNonDiag(A, n):
 
 	for i in range(n):
 		for j in range(i+1, n):
-			### >
-			if abs(A[i,j]) >= maxnondiag:
+
+			if abs(A[i,j]) > maxnondiag:
 				maxnondiag = abs(A[i,j])
 				k = i
 				l = j
@@ -89,23 +89,22 @@ def Jacobi(A, n, epsilon=1e-8, max_it=1e4):
 	iterations = 0
 
 	A = np.array(A)
-	R = np.eye(n)
+	R = np.eye(n)    
 
 	maxnondiag, k, l = MaxNonDiag(A,n)
 
 	while (maxnondiag > epsilon) and (iterations <= max_it):
-
 		A, R             = JacobiRotation(A, R, k, l, n)
-		maxnondiag, k, l = MaxNonDiag(A,n) 
-		iterations += 1
+		maxnondiag, k, l = MaxNonDiag(A,n)
+		iterations      += 1
 
-	# ha med noe sånt????
-	#if maxnondiag >= epsilon:
-	#	print('Non diagonals are not zero, increase max_it')
-	#	sys.exit()
+	# ha med noe sånt?
+	if maxnondiag >= epsilon:
+		print('Non diagonals are not zero, increase max_it')
+		sys.exit()
 
 	EigenVec = R
-	EigenVal = np.diag(A)   # extracts diagonal
+	EigenVal = np.diag(A)
 	end      = time.time()
 	cpu_time = end-start
 
@@ -136,14 +135,13 @@ def JacobiRotation(A, R, k, l, n):
 		c = 1   # cos(theta)?
 		s = 0   # sin(theta)?
 
-	a_kk = A[k,k] # diagonalen
-	a_ll = A[l,l] # diagonalen
+	a_kk = A[k,k]
+	a_ll = A[l,l]
 
 	A[k,k] = c**2 * a_kk - 2 * c * s * A[k,l] + s**2 * a_ll
 	A[l,l] = s**2 * a_kk + 2 * c * s * A[k,l] + c**2 * a_ll
-
 	A[k,l] = 0
-	A[l,k] = 0 
+	A[l,k] = 0
 
 	for i in range(n):
 
@@ -261,17 +259,20 @@ if __name__ == "__main__":
 	# the last max non diagonal is close to zero
 	# max_it = 2*(N**2) ish??
 
-	N = 50             # matrix dimension (N=4 does not work. Need to fix?) Quantum: 400
-	max_it = 2*N**2     # max iterations
+	N = 10             # matrix dimension (N=4 does not work. Need to fix?) Quantum: 400
+	max_it = 2*N**2      # max iterations
 
-	rho0 = 0            # rho min
+	rho0 = 0             # rho min
 	rhoN = 1            # rho max  morten uses 10 in 2d, why??
 
-	h = (rhoN-rho0)/N   # step length (h = rhoN/(N+1))  ish 0.025 for quantum
+	#h = (rhoN-rho0)/N   # step length
+	h = rhoN/(N+1)       # ish 0.025 for quantum
+	print('step', h)
 
 	diag     = 2/h**2   # diagonal elements 
 	non_diag = -1/h**2  # non-diagonal elements
 
+	### is r the same as u?
 
 	if BucklingBeam:
 		print('\nThe buckling beam problem\n')  # exercise 2b
@@ -280,7 +281,6 @@ if __name__ == "__main__":
 
 		# Calculate analytical eigenpairs
 		lam_eigen, u_eigen = AnalyticalEigenpairs(N, diag, non_diag)  # first level 1, not 0
-	
 	'''
 	if QuantumMechanics:
 		print('\nQuantum dots in 3 dimensions')
@@ -336,11 +336,8 @@ if __name__ == "__main__":
 			sys.exit()
 	'''		
 
-	# Calculate eigenpairs with numpy and sort, numpy CPU time
-	start                = time.time()
-	EigVal_np, EigVec_np = np.linalg.eig(A) # or np.linalg.eig(A)????????
-	end                  = time.time()
-	numpy_cpu            = (end-start)
+	# Calculate eigenpairs with numpy and sort
+	EigVal_np, EigVec_np = np.linalg.eigh(A) # or np.linalg.eig(A)????????
 	EigVal_np, EigVec_np = SortEigenpairs(EigVal_np, EigVec_np)
 	
 	# Calculate eigenpairs with Jacobi and sort
