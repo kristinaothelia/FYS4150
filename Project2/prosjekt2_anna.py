@@ -166,6 +166,12 @@ if __name__ == "__main__":
 
 	ex = 3
 
+	#print(tabulate(lambda_table, headers='keys', tablefmt='psql'))
+	#print(lambda_table.to_latex())
+	#df.style.set_properties(**{'text-align': 'center'})
+	#dfStyler = df.style.set_properties(**{'text-align': 'left'})
+	#dfStyler.set_table_styles([dict(selector='th', props=[('text-align', 'left')])])
+
 	if ex == 1:
 		# for exercise 2b
 		A = Toeplitz(N, diag, non_diag)

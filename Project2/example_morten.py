@@ -41,6 +41,7 @@ OrbitalFactor = lOrbital * (lOrbital + 1.0)
 #Calculate array of potential values
 v = np.zeros(Dim)
 r = np.linspace(RMin,RMax,Dim)
+#print(Step)
 for i in range(Dim):
     r[i] = RMin + (i+1) * Step;
     v[i] = potential(r[i]) + OrbitalFactor/(r[i]*r[i]);
