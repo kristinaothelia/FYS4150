@@ -266,17 +266,24 @@ def N_rho(N, rho0, rhoN_list, h, diag, non_diag):
 
 			# Calculate eigenpairs with numpy and sort
 			EigVal_np, EigVec_np = np.linalg.eig(A) # eigh
-			#EigVal_np, EigVec_np = SortEigenpairs(EigVal_np, EigVec_np)
+			EigVal_np, EigVec_np = SortEigenpairs(EigVal_np, EigVec_np)
 
-			#err[i,j] = np.mean(abs(lam_eigen-real_lambdas(np.arange(len(EigVal_np))))) # or max????
+			#print(np.arange(20))
+			#print(real_lambdas(np.arange(20)))
+			#print(N_list[j])
+			#print(EigVal_np)
+			#print(real_lambdas(np.arange(N_list[j])))
+			#print((abs(EigVal_np-real_lambdas(np.arange(N_list[j])))))
+
+			err[i,j] = np.mean(abs(EigVal_np-real_lambdas(np.arange(N_list[j])))) # or max????
+			#err[i,j] = np.max(abs(EigVal_np-real_lambdas(np.arange(N_list[j]))))
 			#errors.append(np.mean(err))
-			err[j,i] = np.max(np.abs(EigVal_np - real_lambdas(np.arange(len(EigVal_np)))))
+			#err[j,i] = np.max(np.abs(EigVal_np - real_lambdas(np.arange(len(EigVal_np)))))
+		#print(err)
+		#sys.exit()
 
-	#data = np.array([[rhoN_list], [N_list], [errors]])
 	print(err)
 	fig, ax = plt.subplots()
-	#im = ax.imshow(err)
-	#fig.colorbar(im)
 	ax = sns.heatmap(err)
 
 	plt.show()
@@ -348,6 +355,9 @@ if __name__ == "__main__":
 			if optional_values:
 				rhoN_list = np.linspace(1,10,10).astype(int)
 				N_list = np.linspace(20, 200, 10).astype(int)
+				#rhoN_list = [1, 5, 10, 25, 50, 75]
+				#N_list = np.array([1e1, 2.5e1, 5e1, 1e2, 3e2, 5e2]).astype(int)
+
 				print(rhoN_list)
 				print(N_list)
 				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
