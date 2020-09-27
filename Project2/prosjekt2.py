@@ -4,10 +4,9 @@ import sys, time, argparse
 
 import numpy             as np
 import pandas            as pd
+import seaborn 			 as sns
 import matplotlib.pyplot as plt
 
-# should imports be under name/main?
-# if creating a module (?)/importing the program/function to another script...
 
 # http://arma.sourceforge.net/docs.html#eig_sym
 # http://compphysics.github.io/ComputationalPhysics/doc/pub/eigvalues/pdf/eigvalues-print.pdf
@@ -195,32 +194,92 @@ def rho(N, rho0, rhoN, h, electron=1, w=0.01):
 			v[i] = potential(r[i], electron, w) #+ OrbitalFactor/(r[i]*r[i]) #????
 	return v
 
-def plot_eigenvectors(rho0, rhoN, N, eigenvectors, labels=None):
+def plot_eigenvectors(rho0, rhoN, N, eigenvectors, title='', labels=None):
 	"""
 	"""
-	y_ = 0.05
+	#y_ = np.max(eigenvectors)
 	r_ = np.linspace(rho0, rhoN, N)
 
 	for i in range(len(eigenvectors)):
-		plt.plot(r_, eigenvectors[i]**2, label=labels[i])
+		plt.plot(r_, eigenvectors[i], label=labels[i])
 
 	#plt.axis([0.0,rhoN,0.0, y_])
 	plt.legend()
+	# Er xlabel og ylabel riktig? Både for beam og quantum??
+	plt.xlabel(r'$u(\rho)$')     
+	plt.ylabel(r'$|u(\rho)|^2$')
+	plt.title(title)
 	plt.show()
 
-def Q_closed(w_r):
+def N_iterations(N_list, diag, non_diag):
+	"""
+	Vi regner ut cpu her,
+	så kanskje ha med numpy også,
+	så får vi mange cpu tider?
+	"""
 
-	m = 0
+	it_list = []
+	for i in range(len(N_list)):
 
-	r0 = (2*w_r**2)**(-1/3)
-	V0 = (3/2) * (w_r)**(2/3)
-	we = np.sqrt(3)*w_r
+		N = N_list[i]
+		A = Toeplitz(N, diag, non_diag)
 
-	em = V0 + we*(m+(1/2))
+		# Calculate analytical eigenpairs
+		lam_eigen, u_eigen = AnalyticalEigenpairs(N, diag, non_diag)  # first level 1, not 0
 
-	return em
-	
+		# Calculate eigenpairs with Jacobi and sort
+		EigVal, EigVec, iterations, cpu = Jacobi(A, N, epsilon=1e-8, max_it=10**6)
+		EigVal_Jac, EigVec_Jac          = SortEigenpairs(EigVal, EigVec)
+		it_list.append(iterations)
 
+	# Er dette riktig????
+	fit = np.polyfit(N_list, it_list, 2)
+	print(fit)
+	plt.plot(N_list, it_list, label=(r'%.2f $N^2$' %fit[0]))
+	plt.xlabel('Size of a NxN matrix')
+	plt.ylabel('Number of iterations')
+	plt.title('Similarity transformations')
+	plt.legend()
+	plt.show()
+
+def real_lambdas(n):
+    return (4*n + 3)
+
+def N_rho(N, rho0, rhoN_list, h, diag, non_diag):
+	"""
+	Siden vi tidligere har sett at Jacobi
+	gir veldig likt svar som numpy (men bruker mye lenger tid)
+	så er det kanskje greit å bruke bare numpy for å finne rho?
+	Kan jo kanskje ikke anta Jacobi er like bra for alle N, men... 
+	"""
+
+	# Analytical eigenvalues
+	lam_eigen  = [3, 7, 11, 15]
+	errors = []
+	err = np.zeros((10,10))
+
+	for i in range(len(rhoN_list)):
+		for j in range(len(N_list)):
+			rho_values = rho(N_list[j], rho0, rhoN_list[i], h, electron=1)
+			new_diag   = diag+rho_values
+			A 		   = Toeplitz(N_list[j], new_diag, non_diag)
+
+			# Calculate eigenpairs with numpy and sort
+			EigVal_np, EigVec_np = np.linalg.eig(A) # eigh
+			#EigVal_np, EigVec_np = SortEigenpairs(EigVal_np, EigVec_np)
+
+			#err[i,j] = np.mean(abs(lam_eigen-real_lambdas(np.arange(len(EigVal_np))))) # or max????
+			#errors.append(np.mean(err))
+			err[j,i] = np.max(np.abs(EigVal_np - real_lambdas(np.arange(len(EigVal_np)))))
+
+	#data = np.array([[rhoN_list], [N_list], [errors]])
+	print(err)
+	fig, ax = plt.subplots()
+	#im = ax.imshow(err)
+	#fig.colorbar(im)
+	ax = sns.heatmap(err)
+
+	plt.show()
 
 if __name__ == "__main__":
 
@@ -231,8 +290,6 @@ if __name__ == "__main__":
 	group = parser.add_mutually_exclusive_group()
 	group.add_argument('-B', '--beam',    action="store_true", help="The buckling beam problem")
 	group.add_argument('-Q', '--quantum', action="store_true", help="Quantum mechanics")
-
-	# Just a thought: adding mutually exclusive for method numpy/jacobi ???
 
 	# Optional arguments for input values, default values are set
 	parser.add_argument('-e', type=int, nargs='?', default= 1,   help="number of electrons (use 1 or 2)")
@@ -250,16 +307,6 @@ if __name__ == "__main__":
 	QuantumMechanics   = args.quantum
 	n_electrons        = args.e
 
-	# N = args.n
-	# muligens lage flere optional inputs m/default verdier etterhvert
-	# (N, maxit, rho0, rhoN), spørs litt på oppsettet vi ender opp med
-
-	# Buckling Beam:
-	# max_it=10^6 and running for different N and print iterations 
-	# [N, iterations] [3,9] [10,153] [100, 17664] [200, 71112]
-	# also printing maxnondiag to see if 
-	# the last max non diagonal is close to zero
-	# max_it = 2*(N**2) ish??
 
 	N = 50             # matrix dimension (N=4 does not work. Need to fix?) Quantum: 400
 	max_it = 2*N**2     # max iterations
@@ -272,16 +319,25 @@ if __name__ == "__main__":
 	diag     = 2/h**2   # diagonal elements 
 	non_diag = -1/h**2  # non-diagonal elements
 
+	optional_values = True
 
 	if BucklingBeam:
 		print('\nThe buckling beam problem\n')  # exercise 2b
 
-		A = Toeplitz(N, diag, non_diag)
+		if optional_values:
+			N_list = np.linspace(3, 50, 10).round().astype(int)
+			N_iterations(N_list, diag, non_diag)
+			sys.exit()
 
-		# Calculate analytical eigenpairs
-		lam_eigen, u_eigen = AnalyticalEigenpairs(N, diag, non_diag)  # first level 1, not 0
-	
-	'''
+		else:
+
+			A = Toeplitz(N, diag, non_diag)
+
+			# Calculate analytical eigenpairs
+			lam_eigen, u_eigen = AnalyticalEigenpairs(N, diag, non_diag)  # first level 1, not 0
+
+
+
 	if QuantumMechanics:
 		print('\nQuantum dots in 3 dimensions')
 
@@ -289,12 +345,20 @@ if __name__ == "__main__":
 		if n_electrons == 1:
 			print('-- one electron\n')
 
-			rho_values = rho(N, rho0, rhoN, h, electron=1)
-			new_diag   = diag+rho_values
-			A 		   = Toeplitz(N, new_diag, non_diag)
+			if optional_values:
+				rhoN_list = np.linspace(1,10,10).astype(int)
+				N_list = np.linspace(20, 200, 10).astype(int)
+				print(rhoN_list)
+				print(N_list)
+				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
 
-			# Analytical eigenvalues, skal disse 'regnes ut'?
-			lam_eigen  = [3, 7, 11, 15] 
+			else:
+				rho_values = rho(N, rho0, rhoN, h, electron=1)
+				new_diag   = diag+rho_values
+				A 		   = Toeplitz(N, new_diag, non_diag)
+
+				# Analytical eigenvalues, skal disse 'regnes ut'?
+				lam_eigen  = [3, 7, 11, 15] 
 
 		# exercise 2e, 'helium'?
 		elif n_electrons == 2:
@@ -334,15 +398,16 @@ if __name__ == "__main__":
 			labels = [r'$\omega =0.01$', r'$\omega =0.25$', r'$\omega =0.5$', r'$\omega =1$', r'$\omega =5$']
 			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest, labels=labels)
 			sys.exit()
-	'''		
+
+	
 
 	# Calculate eigenpairs with numpy and sort, numpy CPU time
 	start                = time.time()
-	EigVal_np, EigVec_np = np.linalg.eig(A) # or np.linalg.eig(A)????????
+	EigVal_np, EigVec_np = np.linalg.eig(A) # eigh
 	end                  = time.time()
 	numpy_cpu            = (end-start)
 	EigVal_np, EigVec_np = SortEigenpairs(EigVal_np, EigVec_np)
-	
+
 	# Calculate eigenpairs with Jacobi and sort
 	EigVal, EigVec, iterations, cpu = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
 	EigVal_Jac, EigVec_Jac          = SortEigenpairs(EigVal, EigVec)
@@ -354,6 +419,8 @@ if __name__ == "__main__":
 	print('')
 	print('Jacobi iterations: %g' %iterations)
 	print('Jacobi cpu time  : %.2f s' %cpu)
+		
+
 
 	
 	if BucklingBeam:
@@ -362,11 +429,15 @@ if __name__ == "__main__":
 		# Plotting the eigenvector for the lowest eigenvalue,
 		# so just the first eigenvector? Or is it nice with 2, 3.. 
 		# eigvect or eigvect**2??
-		rho = np.linspace(rho0, rhoN, N)
-		plt.plot(rho, FirstEigVec_analytical, label='Analytical')
-		plt.plot(rho, FirstEigVec_Jacobi, label='Jacobi')
-		plt.title('The eigenvector for the lowest eigenvalue')
-		plt.legend()
-		plt.show()
+		#rho = np.linspace(rho0, rhoN, N)
+		#plt.plot(rho, FirstEigVec_analytical, label='Analytical')
+		#plt.plot(rho, FirstEigVec_Jacobi, label='Jacobi')
+		#plt.title('The eigenvector for the lowest eigenvalue')
+		#plt.legend()
+		#plt.show()
+		eigenvectors = np.array([FirstEigVec_analytical, FirstEigVec_Jacobi])
+		labels = ['Analytical', 'Jacobi']
+		title  = 'The eigenvector for the lowest eigenvalue'
+		plot_eigenvectors(rho0, rhoN, N, eigenvectors, title=title, labels=labels)
 	
 	
