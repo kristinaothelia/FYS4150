@@ -279,14 +279,15 @@ def N_rho(N, rho0, rhoN_list, h, diag, non_diag):
     """
 
     # Analytical eigenvalues
-    lam_eigen = [3., 7, 11, 15]
-    errors    = []
-    err       = np.zeros((10,10))
+    lam_eigen = [3, 7, 11, 15]
+    err       = np.zeros((len(rhoN_list),len(N_list)))
 
     for i in range(len(rhoN_list)):
         for j in range(len(N_list)):
 
             h_new = (rhoN_list[i] - rho0)/N_list[j]
+            diag     = 2/h**2   		# diagonal elements
+            non_diag = -1/h**2  		# non-diagonal elements
 
             rho_values = rho(N_list[j], rho0, rhoN_list[i], h_new, electron=1)
             new_diag   = diag+rho_values
@@ -299,16 +300,23 @@ def N_rho(N, rho0, rhoN_list, h, diag, non_diag):
             #sys.exit(1)
 
             #print(EigVal_np[0])
-            #err[i,j] = np.mean(abs(EigVal_np-real_lambdas(np.arange(N_list[j])))) # or max????
-            err[i,j] = abs(EigVal_np[0] - lam_eigen[0])
+            #err[i,j] = np.max(abs(EigVal_np-real_lambdas(np.arange(N_list[j])))) # or mean????
+            #err[i,j] = abs(EigVal_np[0] - lam_eigen[0])
+            err[i,j] = np.mean(abs(EigVal_np[:4] - lam_eigen))
+
             #print(err[i,j])
 
-    print('hi')
     #print(err[:,0])
+    err = np.log10(err)
+    max_ = np.max(err).round(0)  # = 3
     fig, ax = plt.subplots()
-    ax      = sns.heatmap(err, xticklabels=N_list, yticklabels=rhoN_list)
+    ax      = sns.heatmap(err, xticklabels=rhoN_list, yticklabels=N_list, vmin=0, vmax=max_)
     ax.invert_yaxis()
     #plt.imshow(err, origin='lower', extent=[20,200,10,100])#, extent=[20,200,10,100])
+    plt.title('Logarithmic Mean Error')
+    plt.xlabel(r'$\rho_N$')
+    plt.ylabel(r'$N$')
+    plt.savefig('Results/N_rhoN_heatmap.png')
     plt.show()
 
 if __name__ == "__main__":
@@ -337,18 +345,9 @@ if __name__ == "__main__":
 	QuantumMechanics   = args.quantum
 	n_electrons        = args.e
 
-
-	N 	   	 = 50             	# matrix dimension (N=4 does not work. Need to fix?) Quantum: 400
-	max_it 	 = 2*N**2     		# max iterations
-
-	rho0   	 = 0            	# rho min
-	rhoN   	 = 1           		# rho max  morten uses 10 in 2d, why??
-
-	h      	 = (rhoN-rho0)/N   	# step length (h = rhoN/(N+1))  ish 0.025 for quantum
-	diag     = 2/h**2   		# diagonal elements
-	non_diag = -1/h**2  		# non-diagonal elements
-
-	optional_values = True
+	#######################
+	optional_values = False
+	#######################
 
 	if BucklingBeam:
 		print('\nThe buckling beam problem\n')  # exercise 2b
@@ -360,6 +359,14 @@ if __name__ == "__main__":
 
 		else:
 
+			N 	   	 = 50             	# matrix dimension
+			max_it 	 = 2*N**2     		# max iterations
+			rho0   	 = 0            	# rho min
+			rhoN   	 = 1           		# rho max
+			h      	 = (rhoN-rho0)/N   	# step length (h = rhoN/(N+1))
+			diag     = 2/h**2   		# diagonal elements
+			non_diag = -1/h**2  		# non-diagonal elements
+
 			A = Toeplitz(N, diag, non_diag)
 
 			# Calculate analytical eigenpairs
@@ -370,17 +377,27 @@ if __name__ == "__main__":
 	if QuantumMechanics:
 		print('\nQuantum dots in 3 dimensions')
 
+		N 	   	 = 75             	# matrix dimension
+		max_it 	 = 2*N**2     		# max iterations
+		rho0   	 = 0            	# rho min
+		rhoN   	 = 7           		# rho max
+		h      	 = (rhoN-rho0)/N   	# step length (h = rhoN/(N+1))
+		diag     = 2/h**2   		# diagonal elements
+		non_diag = -1/h**2  		# non-diagonal elements
+
 		# exercise 2d, 'hydrogen'?
 		if n_electrons == 1:
 			print('-- one electron\n')
 
 			if optional_values:
 				### DOES NOT WORK......(yet!) ###
-				rhoN_list = np.linspace(1,100,10).astype(int)
-				N_list = np.linspace(20, 200, 10).astype(int)
+				rhoN_list = np.linspace(1,10,10).astype(int)
+				N_list = np.linspace(25, 250, 10).astype(int)
 				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
+				sys.exit()
 
 			else:
+
 				rho_values = rho(N, rho0, rhoN, h, electron=1)
 				new_diag   = diag+rho_values
 				A 		   = Toeplitz(N, new_diag, non_diag)
@@ -403,14 +420,25 @@ if __name__ == "__main__":
 				A          = Toeplitz(N, new_diag, non_diag)
 
 				# we should probably switch this out with Jacobi????
-				EigVal_np, EigVec_np, numpy_cpu = EigenPairsNumpy(A)
+				#EigVal_np, EigVec_np, numpy_cpu = EigenPairsNumpy(A)
+				# only interested in lowest states
+				#EigVec_lowest.append(EigVec_np[:,0])
+
+				# Calculate eigenpairs with Jacobi and sort
+				EigVal, EigVec, iterations, cpu = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
+				EigVal_Jac, EigVec_Jac          = SortEigenpairs(EigVal, EigVec)
 
 				# only interested in lowest states
-				EigVec_lowest.append(EigVec_np[:,0])
+				EigVec_lowest.append(EigVec_Jac[:,0])
 
 			EigVec_lowest = np.array(EigVec_lowest)
-			labels = [r'$\omega =0.01$', r'$\omega =0.25$', r'$\omega =0.5$', r'$\omega =1$', r'$\omega =5$']
-			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, labels=labels)
+			labels = [r'$\lambda_0, \omega =0.01$', 
+					  r'$\lambda_0, \omega =0.25$',
+					  r'$\lambda_0, \omega =0.5$',
+					  r'$\lambda_0, \omega =1$',
+					  r'$\lambda_0, \omega =5$']
+			method = 'Quantum dots in 3D (two particles)'
+			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, method=method, labels=labels)
 			sys.exit()
 
 
@@ -430,6 +458,15 @@ if __name__ == "__main__":
 		FirstEigVec_analytical = u_eigen[1,:]
 		FirstEigVec_Jacobi     = EigVec_Jac[:,0]
 
-		eigenvectors = np.array([FirstEigVec_analytical, FirstEigVec_Jacobi])
-		labels = [r'Analytical $\lambda_0$', r'Jacobi $\lambda_0$']
+		SecondEigVec_analytical = u_eigen[2,:]
+		SecondEigVec_Jacobi     = EigVec_Jac[:,1]
+
+		eigenvectors = np.array([FirstEigVec_analytical,
+								 FirstEigVec_Jacobi,
+								 SecondEigVec_analytical,
+								 SecondEigVec_Jacobi])
+		labels = [r'Analytical $\lambda_0$',
+		          r'Jacobi $\lambda_0$',
+		          r'Analytical $\lambda_1$',
+		          r'Jacobi $\lambda_1$']
 		plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='The Buckling Beam', labels=labels, save=True)
