@@ -223,13 +223,15 @@ def plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='', labels=None, save=
     if BB:
     	plt.xlabel(r'$\rho$', fontsize=15)
     	plt.ylabel(r'$u(\rho)$', fontsize=15)
+    	if save == True:
+    		plt.savefig('Results/EigVec_%s_r0[%g]_rN[%g]_N[%g].png' % (method, rho0, rhoN, N))
     else:
     	plt.xlabel(r'$\rho$', fontsize=15)
     	plt.ylabel(r'$|u(\rho)|^2$', fontsize=15)
+    	if save == True:
+    		plt.savefig('Results/LowestEigVec_omega.png')
 
     plt.title('Eigenvectors - %s' %method, fontsize=15)
-    if save == True:
-    	plt.savefig('Results/EigVec_%s_r0[%g]_rN[%g]_N[%g].png' % (method, rho0, rhoN, N))
     plt.show()
 
 def N_iterations(N_list, diag, non_diag):
@@ -447,7 +449,7 @@ if __name__ == "__main__":
 					  r'$\lambda_0, \omega =1$',
 					  r'$\lambda_0, \omega =5$']
 			method = 'Quantum dots in 3D (two particles)'
-			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, method=method, labels=labels, BB=False)
+			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, method=method, labels=labels, save=True, BB=False)
 			sys.exit()
 
 
