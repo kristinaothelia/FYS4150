@@ -202,35 +202,27 @@ def rho(N, rho0, rhoN, h, electron=1, w=0.01):
 			v[i] = potential(r[i], electron, w)
 	return v
 
-def plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='', labels=None, save=False, BB = True):
-    """
-    Justere figsize
-    BB: Boolean statement to assign labels to x and y axes. If True, it will plot
-    the vetical displacement of the buckling beam from its equilibrium point.
-    If False it will plot the probability distribution of the position of the
-    electrons inside the harmonic oscillator potential.
-    """
-    #y_ = np.max(eigenvectors)
-    r_ = np.linspace(rho0, rhoN, N)
-    fig, ax = plt.subplots(figsize=(7,5))
+def plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='', labels=None, save=False):
+	"""
+	Justere figsize
+    legger til if-test for å plotte u(rho) for bucling beam og QM
+	"""
+	#y_ = np.max(eigenvectors)
+	r_ = np.linspace(rho0, rhoN, N)
+	fig, ax = plt.subplots(figsize=(7,5))
 
-    for i in range(len(eigenvectors)):
-    	plt.plot(r_, eigenvectors[i], label=labels[i])
+	for i in range(len(eigenvectors)):
+		plt.plot(r_, eigenvectors[i], label=labels[i])
 
-    #plt.axis([0.0,rhoN,0.0, y_])
-    plt.legend()
-    # Er xlabel og ylabel riktig? Både for beam og quantum??
-    if BB:
-    	plt.xlabel(r'$\rho$', fontsize=15)
-    	plt.ylabel(r'$u(\rho)$', fontsize=15)
-    else:
-    	plt.xlabel(r'$\rho$', fontsize=15)
-    	plt.ylabel(r'$|u(\rho)|^2$', fontsize=15)
-
-    plt.title('Eigenvectors - %s' %method, fontsize=15)
-    if save == True:
-    	plt.savefig('Results/EigVec_%s_r0[%g]_rN[%g]_N[%g].png' % (method, rho0, rhoN, N))
-    plt.show()
+	#plt.axis([0.0,rhoN,0.0, y_])
+	plt.legend()
+	# Er xlabel og ylabel riktig? Både for beam og quantum??
+	plt.xlabel(r'$\rho$', fontsize=15)
+	plt.ylabel(r'$u(\rho)$', fontsize=15)
+	plt.title('Eigenvectors - %s' %method, fontsize=15)
+	if save == True:
+		plt.savefig('Results/EigVec_%s_r0[%g]_rN[%g]_N[%g].png' % (method, rho0, rhoN, N))
+	plt.show()
 
 def N_iterations(N_list, diag, non_diag):
 	"""
@@ -403,7 +395,7 @@ if __name__ == "__main__":
 				rhoN_list = np.linspace(1,10,10).astype(int)
 				N_list = np.linspace(25, 250, 10).astype(int)
 				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
-				#sys.exit()
+				sys.exit()
 
 			else:
 
@@ -447,7 +439,7 @@ if __name__ == "__main__":
 					  r'$\lambda_0, \omega =1$',
 					  r'$\lambda_0, \omega =5$']
 			method = 'Quantum dots in 3D (two particles)'
-			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, method=method, labels=labels, BB=False)
+			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, method=method, labels=labels)
 			sys.exit()
 
 
@@ -478,4 +470,4 @@ if __name__ == "__main__":
 		          r'Jacobi $\lambda_0$',
 		          r'Analytical $\lambda_1$',
 		          r'Jacobi $\lambda_1$']
-		plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='The Buckling Beam', labels=labels, save=True, BB=True)
+		plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='The Buckling Beam', labels=labels, save=True)
