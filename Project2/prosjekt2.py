@@ -202,7 +202,7 @@ def rho(N, rho0, rhoN, h, electron=1, w=0.01):
 			v[i] = potential(r[i], electron, w)
 	return v
 
-def plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='', labels=None, save=False, BB = True):
+def plot_eigenvectors(rho0, rhoN, N, eigenvectors, labels=None, save=False, BB = True):
     """
     Justere figsize
     BB: Boolean statement to assign labels to x and y axes. If True, it will plot
@@ -223,15 +223,15 @@ def plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='', labels=None, save=
     if BB:
     	plt.xlabel(r'$\rho$', fontsize=15)
     	plt.ylabel(r'$u(\rho)$', fontsize=15)
+    	plt.title('Eigenvectors - The Buckling Beam', fontsize=15)
     	if save == True:
-    		plt.savefig('Results/EigVec_%s_r0[%g]_rN[%g]_N[%g].png' % (method, rho0, rhoN, N))
+    		plt.savefig('Results/EigVec_r0[%g]_rN[%g]_N[%g].png' % (rho0, rhoN, N))
     else:
     	plt.xlabel(r'$\rho$', fontsize=15)
     	plt.ylabel(r'$|u(\rho)|^2$', fontsize=15)
+    	plt.title(r'Eigenvectors for varying $\omega$', fontsize=15)
     	if save == True:
     		plt.savefig('Results/LowestEigVec_omega.png')
-
-    plt.title('Eigenvectors - %s' %method, fontsize=15)
     plt.show()
 
 def N_iterations(N_list, diag, non_diag):
@@ -448,8 +448,7 @@ if __name__ == "__main__":
 					  r'$\lambda_0, \omega =0.5$',
 					  r'$\lambda_0, \omega =1$',
 					  r'$\lambda_0, \omega =5$']
-			method = 'Quantum dots in 3D (two particles)'
-			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, method=method, labels=labels, save=True, BB=False)
+			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, labels=labels, save=True, BB=False)
 			sys.exit()
 
 
@@ -480,4 +479,4 @@ if __name__ == "__main__":
 		          r'Jacobi $\lambda_0$',
 		          r'Analytical $\lambda_1$',
 		          r'Jacobi $\lambda_1$']
-		plot_eigenvectors(rho0, rhoN, N, eigenvectors, method='The Buckling Beam', labels=labels, save=True, BB=True)
+		plot_eigenvectors(rho0, rhoN, N, eigenvectors, labels=labels, save=True, BB=True)
