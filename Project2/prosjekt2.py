@@ -342,7 +342,7 @@ if __name__ == "__main__":
 	n_electrons        = args.e
 
 	#######################
-	optional_values = False  # = True: finding optimal values
+	optimal_values = False  # = True: finding optimal values
 	#######################
 
 	if BucklingBeam:
@@ -351,7 +351,7 @@ if __name__ == "__main__":
 		rho0   	 = 0            	# rho min
 		rhoN   	 = 1           		# rho max
 
-		if optional_values:
+		if optimal_values:
 			print('\nFinding Similarity transformations\n')
 			N_list = np.linspace(3, 50, 10).round().astype(int)
 			N_iterations(N_list, rho0, rhoN)
@@ -387,7 +387,7 @@ if __name__ == "__main__":
 		if n_electrons == 1:
 			print('-- one electron\n')
 
-			if optional_values:
+			if optimal_values:
 				print('\nFinding optimal N and rho max\n')
 				rhoN_list = np.linspace(1,10,10).astype(int)
 				N_list = np.linspace(25, 250, 10).astype(int)
