@@ -7,11 +7,11 @@ usage: prosjekt2.py [-h] [-B | -Q] [-e [E]]
 
 Project 2 in FYS4150 - Computational Physics
 
-optional arguments:
-  -h, --help     show this help message and exit
-  -B, --beam     The buckling beam problem
-  -Q, --quantum  Quantum mechanics
-  -e [E]         number of electrons (use 1 or 2)
+optional arguments:  
+  -h, --help     show this help message and exit  
+  -B, --beam     The buckling beam problem  
+  -Q, --quantum  Quantum mechanics  
+  -e [E]         number of electrons (use 1 or 2)  
 
 --------------------------------------------------------------
 ### **Examples of how to run the code**
