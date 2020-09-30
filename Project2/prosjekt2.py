@@ -230,7 +230,7 @@ def plot_eigenvectors(rho0, rhoN, N, eigenvectors, labels=None, save=False, BB =
     		plt.savefig('Results/LowestEigVec_omega.png')
     plt.show()
 
-def N_iterations(N_list, diag, non_diag):
+def N_iterations(N_list, rho0, rhoN):
 	"""
 	Finding number of iterations as a function of N
 	and compares cpu time for numpy and Jacobi
@@ -240,6 +240,10 @@ def N_iterations(N_list, diag, non_diag):
 	cpu_numpy  = []
 
 	for i in range(len(N_list)):
+
+		h      	 = (rhoN-rho0)/N_list[i]  # step length (h = rhoN/(N+1))
+		diag     = 2/h**2   		      # diagonal elements
+		non_diag = -1/h**2  		      # non-diagonal elements
 
 		N = N_list[i]
 		A = Toeplitz(N, diag, non_diag)
@@ -344,17 +348,19 @@ if __name__ == "__main__":
 	if BucklingBeam:
 		print('\nThe buckling beam problem\n')  # exercise 2b
 
+		rho0   	 = 0            	# rho min
+		rhoN   	 = 1           		# rho max
+
 		if optional_values:
+			print('\nFinding Similarity transformations\n')
 			N_list = np.linspace(3, 50, 10).round().astype(int)
-			N_iterations(N_list, diag, non_diag)
+			N_iterations(N_list, rho0, rhoN)
 			sys.exit()
 
 		else:
 
 			N 	   	 = 50             	# matrix dimension
 			max_it 	 = 2*N**2     		# max iterations
-			rho0   	 = 0            	# rho min
-			rhoN   	 = 1           		# rho max
 			h      	 = (rhoN-rho0)/N   	# step length (h = rhoN/(N+1))
 			diag     = 2/h**2   		# diagonal elements
 			non_diag = -1/h**2  		# non-diagonal elements
@@ -382,6 +388,7 @@ if __name__ == "__main__":
 			print('-- one electron\n')
 
 			if optional_values:
+				print('\nFinding optimal N and rho max\n')
 				rhoN_list = np.linspace(1,10,10).astype(int)
 				N_list = np.linspace(25, 250, 10).astype(int)
 				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
