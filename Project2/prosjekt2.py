@@ -1,14 +1,10 @@
 import sys, time, argparse
 
-#from tabulate import tabulate
-
 import numpy             as np
 import pandas            as pd
 import seaborn 			 as sns
 import matplotlib.pyplot as plt
 
-# http://arma.sourceforge.net/docs.html#eig_sym
-# http://compphysics.github.io/ComputationalPhysics/doc/pub/eigvalues/pdf/eigvalues-print.pdf
 
 def Toeplitz(n, diag, non_diag):
 	"""
@@ -21,7 +17,8 @@ def Toeplitz(n, diag, non_diag):
 
 def EigenPairsNumpy(A):
 	"""
-	Function that calculates eigenpairs using numpy
+	Function that calculates eigenpairs (using numpy)
+	and the cpu time, and returns them
 	"""
 	start                = time.time()
 	EigVal_np, EigVec_np = np.linalg.eig(A) # eigh
@@ -37,7 +34,7 @@ def AnalyticalEigenpairs(n, d, a):
 	Computes the analytical values for the eigenpairs
 	for the buckling beam problem.
 	"""
-	# should it be n-1??
+
 	j   = np.linspace(1, n)  #j = 1,2,...,(n-1)
 	lam = d + 2*a*np.cos(j*np.pi/n)
 	u   = np.zeros([n, n])
@@ -63,6 +60,7 @@ def SortEigenpairs(EigVal, EigVec):
 def create_df(analyticals, numpys, jacobis):
 	"""
 	Function returning a pandas dataframe
+	with eigenvalues (analytical, numpy, jacobi)
 	"""
 	columns = ['analytical', 'numpy', 'jacobi']
 	eigvals = np.stack([analyticals, numpys, jacobis], axis=1)
@@ -74,12 +72,13 @@ def create_df(analyticals, numpys, jacobis):
 def MaxNonDiag(A, n):
 	"""
 	Function to find the maximum non diagonal element
+	of a matrix A, with size nxn
 	"""
 	maxnondiag = 0.0
 
 	for i in range(n):
 		for j in range(i+1, n):
-			### >
+
 			if abs(A[i,j]) >= maxnondiag:
 				maxnondiag = abs(A[i,j])
 				k = i
@@ -90,7 +89,8 @@ def MaxNonDiag(A, n):
 
 def Jacobi(A, n, epsilon=1e-8, max_it=1e4):
 	"""
-	The Jacobi method for finding eigenpairs
+	The Jacobi method for finding eigenpairs,
+	returns eigenpairs, iterations and cpu time
 	"""
 	start      = time.time()
 	iterations = 0
@@ -106,10 +106,9 @@ def Jacobi(A, n, epsilon=1e-8, max_it=1e4):
 		maxnondiag, k, l = MaxNonDiag(A,n)
 		iterations 		+= 1
 
-	# ha med noe sånt????
-	#if maxnondiag >= epsilon:
-	#	print('Non diagonals are not zero, increase max_it')
-	#	sys.exit()
+	if maxnondiag >= epsilon:
+		print('Non diagonals are not zero, increase max_it')
+		sys.exit()
 
 	EigenVec = R
 	EigenVal = np.diag(A)   # extracts diagonal
@@ -122,7 +121,7 @@ def Jacobi(A, n, epsilon=1e-8, max_it=1e4):
 
 def JacobiRotation(A, R, k, l, n):
 	"""
-	Jacobi rotation
+	Jacobi rotation for finding the new matrix elements
 	"""
 
 	if A[k,l] != 0:
@@ -130,18 +129,16 @@ def JacobiRotation(A, R, k, l, n):
 		tau = (A[l,l] - A[k,k]) / (2 * A[k,l])
 		# rewrite tau-expression to avoid numerical issues
 		if tau >= 0:
-			#t = -tau + np.sqrt(1 + tau**2)
 			t = 1.0/(tau + np.sqrt(1.0 + tau**2))
 		else:
-			#t = -tau - np.sqrt(1 + tau**2)
 			t = -1.0/(-tau + np.sqrt(1.0 + tau**2))
 
 		c = 1 / np.sqrt(1 + t**2)
 		s = c * t
 
 	else:
-		c = 1   # cos(theta)?
-		s = 0   # sin(theta)?
+		c = 1 
+		s = 0
 
 	a_kk = A[k,k] # diagonalen
 	a_ll = A[l,l] # diagonalen
@@ -149,8 +146,8 @@ def JacobiRotation(A, R, k, l, n):
 	A[k,k] = c**2 * a_kk - 2 * c * s * A[k,l] + s**2 * a_ll
 	A[l,l] = s**2 * a_kk + 2 * c * s * A[k,l] + c**2 * a_ll
 
-	A[k,l] = 0
-	A[l,k] = 0
+	A[k,l] = 0 # hard-coding non-diagonal elements
+	A[l,k] = 0 # hard-coding non-diagonal elements 
 
 	for i in range(n):
 
@@ -162,7 +159,7 @@ def JacobiRotation(A, R, k, l, n):
 			A[i,l] = c*a_il + s*a_ik
 			A[l,i] = A[i,l]
 
-		# new eigenvectors
+		# the new eigenvectors
 		r_ik = R[i,k]
 		r_il = R[i,l]
 
@@ -210,16 +207,15 @@ def plot_eigenvectors(rho0, rhoN, N, eigenvectors, labels=None, save=False, BB =
     If False it will plot the probability distribution of the position of the
     electrons inside the harmonic oscillator potential.
     """
-    #y_ = np.max(eigenvectors)
+
     r_ = np.linspace(rho0, rhoN, N)
     fig, ax = plt.subplots(figsize=(7,5))
 
     for i in range(len(eigenvectors)):
     	plt.plot(r_, eigenvectors[i], label=labels[i])
 
-    #plt.axis([0.0,rhoN,0.0, y_])
     plt.legend()
-    # Er xlabel og ylabel riktig? Både for beam og quantum??
+
     if BB:
     	plt.xlabel(r'$\rho$', fontsize=15)
     	plt.ylabel(r'$u(\rho)$', fontsize=15)
@@ -236,7 +232,8 @@ def plot_eigenvectors(rho0, rhoN, N, eigenvectors, labels=None, save=False, BB =
 
 def N_iterations(N_list, diag, non_diag):
 	"""
-	iterations, cpu times
+	Finding number of iterations as a function of N
+	and compares cpu time for numpy and Jacobi
 	"""
 	it_list    = []
 	cpu_jacobi = []
@@ -260,13 +257,13 @@ def N_iterations(N_list, diag, non_diag):
 		cpu_numpy.append(numpy_cpu)
 		cpu_jacobi.append(cpu)
 
-	# Troooor dette er riktig? For faa desimaler..?
+	# cpu times saved as .txt file 
 	columns   = ['numpy', 'jacobi']
 	cpu_times = np.stack([cpu_numpy, cpu_jacobi], axis=1)
 	df        = pd.DataFrame(cpu_times, columns=columns).round(2)
 	df.to_csv('Results/cpu_times.txt', index=None, sep='\t', mode='a')
 
-	# Er dette riktig????
+
 	fit = np.polyfit(N_list, it_list, 2)
 	print(fit)
 	plt.plot(N_list, it_list, label=(r'%.2f $N^2$' %fit[0]))
@@ -277,16 +274,10 @@ def N_iterations(N_list, diag, non_diag):
 	plt.savefig('Results/BucklingBeam_N_iterations.png')
 	plt.show()
 
-def real_lambdas(n):
-    return (4*n + 3)
 
 def N_rho(N, rho0, rhoN_list, h, diag, non_diag):
     """
-    Siden vi tidligere har sett at Jacobi
-    gir veldig likt svar som numpy (men bruker mye lenger tid)
-    så er det kanskje greit å bruke bare numpy for å finne rho?
-    Kan jo kanskje ikke anta Jacobi er like bra for alle N, men...
-    ja, ihvertfall mens vi prøver å få ting til å funke :)
+    Using numpy to find optimal combination of N and rho max
     """
 
     # Analytical eigenvalues
@@ -307,23 +298,15 @@ def N_rho(N, rho0, rhoN_list, h, diag, non_diag):
             # Calculate eigenpairs with numpy and sort
             EigVal_np, EigVec_np = np.linalg.eig(A) # eigh
             EigVal_np, EigVec_np = SortEigenpairs(EigVal_np, EigVec_np)
-            #print(EigVal_np)
-            #sys.exit(1)
 
-            #print(EigVal_np[0])
-            #err[i,j] = np.max(abs(EigVal_np-real_lambdas(np.arange(N_list[j])))) # or mean????
-            #err[i,j] = abs(EigVal_np[0] - lam_eigen[0])
             err[i,j] = np.mean(abs(EigVal_np[:4] - lam_eigen))
 
-            #print(err[i,j])
 
-    #print(err[:,0])
     err = np.log10(err)
     max_ = np.max(err).round(0)  # = 3
     fig, ax = plt.subplots()
     ax      = sns.heatmap(err, xticklabels=rhoN_list, yticklabels=N_list, vmin=0, vmax=max_)
     ax.invert_yaxis()
-    #plt.imshow(err, origin='lower', extent=[20,200,10,100])#, extent=[20,200,10,100])
     plt.title('Logarithmic Mean Error')
     plt.xlabel(r'$\rho_N$')
     plt.ylabel(r'$N$')
@@ -342,11 +325,9 @@ if __name__ == "__main__":
 
 	# Optional arguments for input values, default values are set
 	parser.add_argument('-e', type=int, nargs='?', default= 1,   help="number of electrons (use 1 or 2)")
-	#parser.add_argument('-n', type=int, nargs='?', default= 100, help="dimensionality of matrix")
 
 
 	# If a mutual exclusive argument is not provided -> help message
-	# Maybe: add test for electrons?????
 	if len(sys.argv) <= 1:
 		sys.argv.append('--help')
 
@@ -357,7 +338,7 @@ if __name__ == "__main__":
 	n_electrons        = args.e
 
 	#######################
-	optional_values = False
+	optional_values = False  # = True: finding optimal values
 	#######################
 
 	if BucklingBeam:
@@ -396,16 +377,15 @@ if __name__ == "__main__":
 		diag     = 2/h**2   		# diagonal elements
 		non_diag = -1/h**2  		# non-diagonal elements
 
-		# exercise 2d, 'hydrogen'?
+		# exercise 2d, 'hydrogen'
 		if n_electrons == 1:
 			print('-- one electron\n')
 
 			if optional_values:
-				### DOES NOT WORK......(yet!) ###
 				rhoN_list = np.linspace(1,10,10).astype(int)
 				N_list = np.linspace(25, 250, 10).astype(int)
 				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
-				#sys.exit()
+				sys.exit()
 
 			else:
 
@@ -417,10 +397,10 @@ if __name__ == "__main__":
 		# exercise 2e, 'helium'?
 		elif n_electrons == 2:
 			print('-- two electrons\n')
-			# use N=400 and rhoN = 10  -> h = 0.025 ish
-			omega_list = [0.01, 0.25, 0.5, 1, 5]  # input with default list maybe?
+			omega_list = [0.01, 0.25, 0.5, 1, 5]
 
 			EigVec_lowest = []
+			Eigval_lowest = []
 
 			for w in range(len(omega_list)):
 				omega = omega_list[w]
@@ -430,18 +410,16 @@ if __name__ == "__main__":
 
 				A          = Toeplitz(N, new_diag, non_diag)
 
-				# we should probably switch this out with Jacobi????
-				#EigVal_np, EigVec_np, numpy_cpu = EigenPairsNumpy(A)
-				# only interested in lowest states
-				#EigVec_lowest.append(EigVec_np[:,0])
-
 				# Calculate eigenpairs with Jacobi and sort
 				EigVal, EigVec, iterations, cpu = Jacobi(A, N, epsilon=1e-8, max_it=max_it)
 				EigVal_Jac, EigVec_Jac          = SortEigenpairs(EigVal, EigVec)
 
 				# only interested in lowest states
+				Eigval_lowest.append(EigVal_Jac[0])
 				EigVec_lowest.append(EigVec_Jac[:,0])
 
+			print('\nEigenvalues (ground state)')
+			print(Eigval_lowest)
 			EigVec_lowest = np.array(EigVec_lowest)
 			labels = [r'$\lambda_0, \omega =0.01$',
 					  r'$\lambda_0, \omega =0.25$',
@@ -450,8 +428,12 @@ if __name__ == "__main__":
 					  r'$\lambda_0, \omega =5$']
 			plot_eigenvectors(rho0, rhoN, N, EigVec_lowest**2, labels=labels, save=True, BB=False)
 			sys.exit()
+		else:
+			# if n_electrons != (1 or 2), print help message and exit
+			parser.print_help(sys.stderr)
+			sys.exit()
 
-
+	# For the Buckling Beam & Quantum dots 3D (one particle):
 
 	# Calculate eigenpairs with numpy and sort, numpy CPU time
 	EigVal_np, EigVec_np, numpy_cpu = EigenPairsNumpy(A)
