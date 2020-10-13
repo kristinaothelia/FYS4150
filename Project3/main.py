@@ -20,11 +20,12 @@ Mass     = Data["Mass"].values
 Dist     = Data["Distance to the Sun"].values
 
 #print(Data.loc[:, Data.columns == 'Mass'].values)
-"""
+
+
 print(Planet)
 print(Mass)
 print(Dist)
-"""
+
 
 yr      = 365*24*60*60
 M_Sun   = 1.989*10**30          # [kg]
