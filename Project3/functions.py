@@ -34,7 +34,7 @@ def get_acceleration(GM, t, pos):
     acc   = GM*r_vec / r**3
 
     return acc
-
+'''
 def ForwardEuler(G, ts, pos, vel, dt):
     """
     Forwrd Euler method. Returns position and velocity
@@ -63,7 +63,7 @@ def Verlet(G, ts, pos, vel, acc, dt):
     print("Verlet time: ", time.time()-start_time)
     # Trenger kanskje ikke return..?
     return pos, vel
-
+'''
 
 def Plot_Sun_Earth_system(pos, label=''):
 

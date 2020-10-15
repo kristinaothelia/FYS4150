@@ -39,6 +39,14 @@ class SolarSystem:
         """
         return self.our_system
 
+    """
+    def get_acceleration(GM, t, pos):
+        r_vec = np.array([0, 0]) - pos[t, :]
+        r     = np.sqrt(r_vec[0]**2 + r_vec[1]**2)
+        acc   = GM*r_vec / r**3
+
+        return self.acc
+    """
 
 
 
