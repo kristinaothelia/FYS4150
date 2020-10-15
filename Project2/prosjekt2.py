@@ -268,7 +268,7 @@ def N_iterations(N_list, rho0, rhoN):
 	df.to_csv('Results/cpu_times.txt', index=None, sep='\t', mode='a')
 
 
-	fit = np.polyfit(N_list, it_list, 2)
+	fit = np.polyfit(N_list, it_list, 3)
 	print(fit)
 	plt.plot(N_list, it_list, label=(r'%.2f $N^2$' %fit[0]))
 	plt.xlabel('Size of a NxN matrix', fontsize=15)
@@ -342,7 +342,7 @@ if __name__ == "__main__":
 	n_electrons        = args.e
 
 	#######################
-	optimal_values = False  # = True: finding optimal values
+	optimal_values = True  # = True: finding optimal values
 	#######################
 
 	if BucklingBeam:
@@ -359,7 +359,7 @@ if __name__ == "__main__":
 
 		else:
 
-			N 	   	 = 50             	# matrix dimension
+			N 	   	 = 80             	# matrix dimension
 			max_it 	 = 2*N**2     		# max iterations
 			h      	 = (rhoN-rho0)/N   	# step length (h = rhoN/(N+1))
 			diag     = 2/h**2   		# diagonal elements
@@ -390,7 +390,7 @@ if __name__ == "__main__":
 			if optimal_values:
 				print('\nFinding optimal N and rho max\n')
 				rhoN_list = np.linspace(1,10,10).astype(int)
-				N_list = np.linspace(25, 250, 10).astype(int)
+				N_list = np.linspace(25, 250, 20).astype(int)
 				N_rho(N_list, rho0, rhoN_list, h, diag, non_diag)
 				sys.exit()
 
