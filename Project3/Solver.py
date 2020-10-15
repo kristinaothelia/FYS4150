@@ -12,6 +12,9 @@ class Solver:
         self.ts         = int(self.total_time/self.dt)        # Time steps
 
 
+    # get_acceleration maa kanskje inn i SolarSystem?
+
+
     def ForwardEuler(G, pos, vel):
         """
         Forwrd Euler method. Returns position and velocity
@@ -24,8 +27,7 @@ class Solver:
 
         print("Forward Euler time: ", time.time()-start_time)
         # Trenger kanskje ikke return..?
-        return pos, vel
-        #return self.pos, self.vel   # ???
+        return self.pos, self.vel   # ???
 
 
     def Verlet(G, pos, vel, acc):
@@ -41,5 +43,4 @@ class Solver:
 
         print("Verlet time: ", time.time()-start_time)
         # Trenger kanskje ikke return..?
-        return pos, vel
-        #return self.pos, self.vel   # ???
+        return self.pos, self.vel   # ???

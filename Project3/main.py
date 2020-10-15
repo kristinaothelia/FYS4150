@@ -9,8 +9,9 @@ import matplotlib.pyplot    as plt
 
 # Import python programs
 import functions            as func
+import SolarSystem_copy          ## ???
 #------------------------------------------------------------------------------
-
+'''
 Data = func.GetData(filename='\planet_data.csv')
 #print(Data)
 
@@ -25,6 +26,8 @@ Dist     = Data["Distance to the Sun"].values
 print(Planet)
 print(Mass)
 print(Dist)
+'''
+
 
 
 yr      = 365*24*60*60
@@ -45,8 +48,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Solar system")
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-1', '--a3', action="store_true", help="Project 3, a)")
-    group.add_argument('-2', '--b3', action="store_true", help="Project 3, b)")
+    group.add_argument('-1', '--b3', action="store_true", help="Project 3, b)")
+    group.add_argument('-2', '--c3', action="store_true", help="Project 3, c)")
 
     # Optional argument for habitable zone calculations
     #parser.add_argument('-X', '--hab', action='store_true', help="Habitable zone calculations", required=False)
@@ -55,13 +58,17 @@ if __name__ == '__main__':
         sys.argv.append('--help')
 
     args  = parser.parse_args()
-    ex_3a = args.a3
-    ex_3b = args.b3
+    ex_3a = args.b3
+    ex_3b = args.c3
 
-    if ex_3a == True:
+
+
+    if ex_3b == True:
 
         print("Earth-Sun system in 2D. Not object oriented")
         print("--"*55)
+
+
 
         total_time  = 10                         # [yr]
         dt          = 1e-3
@@ -85,11 +92,10 @@ if __name__ == '__main__':
         # Burde ogsaa plotte solen i midten...
 
         plt.title("Earth-Sun system. Over %g years" %total_time)
-        plt.savefig("Results/3a_Earth_Sun_system.png")
+        plt.savefig("Results/3b_Earth_Sun_system.png")
         plt.show()
 
+    elif ex_3c == True:
 
-    elif ex_3b == True:
-
-        print("Earth-Sun system. Object oriented")
+        print("...")
         print("--"*55)
