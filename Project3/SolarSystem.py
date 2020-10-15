@@ -1,6 +1,7 @@
-import os
+import os, sys 
+
 import pandas as pd
-import numpy as np
+import numpy  as np
 
 class SolarSystem:
     def __init__(self, names):
@@ -9,18 +10,19 @@ class SolarSystem:
         names: A list of strings with names of the planets to be considered.
         """
 
-        filename = '\Data\planet_data.csv'
+        filename = '/Data/planet_data.csv'
         cwd      = os.getcwd()
         fn       = cwd + filename
         nanDict  = {}
         Data     = pd.read_csv(fn, header=0, skiprows=0, index_col=False, na_values=nanDict)
 
-        Planet   = Data["Planet"].values  #names of planets
-        Mass     = Data["Mass"].values    #[kg], masses
-        Dist     = Data["Distance to the Sun"].values  #[AU], distance from Sun
+        Planet   = Data["Planet"].values  # names of planets
+        Mass     = Data["Mass"].values   # [kg], masses
+        Dist     = Data["Distance to the Sun"].values  # [AU], distance from Sun
 
-        N = len(names) #nr of planets
-        our_system = np.zeros([N, 2])  #row: planets, columns: name, mass, distance
+        N = len(names) # nr of planets
+        our_system = np.zeros([N, 2])  # row: planets, columns: name, mass, distance
+
 
         index = [] #indexes of planets
         for i in range(len(names)):
