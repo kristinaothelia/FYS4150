@@ -82,3 +82,13 @@ plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
 plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.tight_layout()
 plt.savefig("Results/3b_Earth_Sun_system.png"); plt.show()
+
+M_earth = 5.972e24  #[kg]
+K = 0.5*M_earth*np.linalg.norm(vel_V, axis=1)**2
+U = -GM/np.linalg.norm(pos_V, axis=1)
+
+plt.figure()
+plt.plot(U, label="potential")
+#plt.plot(K, label="kinetic")
+plt.legend()
+plt.show()

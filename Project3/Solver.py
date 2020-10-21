@@ -1,5 +1,3 @@
-#INF1100-boka, appendix E
-
 import os
 import pandas as pd
 import numpy as np
@@ -18,15 +16,16 @@ class Solver:
         self.f = lambda u,t: np.asarray(f(u, t))
 
     def set_initial_conditions(self, U0):
-        U0 = np.ravel(U0)
+        #U0 = np.ravel(U0)
         #sys.exit(100)
         #print(U0)
         if isinstance(U0, (float,int)):  #scalar ODE
             self.neq=1
         else:                            #vector ODE
             U0 = np.asarray(U0)
-            self.neq = U0.size
+            self.neq = U0.shape
         self.U0 = U0
+        #print(U0.shape)
 
     def solve(self, time_points, method):
         self.t = np.asarray(time_points)
@@ -34,11 +33,13 @@ class Solver:
         if self.neq == 1:  #scalar ODE
             self.u = np.zeros(n)
         else:
-            self.u = np.zeros((n, self.neq))
+            self.u = np.zeros((n, self.neq[0], self.neq[1]))
 
+        print(self.neq)
+        #sys.exit(100)
         #u = [x, y, vx, vy]
         #assume self.t[0] corresponds to self.U0
-        self.u[0] = self.U0
+        self.u[0,:] = self.U0
         #print(self.u.shape)
         #print(self.U0)
 
@@ -57,8 +58,12 @@ class Solver:
         u, f, k, t = self.u, self.f, self.k, self.t
         dt = t[k+1] - t[k]
 
-        current_vel = u[k, 2:4]
-        current_pos = u[k, 0:2]
+        current_vel = u[k, 2:4, :]
+        current_pos = u[k, 0:2, :]
+
+        print('ho')
+        print(current_pos.shape)
+        print(f(current_pos, t).shape)
 
         new_vel = current_vel + f(current_pos, t)*dt
         new_pos = current_pos + current_vel*dt
