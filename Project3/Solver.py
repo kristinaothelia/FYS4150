@@ -1,46 +1,113 @@
+#INF1100-boka, appendix E
+
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import sys
 
 import functions            as func
 
 class Solver:
-    def __init__(self, total_time, dt):
+    """
+    Class for solving systems of ODEs on the form du/dt = f(u, t).
+    """
+    def __init__(self, f):
+        if not callable(f):
+            raise TypeError("ERROR: f is %s, not a function." % type(f))
+        self.f = lambda u,t: np.asarray(f(u, t))
 
-        self.total_time = total_time
-        self.dt         = dt
-        self.ts         = int(self.total_time/self.dt)        # Time steps
+    def set_initial_conditions(self, U0):
+        U0 = np.ravel(U0)
+        #sys.exit(100)
+        #print(U0)
+        if isinstance(U0, (float,int)):  #scalar ODE
+            self.neq=1
+        else:                            #vector ODE
+            U0 = np.asarray(U0)
+            self.neq = U0.size
+        self.U0 = U0
+
+    def solve(self, time_points):
+        self.t = np.asarray(time_points)
+        n = self.t.size
+        if self.neq == 1:  #scalar ODE
+            self.u = np.zeros(n)
+        else:
+            self.u = np.zeros((n, self.neq))
+
+        #u = [x, y, vx, vy]
+        #assume self.t[0] corresponds to self.U0
+        self.u[0] = self.U0
+        #print(self.u.shape)
+        #print(self.U0)
+
+        #time loop
+        for k in range(n-1):
+            self.k = k
+            self.u[k+1] = self.advance()
+        return self.u, self.t
+
+
+    def advance(self):
+        """
+        euler denne gang
+        """
+        u, f, k, t = self.u, self.f, self.k, self.t
+        dt = t[k+1] - t[k]
+
+        current_vel = u[k, 2:4]
+        current_pos = u[k, 0:2]
+
+        new_vel = current_vel + f(current_pos, t)*dt
+        new_pos = current_pos + current_vel*dt
+
+        u_new = np.zeros_like(u[k])
+        u_new[2:4] = new_vel
+        u_new[0:2] = new_pos
+        print(u_new)
+        #sys.exit(100)
+        #print(u_new.shape)
+        return u_new
 
 
     # get_acceleration maa kanskje inn i SolarSystem?
 
 
-    def ForwardEuler(G, pos, vel):
+    
+
+
+if __name__ == '__main__':
+    def a(r, t):
         """
-        Forwrd Euler method. Returns position and velocity
+        right hand side of dv/dt = -GM/r^2
+        Equation derived from Newtonian mechanics
+        F = ma
+        F = -GMm/r^2
         """
-        start_time = time.time()
+        GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
+        #M_sun   = 1.989e30        # [kg]
+        unit_r = r/np.linalg.norm(r)  #unit vector pointing from sun to Earth
+        print(unit_r)
+        acceleration = -GM/np.linalg.norm(r)*unit_r
+        print(acceleration)
+        #sys.exit(1)
+        return acceleration
 
-        for t in range(self.ts-1):
-            pos[t+1, :] = pos[t, :] + vel[t, :]*self.dt
-            vel[t+1, :] = vel[t, :] + func.get_acceleration(G, t, pos)*self.dt
+    init_pos = [1 , 0]  #[AU]
+    init_vel = [0, 2*np.pi]   #[AU/yr] ??
 
-        print("Forward Euler time: ", time.time()-start_time)
-        # Trenger kanskje ikke return..?
-        return self.pos, self.vel   # ???
+    #using the class
+    solver = Solver(a)
+    solver.set_initial_conditions([init_pos, init_vel])
+    #print(solver.U0)
+    T = 10  #[yr]
+    dt = 1e-3
+    n = int(10e2)
+    t = np.linspace(0, T, n+1)
+    #print(t)
+    u, t = solver.solve(t)
+    print(u)
 
-
-    def Verlet(G, pos, vel, acc):
-        """
-        Verlet method. Returns position and velocity
-        """
-        start_time = time.time()
-
-        for t in range(self.ts-1):
-            pos[t+1, :] = pos[t, :] + vel[t, :]*self.dt + 0.5*acc[t, :]*self.dt**2
-            acc[t+1, :] = func.get_acceleration(G, t+1, pos)
-            vel[t+1, :] = vel[t, :] + 0.5*(acc[t, :] + acc[t+1, :])*self.dt
-
-        print("Verlet time: ", time.time()-start_time)
-        # Trenger kanskje ikke return..?
-        return self.pos, self.vel   # ???
+    plt.plot(u[:,0], u[:,1])
+    plt.show()
