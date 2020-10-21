@@ -28,7 +28,7 @@ class Solver:
             self.neq = U0.size
         self.U0 = U0
 
-    def solve(self, time_points):
+    def solve(self, time_points, method):
         self.t = np.asarray(time_points)
         n = self.t.size
         if self.neq == 1:  #scalar ODE
@@ -45,11 +45,12 @@ class Solver:
         #time loop
         for k in range(n-1):
             self.k = k
-            self.u[k+1] = self.advance()
+            if method == "Euler":
+                self.u[k+1] = self.advance_Euler()
         return self.u, self.t
 
 
-    def advance(self):
+    def advance_Euler(self):
         """
         euler denne gang
         """
@@ -65,7 +66,7 @@ class Solver:
         u_new = np.zeros_like(u[k])
         u_new[2:4] = new_vel
         u_new[0:2] = new_pos
-        print(u_new)
+        #print(u_new)
         #sys.exit(100)
         #print(u_new.shape)
         return u_new
@@ -74,7 +75,7 @@ class Solver:
     # get_acceleration maa kanskje inn i SolarSystem?
 
 
-    
+
 
 
 if __name__ == '__main__':
@@ -88,9 +89,9 @@ if __name__ == '__main__':
         GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
         #M_sun   = 1.989e30        # [kg]
         unit_r = r/np.linalg.norm(r)  #unit vector pointing from sun to Earth
-        print(unit_r)
-        acceleration = -GM/np.linalg.norm(r)*unit_r
-        print(acceleration)
+        #print(unit_r)
+        acceleration = -GM/np.linalg.norm(r)**2*unit_r
+        #print(acceleration)
         #sys.exit(1)
         return acceleration
 
@@ -103,11 +104,11 @@ if __name__ == '__main__':
     #print(solver.U0)
     T = 10  #[yr]
     dt = 1e-3
-    n = int(10e2)
+    n = int(10e3)
     t = np.linspace(0, T, n+1)
     #print(t)
-    u, t = solver.solve(t)
-    print(u)
+    u, t = solver.solve(t, method="Euler")
+    #print(u)
 
     plt.plot(u[:,0], u[:,1])
     plt.show()

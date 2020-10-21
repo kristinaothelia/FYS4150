@@ -10,6 +10,7 @@ import matplotlib.pyplot    as plt
 # Import python programs
 import functions            as func
 import SolarSystem_copy          ## ???
+from Solver import Solver
 #------------------------------------------------------------------------------
 '''
 Data = func.GetData(filename='\planet_data.csv')
@@ -30,9 +31,9 @@ print(Dist)
 
 
 
-yr      = 365*24*60*60
+yr      = 365*24*60*60   #[s]
 M_Sun   = 1.989*10**30          # [kg]
-#M_E     = Mass[0]               # Sting ikke tall... Maa endre noe i .csv
+#M_E     = Mass[0]               # String ikke tall... Maa endre noe i .csv
 M_E     = 6.0*10**24
 print(M_E)
 
@@ -61,7 +62,8 @@ if __name__ == '__main__':
     ex_3a = args.b3
     ex_3b = args.c3
 
-
+    ex_3c = True
+    ex_3b = False
 
     if ex_3b == True:
 
@@ -96,6 +98,35 @@ if __name__ == '__main__':
         plt.show()
 
     elif ex_3c == True:
+        print("Earth-Sun system in 2D. Object oriented (we think...)")
 
-        print("...")
-        print("--"*55)
+        def a(r, t):
+            """
+            Right-hand-side of the ODE dv/dt = -GM/r^2.
+            GM = 4*pi^2, gravitational constant in solar system units (?)
+            r = radial distance from the Sun to a planet.
+            kan kanskje vaere i func?
+            """
+            unit_r = r/np.linalg.norm(r)
+            acceleration = -GM/np.linalg.norm(r)**2*unit_r
+            return acceleration
+
+        init_pos = [1 , 0]  #[AU]
+        init_vel = [0, 2*np.pi]   #[AU/yr] ??
+
+        #using the class
+        #print(Solver)
+        solver = Solver(a)
+        solver.set_initial_conditions([init_pos, init_vel])
+        #print(solver.U0)
+        T = 10  #[yr]
+        dt = 1e-3
+        n = int(10e3)
+        t = np.linspace(0, T, n+1)
+        #print(t)
+        u, t = solver.solve(t, method="Euler")
+        pos_E = u[:,0:2]
+        vel = u[:,2:4]
+
+        func.Plot_Sun_Earth_system(pos_E, label="ForwardEuler")
+        plt.show()
