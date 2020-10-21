@@ -11,9 +11,14 @@ def get_acceleration(GM, t, pos):
     """
     Returns the calculated acceleration
     """
+
+    G     =
+    M_J   = 1.898*10**28
+    r_EJ  = 4.2 # [AU]
+
     r_vec = np.array([0, 0]) - pos[t, :]
     r     = np.sqrt(r_vec[0]**2 + r_vec[1]**2)
-    acc   = GM*r_vec / r**3
+    acc   = GM*r_vec / r**3 + G*M_J/r_EJ
 
     return acc
 

@@ -70,32 +70,8 @@ if __name__ == '__main__':
         print("Earth-Sun system in 2D. Not object oriented")
         print("--"*55)
 
-
-
-        total_time  = 10                         # [yr]
-        dt          = 1e-3
-        ts          = int(total_time/dt)        # Time step
-
-        pos         = np.zeros((ts, 2))
-        vel         = np.zeros((ts, 2))
-        acc         = np.zeros((ts, 2))
-
-        pos[0, :]   = [1, 0]
-        vel[0, :]   = [0, 2*np.pi]
-        acc[0, :]   = func.get_acceleration(GM, 0, pos)
-
-        ### OBS! Noe blir overkjort. Kan ikke flytte plottet etter verlet...
-        pos_E, vel_E = func.ForwardEuler(GM, ts, pos, vel, dt)
-        func.Plot_Sun_Earth_system(pos_E, label="ForwardEuler")
-
-        pos_V, vel_V = func.Verlet(GM, ts, pos, vel, acc, dt)
-        func.Plot_Sun_Earth_system(pos_V, label="Verlet")
-
-        # Burde ogsaa plotte solen i midten...
-
-        plt.title("Earth-Sun system. Over %g years" %total_time)
-        plt.savefig("Results/3b_Earth_Sun_system.png")
-        plt.show()
+        # Kan denne bare importeres og kjores?
+        # 3b.py
 
     elif ex_3c == True:
         print("Earth-Sun system in 2D. Object oriented (we think...)")
