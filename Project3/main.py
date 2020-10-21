@@ -105,4 +105,10 @@ if __name__ == '__main__':
         vel = u[:,2:4]
 
         func.Plot_Sun_Earth_system(pos_E, label="ForwardEuler")
-        plt.show()
+
+        plt.title("Earth-Sun system. Over %g years \n Object oriented" %T, fontsize=15)
+        plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
+        plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
+        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.tight_layout()
+        plt.savefig("Results/3b_Earth_Sun_system_object.png"); plt.show()
