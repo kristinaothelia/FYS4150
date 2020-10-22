@@ -8,32 +8,18 @@ import matplotlib.pyplot    as plt
 
 # Import python programs
 import functions            as func
-from Solver import Solver
+
+from Solver                 import Solver
+from SolarSystem            import SolarSystem
 #------------------------------------------------------------------------------
-'''
-Data = func.GetData(filename='\planet_data.csv')
-#print(Data)
 
-Planet   = Data["Planet"].values
-# Mass blir feil... Maa endres i .csv
-Mass     = Data["Mass"].values
-Dist     = Data["Distance to the Sun"].values
+planets = SolarSystem(["Earth", "Jupiter"])
 
-#print(Data.loc[:, Data.columns == 'Mass'].values)
-
-
-print(Planet)
-print(Mass)
-print(Dist)
-'''
-
-
+M_E = planets.mass[0]
+print(M_E)
 
 yr      = 365*24*60*60   #[s]
 M_Sun   = 1.989*10**30          # [kg]
-#M_E     = Mass[0]               # String ikke tall... Maa endre noe i .csv
-M_E     = 6.0*10**24
-print(M_E)
 
 AU      = 149597870691          # AU [m]
 #G       = 6.67430*10**(-11)     # [m^3/kgs^2]
