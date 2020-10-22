@@ -9,7 +9,7 @@ import pandas              as pd
 import matplotlib.pyplot   as plt
 
 #------------------------------------------------------------------------------
-
+'''
 def GetData(filename=''):
     """
     Function for reading csv files
@@ -63,6 +63,7 @@ def Verlet(G, ts, pos, vel, acc, dt):
     print("Verlet time: ", time.time()-start_time)
     # Trenger kanskje ikke return..?
     return pos, vel
+'''
 
 
 def Energy(M_E, GM, vel, pos, time):

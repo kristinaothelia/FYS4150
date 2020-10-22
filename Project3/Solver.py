@@ -12,19 +12,14 @@ class Solver:
     """
     Class for solving a system of two coupled Ordinary Differential Equations (ODEs).
     """
-    def __init__(self, f, M, r0, v0, Np, T, n):
+    def __init__(self, M, r0, v0, Np, T, n):
         """
-        f: Right-hand side of one of the equations, dv/dv = f(r, dr/dt, t)
+        M : Planet masses
         r0: Initial positions,  x   y  [2, nr_planets]
         v0: Initial velocities, vx, vy [2, nr_planets]
         Np: Number of bodies.
         ts: Array with time points.
         """
-
-        #check if f is a callable function
-        if not callable(f):
-            raise TypeError("ERROR: f is %s, not a function." % type(f))
-        self.f = lambda u,t: np.asarray(f(u, t))
 
         self.M  = M
 
