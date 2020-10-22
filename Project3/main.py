@@ -60,7 +60,7 @@ if __name__ == '__main__':
     ex_3i = args.i3
     '''
 
-    ex_3c = False
+    ex_3c = True
     ex_3d = False
     ex_3e = False
     ex_3f = False
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     ex_3h = False
     ex_3i = False
 
-    ex_test = True
+    ex_test = False
 
 
     if ex_3c == True:
@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
         # Ogsaa gjore for Euler...!
 
-        func.Energy(M, GM, vel_V, pos_V, t_V)
+        func.Energy(M_E, GM, vel_V, pos_V, t_V)
         func.angular_momentum(vel_V, pos_V, t_V)
         #plt.savefig("Results/3c_Earth_Sun_system_energy_object.png")
 

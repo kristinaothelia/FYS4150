@@ -84,9 +84,7 @@ def Energy(M_E, GM, vel, pos, time):
     plt.show()
 
 def angular_momentum(vel, pos, time):
-    #angular momentum
-    print("hey")
-    fig, ax = plt.subplots(1,1)
+
     L = np.cross(pos, vel, axis=0)
     L = np.linalg.norm(L, axis=1)
     time = time[:-1]
