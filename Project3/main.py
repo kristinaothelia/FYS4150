@@ -16,13 +16,16 @@ from SolarSystem            import SolarSystem
 planets = SolarSystem(["Earth", "Jupiter"])
 
 M_E = planets.mass[0]
-print(M_E)
+print('Mass Earth:', M_E)
 
-yr      = 365*24*60*60   #[s]
+M_J = planets.mass[1]
+print('Mass Jupiter:', M_J)
+
+yr      = 365*24*60*60          # [s]
 M_Sun   = 1.989*10**30          # [kg]
 
 AU      = 149597870691          # AU [m]
-#G       = 6.67430*10**(-11)     # [m^3/kgs^2]
+GMJ     = 4*np.pi*(M_J/M_Sun)   # [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
 
@@ -30,6 +33,7 @@ GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
 if __name__ == '__main__':
 
+    '''
     parser = argparse.ArgumentParser(description="Solar system")
 
     group = parser.add_mutually_exclusive_group()
@@ -45,9 +49,12 @@ if __name__ == '__main__':
     args  = parser.parse_args()
     ex_3a = args.b3
     ex_3b = args.c3
+    '''
 
-    ex_3c = True
+    ex_3c = False
     ex_3b = False
+
+    ex_test = True
 
     if ex_3b == True:
 
@@ -68,8 +75,8 @@ if __name__ == '__main__':
             r = radial distance from the Sun to a planet.
             kan kanskje vaere i func?
             """
-            unit_r = r/np.linalg.norm(r)
-            acc    = -GM/np.linalg.norm(r)**2*unit_r
+            unit_r = r/np.linalg.norm(r, axis=0)
+            acc    = -GM/np.linalg.norm(r, axis=0)**2*unit_r
             return acc
 
 
@@ -108,3 +115,48 @@ if __name__ == '__main__':
 
         func.Energy(M_earth, GM, vel_V, pos_V, t_V)
         plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()
+
+    elif ex_test == True:
+
+        def a(r, t):
+            """
+            Right-hand-side of the ODE dv/dt = -GM/r^2.
+            GM = 4*pi^2, gravitational constant in solar system units (?)
+            r = radial distance from the Sun to a planet.
+            kan kanskje vaere i func?
+            """
+            #unit_r = r/np.linalg.norm(r, axis=0)
+            #acc    = -GM/np.linalg.norm(r, axis=0)**2*unit_r
+            unit_r = r/np.linalg.norm(r, axis=0)
+            acc    = -GM/np.linalg.norm(r, axis=0)**2*unit_r
+            return acc
+
+
+        T  = 10  #[yr]
+        n  = int(10e3)
+        Np = len(planets.mass)  #nr of planets
+
+        #init_pos = np.array([[1,0]])            # [AU]
+        #init_vel = np.array([[0,2*np.pi]])      # [AU/yr]
+
+        init_pos = planets.initPos
+        init_vel = planets.initVel
+        masses   = planets.mass
+
+        #using the class
+        solver2 = Solver(a, masses, init_pos, init_vel, Np, T, n)
+        pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
+
+        plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet")
+        plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
+
+        plt.plot(pos_V[0,:,1], pos_V[1,:,1], label="Verlet")
+        plt.plot(pos_V[0,0,1], pos_V[1,0,1], "x", label="Init. pos.")
+
+        plt.title("Earth-Sun system. Over %g years \n Object oriented" %T, fontsize=15)
+        plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
+        plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
+        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.tight_layout()
+        plt.axis('equal')
+        plt.show()

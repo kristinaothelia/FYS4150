@@ -26,8 +26,8 @@ class SolarSystem():
 
         x0     = Planets['x'].values
         y0     = Planets['y'].values
-        vx0    = Planets['vx'].values
-        vy0    = Planets['vy'].values
+        vx0    = Planets['vx'].values*365.25
+        vy0    = Planets['vy'].values*365.25
 
         #print(mass)
         #print(x0)

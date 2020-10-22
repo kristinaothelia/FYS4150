@@ -10,7 +10,7 @@ class Solver:
     """
     Class for solving a system of two coupled Ordinary Differential Equations (ODEs).
     """
-    def __init__(self, f, r0, v0, Np, T, n):
+    def __init__(self, f, M, r0, v0, Np, T, n):
         """
         f: Right-hand side of one of the equations, dv/dv = f(r, dr/dt, t)
         r0: Initial positions,  x   y  [2, nr_planets]
@@ -23,6 +23,10 @@ class Solver:
         if not callable(f):
             raise TypeError("ERROR: f is %s, not a function." % type(f))
         self.f = lambda u,t: np.asarray(f(u, t))
+
+        self.M  = M
+
+        self.M_Sun = 1.989*10**30  # [kg]
 
         #initial positions and velocities
         self.r0 = r0
@@ -41,6 +45,7 @@ class Solver:
         #velocity matrix
         self.v = np.zeros([2, self.ts.size-1, self.Np])  #[vs or vy, time step, planet]
 
+
     def solve(self, method):
         """
         Solves the system of ODEs using either Forward Euler or Velocity Verlet
@@ -54,6 +59,7 @@ class Solver:
         #size of time step (use as argument instead of T or n?)
         dt = self.ts[1] - self.ts[0]
 
+        '''
         #time loop
         for k in range(self.n-1):
             self.k = k  #current index (in time)
@@ -63,6 +69,43 @@ class Solver:
             if method == "Verlet":
                 self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*self.f(self.r[:,k,:], self.ts[k])*dt**2
                 self.v[:,k+1,:] = self.v[:,k,:] + 0.5*(self.f(self.r[:,k,:], self.ts[k]) + self.f(self.r[:,k+1,:], self.ts[k+1]))*dt
+        '''
+
+        for k in range(self.n-1):
+            self.k = k  #current index (in time)
+            acceleration1 = np.zeros((2, self.Np))
+
+            for n in range(self.Np):
+                #self.n = n
+                for i in range(self.Np):
+                    if i  != n:
+                        temp_r = self.r[:,k,n] - self.r[:,k,i]
+                        unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
+                        acceleration1[:,n] = (4*np.pi**2*self.M[i]/self.M_Sun)/np.linalg.norm(temp_r, axis=0)**2
+                    else:
+                        pass
+
+
+            if method == "Euler":
+                    self.v[:,k+1,:] = self.v[:,k,:] + acceleration*dt
+                    self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt
+
+            if method == "Verlet":
+                    self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*acceleration1*dt**2
+                    
+                    acceleration2 = np.zeros((2, self.Np))
+                    for n in range(self.Np):
+                        #self.n = n
+                        for i in range(self.Np):
+                            if i  != n:
+                                temp_r = self.r[:,k+1,n] - self.r[:,k+1,i]
+                                unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
+                                acceleration2[:,n] = (4*np.pi**2*self.M[i]/self.M_Sun)/np.linalg.norm(temp_r, axis=0)**2
+                            else:
+                                pass
+                    
+                    self.v[:,k+1,:] = self.v[:,k,:] + 0.5*(acceleration1+acceleration2)*dt
+
         return self.r, self.v, self.ts
 
 
