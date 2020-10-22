@@ -60,10 +60,10 @@ if __name__ == '__main__':
     ex_3i = args.i3
     '''
 
-    ex_3c = True
+    ex_3c = False
     ex_3d = False
     ex_3e = False
-    ex_3f = False
+    ex_3f = True
     ex_3g = False
     ex_3h = False
     ex_3i = False
@@ -122,16 +122,7 @@ if __name__ == '__main__':
         T  = 10                        # [yr]
         Np = 1                                  # Nr. of planets. Only Earth
         n  = int(10e3)
-        '''
-        pos         = np.zeros((ts, 2))
-        vel         = np.zeros((ts, 2))
-        acc         = np.zeros((ts, 2))
-        '''
-        init_pos = np.array([[1,0]])            # [AU]
-        init_vel = np.array([[0,2*np.pi]])      # [AU/yr]
 
-        init_pos = np.transpose(init_pos)
-        init_vel = np.transpose(init_vel)
 
         # Trial and error to find the initial velocity for escaping
         test = [0.9, 1.1, 1.3, 1.35, 1.4, 1.415]
@@ -139,23 +130,38 @@ if __name__ == '__main__':
         for i in range(len(test)):
             v_esc       = 2*np.pi*test[i]
 
-            pos[0, :]   = [1, 0]
-            vel[0, :]   = [0, v_esc]
-            acc[0, :]   = get_acceleration(GM, 0, pos)
+            init_pos = np.array([[1,0]])            # [AU]
+            init_vel = np.array([[0,v_esc]])      # [AU/yr]
 
-            pos_V, vel_V = Verlet(GM, ts, pos, vel, acc, dt)
-            func.Plot_Sun_Earth_system(pos_V, label="Verlet. v=2pi*%.3f"%test[i])
+            init_pos = np.transpose(init_pos)
+            init_vel = np.transpose(init_vel)
+
+            solver1 = Solver(M_E, init_pos, init_vel, Np, T, n)
+            pos_V, vel_V, t_V = solver1.solve(method = "Verlet")
+
+
+            #func.Plot_Sun_Earth_system(pos_V, label="Verlet. v=2pi*%.3f"%test[i])
+            plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet")
+            plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
+
 
         # The formula for escape velocity
         v_esc       = np.sqrt(2*GM/1)           # sqrt(2GM/r)
 
-        pos[0, :]   = [1, 0]
-        vel[0, :]   = [0, v_esc]
-        acc[0, :]   = get_acceleration(GM, 0, pos)
+        init_pos = np.array([[1,0]])            # [AU]
+        init_vel = np.array([[0,v_esc]])      # [AU/yr]
 
-        pos_V, vel_V = Verlet(GM, ts, pos, vel, acc, dt)
-        Plot_Sun_Earth_system(pos_V, label="Verlet. v=sqrt(2GM/r)")
-        plt.plot(pos[0, 0], pos[0, 1], 'x', label='Init. pos.')
+        init_pos = np.transpose(init_pos)
+        init_vel = np.transpose(init_vel)
+
+        solver1 = Solver(M_E, init_pos, init_vel, Np, T, n)
+        pos, vel, t = solver1.solve(method = "Verlet")
+
+        #func.Plot_Sun_Earth_system(pos_V, label="Verlet. v=sqrt(2GM/r)")
+        plt.plot(pos[0,:,0], pos[1,:,0], label="Verlet")
+        plt.plot(pos[0,0,0], pos[1,0,0], "x", label="Init. pos.")
+
+        #plt.plot(pos[0, 0], pos[0, 1], 'x', label='Init. pos.')
 
         plt.title("Earth-Sun system. Over %g years \n Escape velocity" %T, fontsize=15)
         plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
@@ -163,6 +169,7 @@ if __name__ == '__main__':
         plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
         plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.tight_layout()
+        plt.axis('equal')
         plt.savefig("Results/3f_v_esc_Earth_Sun_system.png"); plt.show()
 
     elif ex_test == True:
