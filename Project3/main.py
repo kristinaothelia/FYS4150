@@ -13,12 +13,12 @@ from Solver                 import Solver
 from SolarSystem            import SolarSystem
 #------------------------------------------------------------------------------
 
-planets = SolarSystem(["Earth", "Jupiter"])
+planets = SolarSystem(["Earth", "Jupiter", "Saturn"])
 
 M_E = planets.mass[0]
 print('Mass Earth:', M_E)
 
-M_J = planets.mass[1]
+M_J = planets.mass[1]*1000
 print('Mass Jupiter:', M_J)
 
 yr      = 365*24*60*60          # [s]
@@ -27,6 +27,7 @@ M_Sun   = 1.989*10**30          # [kg]
 AU      = 149597870691          # AU [m]
 GMJ     = 4*np.pi*(M_J/M_Sun)   # [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
+G = GM/M_Sun
 
 
 # Bare begynte aa sette opp noe til senere..
@@ -51,10 +52,10 @@ if __name__ == '__main__':
     ex_3b = args.c3
     '''
 
-    ex_3c = False
+    ex_3c = True
     ex_3b = False
 
-    ex_test = True
+    ex_test = False
 
     if ex_3b == True:
 
@@ -83,8 +84,8 @@ if __name__ == '__main__':
         T  = 10  #[yr]
         n  = int(10e3)
         Np = 1  #nr of planets
+        M   = planets.mass[0]
 
-        M_earth = 5.972e24  #[kg]
 
         init_pos = np.array([[1,0]])            # [AU]
         init_vel = np.array([[0,2*np.pi]])      # [AU/yr]
@@ -93,8 +94,8 @@ if __name__ == '__main__':
         init_vel = np.transpose(init_vel)
 
         #using the class
-        solver1 = Solver(a, init_pos, init_vel, Np, T, n)
-        solver2 = Solver(a, init_pos, init_vel, Np, T, n)
+        solver1 = Solver(a, M, init_pos, init_vel, Np, T, n)
+        solver2 = Solver(a, M, init_pos, init_vel, Np, T, n)
         pos_E, vel_E, t_E = solver1.solve(method = "Euler")
         pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
 
@@ -113,7 +114,7 @@ if __name__ == '__main__':
 
         # Funker ikke helt...
 
-        func.Energy(M_earth, GM, vel_V, pos_V, t_V)
+        func.Energy(M, GM, vel_V, pos_V, t_V)
         plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()
 
     elif ex_test == True:
@@ -132,7 +133,7 @@ if __name__ == '__main__':
             return acc
 
 
-        T  = 10  #[yr]
+        T  = 100  #[yr]
         n  = int(10e3)
         Np = len(planets.mass)  #nr of planets
 
@@ -152,6 +153,9 @@ if __name__ == '__main__':
 
         plt.plot(pos_V[0,:,1], pos_V[1,:,1], label="Verlet")
         plt.plot(pos_V[0,0,1], pos_V[1,0,1], "x", label="Init. pos.")
+
+        plt.plot(pos_V[0,:,2], pos_V[1,:,2], label="Verlet")
+        plt.plot(pos_V[0,0,2], pos_V[1,0,2], "x", label="Init. pos.")
 
         plt.title("Earth-Sun system. Over %g years \n Object oriented" %T, fontsize=15)
         plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?

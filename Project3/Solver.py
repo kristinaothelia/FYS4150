@@ -1,8 +1,10 @@
+from __future__ import division
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+
 
 import functions            as func
 
@@ -28,6 +30,9 @@ class Solver:
 
         self.M_Sun = 1.989*10**30  # [kg]
 
+        self.GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
+        self.G = self.GM/self.M_Sun
+
         #initial positions and velocities
         self.r0 = r0
         self.v0 = v0
@@ -44,6 +49,24 @@ class Solver:
 
         #velocity matrix
         self.v = np.zeros([2, self.ts.size-1, self.Np])  #[vs or vy, time step, planet]
+
+    def acceleration_func(self, k_val):
+        acceleration = np.zeros((2, self.Np))
+        #print(acceleration.shape)
+        for n in range(self.Np):
+            #self.n = n
+            acceleration_sum = 0
+            for i in range(self.Np):
+                if i != n:
+                    temp_r = self.r[:,k_val,n] - self.r[:,k_val,i]
+                    unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
+                    acceleration_sum += (self.G*self.M[i])/np.linalg.norm(temp_r, axis=0)**2*unit_r
+                else:
+                    pass
+
+            unit_r_sun = self.r[:,k_val,n]/np.linalg.norm(self.r[:,k_val,n], axis=0)
+            acceleration[:,n] = acceleration_sum - self.G*self.M_Sun/np.linalg.norm(self.r[:,k_val,n], axis=0)**2*unit_r_sun
+        return acceleration
 
 
     def solve(self, method):
@@ -73,37 +96,17 @@ class Solver:
 
         for k in range(self.n-1):
             self.k = k  #current index (in time)
-            acceleration1 = np.zeros((2, self.Np))
 
-            for n in range(self.Np):
-                #self.n = n
-                for i in range(self.Np):
-                    if i  != n:
-                        temp_r = self.r[:,k,n] - self.r[:,k,i]
-                        unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
-                        acceleration1[:,n] = (4*np.pi**2*self.M[i]/self.M_Sun)/np.linalg.norm(temp_r, axis=0)**2
-                    else:
-                        pass
+            acceleration1 = self.acceleration_func(k)
 
 
             if method == "Euler":
-                    self.v[:,k+1,:] = self.v[:,k,:] + acceleration*dt
+                    self.v[:,k+1,:] = self.v[:,k,:] + acceleration1*dt
                     self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt
 
             if method == "Verlet":
                     self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*acceleration1*dt**2
-                    
-                    acceleration2 = np.zeros((2, self.Np))
-                    for n in range(self.Np):
-                        #self.n = n
-                        for i in range(self.Np):
-                            if i  != n:
-                                temp_r = self.r[:,k+1,n] - self.r[:,k+1,i]
-                                unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
-                                acceleration2[:,n] = (4*np.pi**2*self.M[i]/self.M_Sun)/np.linalg.norm(temp_r, axis=0)**2
-                            else:
-                                pass
-                    
+                    acceleration2 = self.acceleration_func(k+1)
                     self.v[:,k+1,:] = self.v[:,k,:] + 0.5*(acceleration1+acceleration2)*dt
 
         return self.r, self.v, self.ts

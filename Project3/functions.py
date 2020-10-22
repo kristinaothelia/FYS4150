@@ -81,6 +81,23 @@ def Energy(M_E, GM, vel, pos, time):
     plt.xlabel("Time [yr]", fontsize=15); plt.ylabel("Energy [J] ??", fontsize=15)
     plt.legend()
 
+def Energy(M_E, GM, vel, pos, time):
+    K = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
+    U = -(GM*M_E)/np.linalg.norm(pos, axis=0)
+
+    K = np.ravel(K)
+    U = np.ravel(U)
+    time = time[:-1]
+
+    plt.figure()
+    plt.plot(time, U, label="potential")
+    plt.plot(time, K, label="kinetic")
+    plt.plot(time, U+K, label="total energy")
+
+    plt.title("Energy", fontsize=15)
+    plt.xlabel("Time [yr]", fontsize=15); plt.ylabel("Energy [J] ??", fontsize=15)
+    plt.legend()
+
 def Plot_Sun_Earth_system(pos, label=''):
 
     plt.plot(pos[:, 0], pos[:, 1], label=label)
