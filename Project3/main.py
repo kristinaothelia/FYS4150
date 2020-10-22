@@ -28,6 +28,39 @@ GMJ     = 4*np.pi*(M_J/M_Sun)   # G*M_J, Astro units, [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
 
+def Energy(vel, pos, time):
+    K = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
+    U = -(GM*M_E)/np.linalg.norm(pos, axis=0)
+
+    K = np.ravel(K)
+    U = np.ravel(U)
+    time = time[:-1]
+
+    plt.figure(1)
+    plt.plot(time, U, label="Potential")
+    plt.plot(time, K, label="Kinetic")
+    plt.plot(time, U+K, label="Total energy")
+    plt.title("Energy", fontsize=15)
+    plt.xlabel("Time [yr]", fontsize=15); plt.ylabel("Energy [J] ??", fontsize=15)
+    plt.legend()
+
+def angular_momentum(vel, pos, time):
+
+    L = np.cross(pos, vel, axis=0)
+    L = np.linalg.norm(L, axis=1)
+    time = time[:-1]
+    plt.plot(time, L)
+
+def Figure(title=''):
+    plt.title(title, fontsize=15)
+    plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
+    plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout()
+    plt.axis('equal')
+
+
+
 if __name__ == '__main__':
 
     '''
@@ -58,10 +91,10 @@ if __name__ == '__main__':
     ex_3i = args.i3
     '''
 
-    ex_3c = False
+    ex_3c = True
     ex_3d = False
     ex_3e = False
-    ex_3f = True
+    ex_3f = False
     ex_3g = False
     ex_3h = False
     ex_3i = False
@@ -95,14 +128,15 @@ if __name__ == '__main__':
         plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
 
         # Make figure
-        func.Figure( title="Earth-Sun system. Over %g years \n Object oriented" %T)
+        Figure( title="Earth-Sun system. Over %g years \n Object oriented" %T)
         plt.savefig("Results/3b_Earth_Sun_system_object_.png"); plt.show()
 
         # Ogsaa gjore for Euler...!
 
-        func.Energy(M_E, GM, vel_V, pos_V, t_V)
-        func.angular_momentum(vel_V, pos_V, t_V)
-        #plt.savefig("Results/3c_Earth_Sun_system_energy_object.png")
+        Energy(vel_V, pos_V, t_V)
+        plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()
+        angular_momentum(vel_V, pos_V, t_V) # OBS! NOE GALT
+        plt.savefig("Results/3c_Earth_Sun_system_momentum_object.png"); plt.show()
 
     elif ex_3f == True:
         """
@@ -145,7 +179,7 @@ if __name__ == '__main__':
 
 
         # Make figure
-        func.Figure(title="Earth-Sun system. Over %g years \n Escape velocity" %T)
+        Figure(title="Earth-Sun system. Over %g years \n Escape velocity" %T)
         plt.savefig("Results/3f_v_esc_Earth_Sun_system.png"); plt.show()
 
     elif ex_test == True:
@@ -171,5 +205,5 @@ if __name__ == '__main__':
             plt.plot(pos_V[0,0,i], pos_V[1,0,i], "kx", label="Init. pos. %s" %planet_names[i])
 
         # Make figure
-        func.Figure(title="Solar system. Over %g years \n Object oriented, Verlet method" %T)
+        Figure(title="Solar system. Over %g years \n Object oriented, Verlet method" %T)
         plt.savefig("Results/test_orbits.png"); plt.show()
