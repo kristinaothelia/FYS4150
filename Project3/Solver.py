@@ -109,8 +109,5 @@ class Solver:
         return self.r, self.v, self.ts
 
 
-
-
-
 if __name__ == '__main__':
     print("Import into main.py.")
