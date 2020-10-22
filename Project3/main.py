@@ -115,7 +115,8 @@ if __name__ == '__main__':
         # Funker ikke helt...
 
         func.Energy(M, GM, vel_V, pos_V, t_V)
-        plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()
+        func.angular_momentum(vel_V, pos_V, t_V)
+        #plt.savefig("Results/3c_Earth_Sun_system_energy_object.png")
 
     elif ex_test == True:
 
