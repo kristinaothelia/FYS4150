@@ -74,15 +74,13 @@ if __name__ == '__main__':
 
 
         T  = 10  #[yr]
-        dt = 1e-3
         n  = int(10e3)
-        t  = np.linspace(0, T, n+1)
-        Np = 1
+        Np = 1  #nr of planets
 
         M_earth = 5.972e24  #[kg]
 
         init_pos = np.array([[1,0]])            # [AU]
-        init_vel = np.array([[0,2*np.pi]])      # [?]
+        init_vel = np.array([[0,2*np.pi]])      # [AU/yr]
 
         init_pos = np.transpose(init_pos)
         init_vel = np.transpose(init_vel)
@@ -90,12 +88,12 @@ if __name__ == '__main__':
         #using the class
         solver1 = Solver(a, init_pos, init_vel, Np, T, n)
         solver2 = Solver(a, init_pos, init_vel, Np, T, n)
-        pos_E, vel_E = solver1.solve(method = "Euler")
-        pos_V, vel_V = solver2.solve(method = "Verlet")
+        pos_E, vel_E, t_E = solver1.solve(method = "Euler")
+        pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
 
-        plt.plot(pos_E[0,:-1,0], pos_E[1,:-1,0], label="Forward Euler")
+        plt.plot(pos_E[0,:,0], pos_E[1,:,0], label="Forward Euler")
         plt.plot(pos_E[0,0,0], pos_E[1,0,0], "x", label="Init. pos.")
-        plt.plot(pos_V[0,:-1,0], pos_V[1,:-1,0], label="Verlet")
+        plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet")
         plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
 
         plt.title("Earth-Sun system. Over %g years \n Object oriented" %T, fontsize=15)
@@ -108,5 +106,5 @@ if __name__ == '__main__':
 
         # Funker ikke helt...
 
-        func.Energy(M_earth, GM, vel_V, pos_V)
+        func.Energy(M_earth, GM, vel_V, pos_V, t_V)
         plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()
