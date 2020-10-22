@@ -49,9 +49,16 @@ class Solver:
         """
         #initalize r and v matrices
 
-        print(self.r0)
-        print(self.r[:,0,:])
+        #print(self.r0)
+        #print(self.r[:,0,:])
         #sys.exit(100)
+
+        """
+        for i in range(self.Np):
+            for k in range(2):
+                self.r[k,0,i] = self.r0[k,i]
+                self.v[k,0,i] = self.v0[k,i]
+        """
 
         self.r[:,0,:] = self.r0
         self.v[:,0,:] = self.v0
@@ -67,9 +74,12 @@ class Solver:
             if method == "Euler":
                 self.v[:,k+1,:] = self.v[:,k,:] + self.f(self.r[:,k,:], self.ts[k])*dt
                 self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt
+                print(self.f(self.r[:,k,:], self.ts[k]))
+                print("---------------")
+                print(self.r)
             if method == "Verlet":
                 self.r[:,k+1,:] = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*self.f(self.r[:,k,:], self.ts[k])*dt**2
-                self.v[:,k+1,:] = self.v[:,k,:] + 0.5*(self.f(self.r[:,k,:], self.ts[k]) + self.f(self.r[:,k+1,:], self.ts[k]))*dt
+                self.v[:,k+1,:] = self.v[:,k,:] + 0.5*(self.f(self.r[:,k,:], self.ts[k]) + self.f(self.r[:,k+1,:], self.ts[k+1]))*dt
 
                 #vel[t+1, :] = vel[t, :] + 0.5*(acc[t, :] + acc[t+1, :])*dt
         return self.r, self.v
@@ -88,34 +98,40 @@ if __name__ == '__main__':
         """
         GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
         #M_sun   = 1.989e30        # [kg]
-        unit_r = r/np.linalg.norm(r)  #unit vector pointing from sun to Earth
+        unit_r = r/np.linalg.norm(r, axis=0)  #unit vector pointing from sun to Earth
         #print(unit_r)
-        acceleration = -GM/np.linalg.norm(r)**2*unit_r
+        acceleration = -GM/np.linalg.norm(r, axis=0)**2*unit_r
         return acceleration
 
     #init_pos = [1 , 0]     #[AU]
     #init_vel = [0, 2*np.pi]  #[AU/yr]
 
-    T = 10        #[yr]
-    n = int(1e4)  #nr of time steps
+    T = 10       #[yr]
+    n = int(1e3)  #nr of time steps
 
     #init_pos = np.reshape(init_pos, [2,1])
     #init_vel = np.reshape(init_vel, [2,1])
 
     #og lese fra inn fil
     init_pos = np.array([[1,0], [2,0]])
-    init_vel = np.array([[0,2*np.pi], [0,1]])
+    init_vel = np.array([[0,2*np.pi], [0,2.5]])
+
+
+    #init_pos = np.array([[1,0]])
+    #init_vel = np.array([[0,2*np.pi]])
 
     init_pos = np.transpose(init_pos)
     init_vel = np.transpose(init_vel)
 
     print(init_pos)
+
+    #print(init_pos)
     #sys.exit(100)
 
     #using the class
-    solver1 = Solver(a, init_pos, init_vel, 2, T, n)
+    #solver1 = Solver(a, init_pos, init_vel, 2, T, n)
     solver2 = Solver(a, init_pos, init_vel, 2, T, n)
-    pos_E, vel_E = solver1.solve(method = "Euler")
+    #pos_E, vel_E = solver1.solve(method = "Euler")
     pos_V, vel_V = solver2.solve(method = "Verlet")
 
 
@@ -126,8 +142,10 @@ if __name__ == '__main__':
     plt.plot(pos_V[0,:-1,0], pos_V[1,:-1,0], color="green")
     plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", color="green",)
 
+
     plt.plot(pos_V[0,0,1], pos_V[1,0,1], "x", color="red",)
     plt.plot(pos_V[0,:-1,1], pos_V[1,:-1,1], color="red")
-    plt.axis([-2,2, -2,2])
+
+    #plt.axis([-2,2, -2,2])
     plt.axis('equal')
     plt.show()
