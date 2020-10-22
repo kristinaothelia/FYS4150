@@ -5,6 +5,9 @@ import time
 import numpy                as np
 import matplotlib.pyplot    as plt
 
+# Import python programs
+import functions            as func
+
 # -----------------------------------------------------------------------------
 
 def get_acceleration(GM, t, pos):
