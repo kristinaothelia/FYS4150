@@ -3,55 +3,72 @@ import os, sys
 import pandas as pd
 import numpy  as np
 
-class SolarSystem:
+class SolarSystem():
+
     def __init__(self, names):
         """
         Initialize the solar system with the masses of the sun and planets.
         names: A list of strings with names of the planets to be considered.
         """
 
+        # Setting index_col=0 to easier work with the DataFrame
         filename = '/Data/planet_data.csv'
         cwd      = os.getcwd()
         fn       = cwd + filename
         nanDict  = {}
-        Data     = pd.read_csv(fn, header=0, skiprows=0, index_col=False, na_values=nanDict)
+        Data     = pd.read_csv(fn, header=0, skiprows=0, index_col=0, na_values=nanDict)
 
-        Planet   = Data["Planet"].values  # names of planets
-        Mass     = Data["Mass"].values   # [kg], masses
-        Dist     = Data["Distance to the Sun"].values  # [AU], distance from Sun
+        # Creating a new DataFrame only containing input planets: 'names'
+        Planets = Data.loc[names].reset_index()
 
-        N = len(names) # nr of planets
-        our_system = np.zeros([N, 2])  # row: planets, columns: name, mass, distance
+        print('\nOur Solar System now has the following planets:\n')
+        print(Planets)
 
+        x0     = Planets['x'].values
+        y0     = Planets['y'].values
+        vx0    = Planets['vx'].values
+        vy0    = Planets['vy'].values
 
-        index = [] #indexes of planets
-        for i in range(len(names)):
-            for j in range(len(Planet)):
-                if names[i] == Planet[j]:
-                    index.append(j)
-                    our_system[i,:] = [eval(Mass[j]), float(Dist[j])]
-        self.our_system = our_system
-        print("Our Solar System now has the following planets:")
-        for k in range(len(index)):
-            print("%s" % Planet[index[k]])
+        #print(mass)
+        #print(x0)
+        #print(y0)
+        #print(vx0)
+        #print(vy0)
 
-    def __call__(self):
-        """
-        Returns masses and initial conditions of the sun and planets.
-        """
-        return self.our_system
+        self.mass    = Planets.eval(Planets['Mass'])
+        print(self.mass)
 
-    """
-    def get_acceleration(GM, t, pos):
-        r_vec = np.array([0, 0]) - pos[t, :]
-        r     = np.sqrt(r_vec[0]**2 + r_vec[1]**2)
-        acc   = GM*r_vec / r**3
+        self.initPos = np.array((x0, y0))
+        print(self.initPos)
 
-        return self.acc
-    """
+        self.initVel = np.array((vx0, vy0))
+        print(self.initVel)
 
+    '''
+    def init_conditions(self):
+        # Create lists of Mass of Dist values
+        mass   = Planets.eval(Planets['Mass']).tolist()
+        x0     = Planets['x'].values
+        y0     = Planets['y'].values
+        vx0    = Planets['vx'].values
+        vy0    = Planets['vy'].values
+
+        print(mass)
+        print(x0)
+        print(y0)
+        print(vx0)
+        print(vy0)
+
+        return mass, x0, y0, vx0, vy0
+    '''
+
+    #def __call__(self):
+    #    """
+    #    Returns masses and initial conditions of the sun and planets.
+    #    """
+    #   return self.our_system
 
 
 if __name__ == '__main__':
     ex3b = SolarSystem(["Earth", "Jupiter", "Mercury", "Saturn"])
-    print(ex3b())
+    print('\nrow: planets, columns: mass, distance:\n'); print(ex3b())
