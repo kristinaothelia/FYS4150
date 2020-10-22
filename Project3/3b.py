@@ -61,13 +61,14 @@ GM          = 4*np.pi**2                # G*M_sun, Astro units, [AU^3/yr^2]
 total_time  = 10                        # [yr]
 dt          = 1e-3
 ts          = int(total_time/dt)        # Time step
+v0          = 2*np.pi                   # Equal to np.sqrt(GM/r), where r=1 AU
 
 pos         = np.zeros((ts, 2))
 vel         = np.zeros((ts, 2))
 acc         = np.zeros((ts, 2))
 
 pos[0, :]   = [1, 0]
-vel[0, :]   = [0, 2*np.pi]
+vel[0, :]   = [0, v0]
 acc[0, :]   = get_acceleration(GM, 0, pos)
 
 ### OBS! Noe blir overkjort. Kan ikke flytte plottet etter verlet...
@@ -86,6 +87,8 @@ plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.tight_layout()
 plt.savefig("Results/3b_Earth_Sun_system.png"); plt.show()
 
+'''
 M_earth = 5.972e24  #[kg]
-func.Energy(M_earth, GM, vel_V, pos_V)
+func.Energy(M_earth, GM, vel_V, pos_V, )
 plt.savefig("Results/3c_Earth_Sun_system_energy.png"); plt.show()
+'''
