@@ -91,9 +91,18 @@ def angular_momentum(vel, pos, time):
     plt.plot(time, L)
     plt.show()
 
+def Figure(title=''):
+    plt.title(title, fontsize=15)
+    plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
+    plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout()
+    plt.axis('equal')
 
+'''
 def Plot_Sun_Earth_system(pos, label=''):
 
     plt.plot(pos[:, 0], pos[:, 1], label=label)
     plt.axis("equal")
     plt.legend()
+'''
