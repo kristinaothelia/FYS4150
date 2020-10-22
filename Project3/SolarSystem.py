@@ -1,4 +1,4 @@
-import os, sys 
+import os, sys
 
 import pandas as pd
 import numpy  as np
@@ -29,20 +29,9 @@ class SolarSystem():
         vx0    = Planets['vx'].values*365.25
         vy0    = Planets['vy'].values*365.25
 
-        #print(mass)
-        #print(x0)
-        #print(y0)
-        #print(vx0)
-        #print(vy0)
-
         self.mass    = Planets.eval(Planets['Mass'])
-        print(self.mass)
-
         self.initPos = np.array((x0, y0))
-        print(self.initPos)
-
         self.initVel = np.array((vx0, vy0))
-        print(self.initVel)
 
     '''
     def init_conditions(self):
