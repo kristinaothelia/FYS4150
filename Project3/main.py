@@ -1,4 +1,3 @@
-
 """
 Main program for FYS4150 - Project 3: Solar system
 """
@@ -9,7 +8,6 @@ import matplotlib.pyplot    as plt
 
 # Import python programs
 import functions            as func
-import SolarSystem_copy          ## ???
 from Solver import Solver
 #------------------------------------------------------------------------------
 '''
@@ -76,6 +74,7 @@ if __name__ == '__main__':
     elif ex_3c == True:
         print("Earth-Sun system in 2D. Object oriented (we think...)")
 
+        # Denne maa inn i Solver...?
         def a(r, t):
             """
             Right-hand-side of the ODE dv/dt = -GM/r^2.
@@ -84,31 +83,44 @@ if __name__ == '__main__':
             kan kanskje vaere i func?
             """
             unit_r = r/np.linalg.norm(r)
-            acceleration = -GM/np.linalg.norm(r)**2*unit_r
-            return acceleration
+            acc    = -GM/np.linalg.norm(r)**2*unit_r
+            return acc
 
-        init_pos = [1 , 0]  #[AU]
-        init_vel = [0, 2*np.pi]   #[AU/yr] ??
+
+        T  = 10  #[yr]
+        dt = 1e-3
+        n  = int(10e3)
+        t  = np.linspace(0, T, n+1)
+        Np = 1
+
+        M_earth = 5.972e24  #[kg]
+
+        init_pos = np.array([[1,0]])            # [AU]
+        init_vel = np.array([[0,2*np.pi]])      # [?]
+
+        init_pos = np.transpose(init_pos)
+        init_vel = np.transpose(init_vel)
 
         #using the class
-        #print(Solver)
-        solver = Solver(a)
-        solver.set_initial_conditions([init_pos, init_vel])
-        #print(solver.U0)
-        T = 10  #[yr]
-        dt = 1e-3
-        n = int(10e3)
-        t = np.linspace(0, T, n+1)
-        #print(t)
-        u, t = solver.solve(t, method="Euler")
-        pos_E = u[:,0:2]
-        vel = u[:,2:4]
+        solver1 = Solver(a, init_pos, init_vel, Np, T, n)
+        solver2 = Solver(a, init_pos, init_vel, Np, T, n)
+        pos_E, vel_E = solver1.solve(method = "Euler")
+        pos_V, vel_V = solver2.solve(method = "Verlet")
 
-        func.Plot_Sun_Earth_system(pos_E, label="ForwardEuler")
+        plt.plot(pos_E[0,:-1,0], pos_E[1,:-1,0], label="Forward Euler")
+        plt.plot(pos_E[0,0,0], pos_E[1,0,0], "x", label="Init. pos.")
+        plt.plot(pos_V[0,:-1,0], pos_V[1,:-1,0], label="Verlet")
+        plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
 
         plt.title("Earth-Sun system. Over %g years \n Object oriented" %T, fontsize=15)
         plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
         plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
         plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.tight_layout()
+        plt.axis('equal')
         plt.savefig("Results/3b_Earth_Sun_system_object.png"); plt.show()
+
+        # Funker ikke helt...
+
+        func.Energy(M_earth, GM, vel_V, pos_V)
+        plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()

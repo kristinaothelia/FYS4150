@@ -84,15 +84,5 @@ plt.tight_layout()
 plt.savefig("Results/3b_Earth_Sun_system.png"); plt.show()
 
 M_earth = 5.972e24  #[kg]
-K = 0.5*M_earth*np.linalg.norm(vel_V, axis=1)**2
-U = -(GM*M_earth)/np.linalg.norm(pos_V, axis=1)
-
-plt.figure()
-plt.plot(U, label="potential")
-plt.plot(K, label="kinetic")
-plt.plot(U+K, label="energy")
-
-plt.title("Energy", fontsize=15)
-plt.xlabel("...", fontsize=15); plt.ylabel("...", fontsize=15)
-plt.legend()
+func.Energy(M_earth, GM, vel_V, pos_V)
 plt.savefig("Results/3c_Earth_Sun_system_energy.png"); plt.show()
