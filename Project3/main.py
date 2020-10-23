@@ -38,8 +38,7 @@ def Energy(vel, pos, time, title=''):
     plt.plot(time, U, label="Potential")
     plt.plot(time, K, label="Kinetic")
     plt.plot(time, U+K, label="Total energy")
-    plt.xticks(fontsize=13)
-    plt.yticks(fontsize=13)
+    plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.title(title, fontsize=15)
     plt.xlabel("Time [yr]", fontsize=15)
     plt.ylabel("Energy [J] ??", fontsize=15)
@@ -52,31 +51,26 @@ def angular_momentum(vel, pos, time, title=''):
     time = time[:-1]
 
     plt.plot(time, L)
-    plt.xticks(fontsize=13)
-    plt.yticks(fontsize=13)
+    plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.title(title, fontsize=15)
     plt.xlabel("Time [yr]", fontsize=15)
     plt.ylabel("??", fontsize=15)
 
 def Figure(title=''):
 
-    plt.xticks(fontsize=13)
-    plt.yticks(fontsize=13)
-
     plt.title(title, fontsize=15)
     plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
     plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.axis('equal'); plt.tight_layout()
 
 def Figure_noSunPlot(title=''):
 
-    plt.xticks(fontsize=13)
-    plt.yticks(fontsize=13)
-
     plt.title(title, fontsize=15)
     plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.axis('equal'); plt.tight_layout()
 
 def Ex3cd(n, T=10, Np=1, test_stability=False):
@@ -278,6 +272,7 @@ def Ex3h(n, T, planet_names):
 
     planet_names : Import of wanted planets (and/or Sun)
     """
+    #n = int(1e5)
     planets = SolarSystem(planet_names)
     Np      = len(planets.mass)          # Nr. of planets
 
