@@ -87,8 +87,7 @@ def angular_momentum(vel, pos, time):
 
     L = np.cross(pos, vel, axis=0)
     L = np.linalg.norm(L, axis=1)
-    time = time[:-1]
-    plt.plot(time, L)
+    plt.plot(L)
     plt.show()
 
 
