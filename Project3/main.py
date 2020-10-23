@@ -329,7 +329,7 @@ if __name__ == '__main__':
         print("Earth-Sun system in 2D. Object oriented. Energy cons and AM")
         print("--------------------------------------------------------------")
 
-        Ex3cd(n=n, T=10, Np=1, test_stability=True)
+        #Ex3cd(n=n, T=10, Np=1, test_stability=True)
         Ex3cd(n=n, T=10, Np=1, test_stability=False)
 
     elif ex_3e == True:
