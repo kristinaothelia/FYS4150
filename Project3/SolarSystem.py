@@ -1,7 +1,11 @@
+"""
+FYS4150 - Project 3: Solar system class
+"""
 import os, sys
-
 import pandas as pd
 import numpy  as np
+
+#------------------------------------------------------------------------------
 
 class SolarSystem():
 

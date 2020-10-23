@@ -6,14 +6,12 @@ import argparse
 import numpy                as np
 import matplotlib.pyplot    as plt
 
-# Import python programs
-import functions            as func
-
+# Import python classes
 from Solver                 import Solver
 from SolarSystem            import SolarSystem
 #------------------------------------------------------------------------------
 
-planet_names = ["Earth", "Jupiter", "Saturn", "Pluto"]
+planet_names = ["Earth", "Jupiter"]
 planets = SolarSystem(planet_names)
 
 yr      = 365*24*60*60          # [s]
@@ -27,175 +25,239 @@ AU      = 149597870691          # AU [m]
 GMJ     = 4*np.pi*(M_J/M_Sun)   # G*M_J, Astro units, [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
+n = int(1e4)         # because of computational time
 
-def Energy(vel, pos, time):
-    K = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
-    U = -(GM*M_E)/np.linalg.norm(pos, axis=0)
+def Energy(vel, pos, time, title=''):
 
-    K = np.ravel(K)
-    U = np.ravel(U)
+    K    = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
+    U    = -(GM*M_E)/np.linalg.norm(pos, axis=0)
+    K    = np.ravel(K)
+    U    = np.ravel(U)
     time = time[:-1]
 
-    plt.figure(1)
     plt.plot(time, U, label="Potential")
     plt.plot(time, K, label="Kinetic")
     plt.plot(time, U+K, label="Total energy")
-    plt.title("Energy", fontsize=15)
-    plt.xlabel("Time [yr]", fontsize=15); plt.ylabel("Energy [J] ??", fontsize=15)
-    plt.legend()
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    plt.title(title, fontsize=15)
+    plt.xlabel("Time [yr]", fontsize=15)
+    plt.ylabel("Energy [J] ??", fontsize=15)
+    plt.legend(fontsize=13)
 
-def angular_momentum(vel, pos, time):
+def angular_momentum(vel, pos, time, title=''):
 
     L = np.cross(pos, vel, axis=0)
     L = np.linalg.norm(L, axis=1)
     time = time[:-1]
+
     plt.plot(time, L)
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    plt.title(title, fontsize=15)
+    plt.xlabel("Time [yr]", fontsize=15)
+    plt.ylabel("??", fontsize=15)
 
 def Figure(title=''):
+
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+
     plt.title(title, fontsize=15)
     plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
     plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.tight_layout()
-    plt.axis('equal')
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    plt.axis('equal'); plt.tight_layout()
+
+def Figure_noSunPlot(title=''):
+
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+
+    plt.title(title, fontsize=15)
+    plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    plt.axis('equal'); plt.tight_layout()
+
+def Ex3cd(n, T=10, Np=1, test_stability=False):
+    """
+    n       : Integration points
+    T       : Time to run the simulation. Default 10 years. [yr]
+    Np      : Number of planets. Earth only for 3c)
+
+    Test stability : Test n-values needed for a stable orbit
+    """
+
+    init_pos = np.array([[1,0]])            # [AU]
+    init_vel = np.array([[0,2*np.pi]])      # [AU/yr]
+
+    init_pos = np.transpose(init_pos)
+    init_vel = np.transpose(init_vel)
+
+    if test_stability == True:
+
+        n = [1e1, 1e2, 1e3, 1e4, 1e5, 1e6]   # Different n values
+
+        for i in range(len(n)):
+
+            # Using the class
+            solver1 = Solver(M_E, init_pos, init_vel, Np, T, int(n[i]))
+            solver2 = Solver(M_E, init_pos, init_vel, Np, T, int(n[i]))
+            pos_E, vel_E, t_E = solver1.solve(method = "Euler")
+            pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
+
+            # Plot for Euler and Verlet
+            plt.plot(pos_E[0,:,0], pos_E[1,:,0], label="Forward Euler")
+            plt.plot(pos_E[0,0,0], pos_E[1,0,0], "kx", label="Init. pos.")
+            plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet")
+            plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
+
+            Figure(title="Earth-Sun system. Over %g years \n Object oriented. n=$10^%g$" %(T, i+1))
+            plt.savefig("Results/Integration_points/3b_stability_%g.png" %(i+1)); plt.show()
+        sys.exit()
+
+    # Using the class
+    solver1 = Solver(M_E, init_pos, init_vel, Np, T, n)
+    solver2 = Solver(M_E, init_pos, init_vel, Np, T, n)
+    pos_E, vel_E, t_E = solver1.solve(method = "Euler")
+    pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
+
+    # Plot for Euler and Verlet
+    plt.plot(pos_E[0,:,0], pos_E[1,:,0], label="Forward Euler")
+    plt.plot(pos_E[0,0,0], pos_E[1,0,0], "x", label="Init. pos.")
+    plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet")
+    plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
+
+    # Make figure
+    Figure(title="Earth-Sun system. Over %g years \n Object oriented" %T)
+    plt.savefig("Results/3b_Earth_Sun_system_object_.png"); plt.show()
+
+    # Energy and momentum, Forward Euler:
+    Energy(vel_E, pos_E, t_E, "Earth-Sun system. Energy conservation \n Forward Euler")
+    plt.savefig("Results/3c_Earth_Sun_system_energy_object_E.png"); plt.show()
+    angular_momentum(vel_E, pos_E, t_E, "Earth-Sun system. Angular momentum \n Forward Euler") # OBS! NOE GALT
+    plt.savefig("Results/3c_Earth_Sun_system_momentum_object_E.png"); plt.show()
+
+    # Energy and momentum, Verlet:
+    Energy(vel_V, pos_V, t_V, "Earth-Sun system. Energy conservation \n Verlet")
+    plt.savefig("Results/3c_Earth_Sun_system_energy_object_V.png"); plt.show()
+    angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system. Angular momentum \n Verlet") # OBS! NOE GALT
+    plt.savefig("Results/3c_Earth_Sun_system_momentum_object_V.png"); plt.show()
 
 
+def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi):
+    """
+    n       : Integration points
+    T       : Time to run the simulation. Default 10 years. [yr]
+    Np      : Number of planets. Earth only for 3e)
+    Beta    : Beta values. beta=2 as default
 
-if __name__ == '__main__':
+    v0
+    """
 
-    '''
-    parser = argparse.ArgumentParser(description="Solar system")
+    if type(beta) == int:
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-1', '--c3', action="store_true", help="Project 3, c)")
-    group.add_argument('-2', '--d3', action="store_true", help="Project 3, d)")
-    group.add_argument('-3', '--e3', action="store_true", help="Project 3, e)")
-    group.add_argument('-4', '--f3', action="store_true", help="Project 3, f)")
-    group.add_argument('-5', '--g3', action="store_true", help="Project 3, g)")
-    group.add_argument('-6', '--h3', action="store_true", help="Project 3, h)")
-    group.add_argument('-7', '--i3', action="store_true", help="Project 3, i)")
-
-    # Optional argument for habitable zone calculations
-    #parser.add_argument('-X', '--hab', action='store_true', help="Habitable zone calculations", required=False)
-
-    if len(sys.argv) <= 1:
-        sys.argv.append('--help')
-
-    args  = parser.parse_args()
-    ex_3c = args.c3
-    ex_3d = args.d3
-    ex_3e = args.e3
-    ex_3f = args.f3
-    ex_3g = args.g3
-    ex_3h = args.h3
-    ex_3i = args.i3
-    '''
-
-    ex_3c = True
-    ex_3d = False
-    ex_3e = False
-    ex_3f = False
-    ex_3g = False
-    ex_3h = False
-    ex_3i = False
-
-    ex_test = False
-
-
-    if ex_3c == True:
-        print("Earth-Sun system in 2D. Object oriented")
-
-        T  = 10                                 # [yr]
-        Np = 1                                  # Nr. of planets. Only Earth
-        n  = int(10e3)
-
-        init_pos = np.array([[1,0]])            # [AU]
-        init_vel = np.array([[0,2*np.pi]])      # [AU/yr]
+        init_pos = np.array([[1,0]])                # [AU]
+        init_vel = np.array([[0,v0]])               # [AU/yr]
 
         init_pos = np.transpose(init_pos)
         init_vel = np.transpose(init_vel)
 
-        # Using the class
         solver1 = Solver(M_E, init_pos, init_vel, Np, T, n)
-        solver2 = Solver(M_E, init_pos, init_vel, Np, T, n)
-        pos_E, vel_E, t_E = solver1.solve(method = "Euler")
-        pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
+        pos_V, vel_V, t_V = solver1.solve(method = "Verlet", beta=beta)
 
-        # Plot for Euler and Verlet
-        plt.plot(pos_E[0,:,0], pos_E[1,:,0], label="Forward Euler")
-        plt.plot(pos_E[0,0,0], pos_E[1,0,0], "x", label="Init. pos.")
-        plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet")
-        plt.plot(pos_V[0,0,0], pos_V[1,0,0], "x", label="Init. pos.")
+        plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet. beta=%.1f" % beta)
+        plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
 
         # Make figure
-        Figure( title="Earth-Sun system. Over %g years \n Object oriented" %T)
-        plt.savefig("Results/3b_Earth_Sun_system_object_.png"); plt.show()
+        Figure(title="Earth-Sun system. Over %g years \n v0=%g AU/yr" %(T, v0))
+        plt.savefig("Results/3e_beta_Earth_Sun_system_v0%g.png" %v0); plt.show()
 
-        # Ogsaa gjore for Euler...!
 
-        Energy(vel_V, pos_V, t_V)
-        plt.savefig("Results/3c_Earth_Sun_system_energy_object.png"); plt.show()
-        angular_momentum(vel_V, pos_V, t_V) # OBS! NOE GALT
-        plt.savefig("Results/3c_Earth_Sun_system_momentum_object.png"); plt.show()
+    else:
+        for i in range(len(beta)):
 
-    elif ex_3f == True:
-        """
-        Escape velocity.
-        Consider then a planet (Earth) which begins at a distance of 1 AU
-        from the sun. Find out by trial and error what the initial velocity
-        must be in order for the planet to escape from the sun
-        """
-
-        T  = 10                        # [yr]
-        Np = 1                                  # Nr. of planets. Only Earth
-        n  = int(10e3)
-
-        # Trial and error to find the initial velocity for escaping
-        test = np.array([0.9, 1.1, 1.3, 1.35, 1.4, 1.415])
-        # Known escape velocity equation
-        eq   = np.sqrt(2*GM/1)
-        # All velocities to be tested
-        vel  = np.append(2*np.pi*test, eq)
-
-        for i in range(len(vel)):
-
-            v_esc       = vel[i]
-
-            init_pos = np.array([[1,0]])            # [AU]
-            init_vel = np.array([[0,v_esc]])        # [AU/yr]
+            init_pos = np.array([[1,0]])                # [AU]
+            init_vel = np.array([[0,v0]])               # [AU/yr]
 
             init_pos = np.transpose(init_pos)
             init_vel = np.transpose(init_vel)
 
             solver1 = Solver(M_E, init_pos, init_vel, Np, T, n)
-            pos_V, vel_V, t_V = solver1.solve(method = "Verlet")
+            pos_V, vel_V, t_V = solver1.solve(method = "Verlet", beta=beta[i])
 
-            if i < 6:
-                plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet. v=2pi*%.3f" %test[i])
-                plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
-            else:
-                plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet. v=sqrt(2GM/r)")
-                plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
-
+            plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet. beta=%.1f" % beta[i])
+            plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
 
         # Make figure
-        Figure(title="Earth-Sun system. Over %g years \n Escape velocity" %T)
-        plt.savefig("Results/3f_v_esc_Earth_Sun_system.png"); plt.show()
+        Figure(title="Earth-Sun system. Over %g years \n Different $\\beta$ values. v0=2$\\pi$" %T)
+        plt.savefig("Results/3e_beta_Earth_Sun_system.png"); plt.show()
 
-    elif ex_test == True:
-        """
-        Test for 3h). But need to add center of mass
-        """
-        T  = 100                        # [yr]
-        Np = len(planets.mass)          # Nr. of planets
-        n  = int(10e3)
 
-        init_pos = planets.initPos
-        init_vel = planets.initVel
-        masses   = planets.mass
+def Ex3f(n, T=10, Np=1, v_esc_test=[0.9, 1.1, 1.3, 1.35, 1.4, 1.415]):
+    """
+    n       : Integration points
+    T       : Time to run the simulation. Default 10 years. [yr]
+    Np      : Number of planets. Earth only for 3f)
+
+    v_esc_test : List of initial velocities to test as escape velocity
+                 Default: [0.9, 1.1, 1.3, 1.35, 1.4, 1.415]
+    """
+
+    # Trial and error to find the initial velocity for escaping
+    test = np.array(v_esc_test)
+    # Known escape velocity equation
+    eq   = np.sqrt(2*GM/1)
+    # All velocities to be tested
+    vel  = np.append(2*np.pi*test, eq)
+
+    for i in range(len(vel)):
+
+        v_esc       = vel[i]
+
+        init_pos = np.array([[1,0]])            # [AU]
+        init_vel = np.array([[0,v_esc]])        # [AU/yr]
+
+        init_pos = np.transpose(init_pos)
+        init_vel = np.transpose(init_vel)
+
+        solver1 = Solver(M_E, init_pos, init_vel, Np, T, n)
+        pos_V, vel_V, t_V = solver1.solve(method = "Verlet")
+
+        if i < 6:
+            plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet. v0=2pi*%.3f" %test[i])
+            plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
+        else:
+            plt.plot(pos_V[0,:,0], pos_V[1,:,0], label="Verlet. v0=sqrt(2GM/r)")
+            plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
+
+    # Make figure
+    Figure(title="Earth-Sun system. Over %g years \n Escape velocity" %T)
+    plt.savefig("Results/3f_v_esc_Earth_Sun_system_yr%g.png" %T); plt.show()
+
+
+def Ex3g(n, T, m=1):
+    """
+    n       : Integration points
+    T       : Time to run the simulation. Default 10 years. [yr]
+    m       : Factor to change Jupiter mass
+    """
+
+    planet_names = ["Earth", "Jupiter"]
+    planets = SolarSystem(planet_names)
+
+    Np = len(planets.mass)          # Nr. of planets
+
+    init_pos = planets.initPos
+    init_vel = planets.initVel
+    masses   = planets.mass
+
+    for M in range(len(m)):
+
+        masses_  = [masses[0], masses[1]*m[M]]
 
         # Using the class
-        solver2 = Solver(masses, init_pos, init_vel, Np, T, n)
+        solver2 = Solver(masses_, init_pos, init_vel, Np, T, n)
         pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
 
         # Plot orbits
@@ -205,5 +267,123 @@ if __name__ == '__main__':
             plt.plot(pos_V[0,0,i], pos_V[1,0,i], "kx", label="Init. pos. %s" %planet_names[i])
 
         # Make figure
-        Figure(title="Solar system. Over %g years \n Object oriented, Verlet method" %T)
-        plt.savefig("Results/test_orbits.png"); plt.show()
+        Figure(title="Solar system. Over %g years \n Verlet method. $M_J$=$M_J$*%g" %(T,m[M]))
+        plt.savefig("Results/3g_E_J_Sun_system_m%g.png" %m[M]); plt.show()
+
+
+def Ex3h(n, T, planet_names):
+    """
+    n       : Integration points
+    T       : Time to run the simulation. Default 10 years. [yr]
+
+    planet_names : Import of wanted planets (and/or Sun)
+    """
+    planets = SolarSystem(planet_names)
+    Np      = len(planets.mass)          # Nr. of planets
+
+    init_pos = planets.initPos
+    init_vel = planets.initVel
+    masses   = planets.mass
+
+    # Using the class
+    solver = Solver(masses, init_pos, init_vel, Np, T, n)
+    pos_V, vel_V, t_V = solver.solve(method = "Verlet", SunInMotion=True)
+
+    # Plot orbits
+    for i in range(Np):
+
+        plt.plot(pos_V[0,:,i], pos_V[1,:,i], label="%s" %planet_names[i])
+        plt.plot(pos_V[0,0,i], pos_V[1,0,i], "kx", label="Init. pos. %s" %planet_names[i])
+
+    # Make figure
+    Figure_noSunPlot(title="Solar system. Over %g years \n Verlet method" %(T))
+    plt.savefig("Results/3h_solar_system_nrPlanets_%g.png" %Np); plt.show()
+
+
+if __name__ == '__main__':
+
+    # For ex. 3b) Run 3b.py only
+
+    parser = argparse.ArgumentParser(description="Solar system")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-1', '--cd3', action="store_true", help="Project 3, c) og d)")
+    group.add_argument('-2', '--e3',  action="store_true", help="Project 3, e)")
+    group.add_argument('-3', '--f3',  action="store_true", help="Project 3, f)")
+    group.add_argument('-4', '--g3',  action="store_true", help="Project 3, g)")
+    group.add_argument('-5', '--h3',  action="store_true", help="Project 3, h)")
+    group.add_argument('-6', '--i3',  action="store_true", help="Project 3, i)")
+
+    # Optional argument for habitable zone calculations
+    #parser.add_argument('-X', '--hab', action='store_true', help="Habitable zone calculations", required=False)
+
+    if len(sys.argv) <= 1:
+        sys.argv.append('--help')
+
+    args   = parser.parse_args()
+    ex_3cd = args.cd3
+    ex_3e  = args.e3
+    ex_3f  = args.f3
+    ex_3g  = args.g3
+    ex_3h  = args.h3
+    ex_3i  = args.i3
+
+
+    if ex_3cd == True:
+        print("--------------------------------------------------------------")
+        print("Earth-Sun system in 2D. Object oriented. Energy cons and AM")
+        print("--------------------------------------------------------------")
+
+        Ex3cd(n=n, T=10, Np=1, test_stability=True)
+        Ex3cd(n=n, T=10, Np=1, test_stability=False)
+
+    elif ex_3e == True:
+        print("--------------------------------------------------------------")
+        print("Beta values")
+        print("--------------------------------------------------------------")
+
+        #b  = np.linspace(2, 3, 6)
+        b  = [3, 2.9, 2]                        # Beta values
+        Ex3e(n=n, T=50, Np=1, beta=b)
+
+        # bare med beta=2
+        Ex3e(n=n, T=10, Np=1, beta=2, v0=5)
+
+
+    elif ex_3f == True:
+        print("--------------------------------------------------------------")
+        print("Escape velocity")
+        print("--------------------------------------------------------------")
+
+        list = [0.9, 1.1, 1.3, 1.35, 1.4, 1.415]
+        Ex3f(n=n, T=10,  Np=1, v_esc_test=list)
+        Ex3f(n=n, T=100, Np=1, v_esc_test=list)
+
+
+    elif ex_3g == True:
+        print("--------------------------------------------------------------")
+        print("The three-body problem. Earth-Jupiter-Sun")
+        print("--------------------------------------------------------------")
+
+        m = [1, 10, 1000]           # Factors to change the mass of Jupiter
+        Ex3g(n=n, T=100, m=m)
+
+
+    elif ex_3h == True:
+        """
+        Planets and the Sun have to orbit around the center of mass, not a
+        stationary Sun.
+        """
+        print("--------------------------------------------------------------")
+        print("Model for all planets of the solar system. Sun in motion")
+        print("--------------------------------------------------------------")
+
+        SEJ = ["Sun", "Earth", "Jupiter"]
+        SS  = ["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptun", "Pluto"]
+
+        Ex3h(n, T=100, planet_names=SEJ)
+        Ex3h(n, T=250, planet_names=SS)
+
+
+    elif ex_3i == True:
+        print("The perihelion precession of Mercury")
