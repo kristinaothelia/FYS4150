@@ -15,37 +15,40 @@ class Solver:
     """
     def __init__(self, M, r0, v0, Np, T, n):
         """
-        M : Planet masses
-        r0: Initial positions,  x   y  [2, nr_planets]
-        v0: Initial velocities, vx, vy [2, nr_planets]
+        M : Planet masses.
+        r0: Initial positions,  x   y  [2, nr_planets].
+        v0: Initial velocities, vx, vy [2, nr_planets].
         Np: Number of bodies.
         ts: Array with time points.
         """
 
         self.M     = M
-        self.M_Sun = 1.989*10**30  # [kg]
-        self.GM    = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
+        self.M_Sun = 1.989*10**30        # [kg]
+        self.GM    = 4*np.pi**2          # [AU^3/yr^2] (G*M_sun, Astro units)
         self.G     = self.GM/self.M_Sun
+        self.c     = 63239.7             # [AU/yr]
 
-        #initial positions and velocities
+        # initial positions and velocities
         self.r0 = r0
         self.v0 = v0
 
-        #number of planets
+        # number of planets
         self.Np = int(Np)
 
-        #time array
-        self.T = T; self.n = n
+        # time array
+        self.T  = T
+        self.n  = n # int(n)
         self.ts = np.linspace(0, T, n+1)
 
-        #position matrix
+        # position matrix
         self.r = np.zeros([2, self.ts.size-1, self.Np])  #[x or y, time step, planet]
 
-        #velocity matrix
+        # velocity matrix
         self.v = np.zeros([2, self.ts.size-1, self.Np])  #[vs or vy, time step, planet]
 
 
     def acc_sun_in_motion(self, k_val, beta):
+        """ Calculates acceleration according to mass center """
 
         acceleration = np.zeros((2, self.Np))
 
@@ -66,6 +69,7 @@ class Solver:
 
 
     def acceleration_func(self, k_val, beta):
+        """ Calculates acceleration when assuming fixed Sun"""
         acceleration = np.zeros((2, self.Np))
 
         for n in range(self.Np):
@@ -86,13 +90,60 @@ class Solver:
         return acceleration
 
 
+    def relativity(self, k_val, beta=2):
+        """Calculates acceleration with relativistic correction, fixed sun?"""
+
+        acceleration = np.zeros((2, self.Np))
+
+        # axis wrong...?
+        ang    = np.cross(self.r[:,k_val,:], self.v[:,k_val,:], axis=0) # orbital angular momentum
+        l      = np.linalg.norm(ang, axis=0)                            # magnitude of ang / unit mass
+
+        radius = np.linalg.norm(self.r[:,k_val,:], axis=0)              # distance/radius, axis 0 or 1?
+        corr   = [1 + (3*l**2)/(radius[0]**beta * self.c**2)]           # relativistic correction
+
+        #print('ang', ang)
+        #print('l', l)
+        #print('r', radius)
+        #print('correction', corr)
+        #print('type corr', type(corr))
+        #print(self.r[:,k_val,:])
+
+        # Denne er nok helt på jordet, haha
+        acceleration -= (self.r[:,k_val,:]*self.G/radius[0]**(1+beta)) * corr[0]
+
+        return acceleration
+
+    def solver_relativistic(self, beta):
+        """Solver relativistic + Verlet (midlertidig?)"""
+
+        # initalize r and v matrices
+        self.r[:,0,:] = self.r0
+        self.v[:,0,:] = self.v0
+
+        dt     = self.ts[1] - self.ts[0]
+        #self.n = int(self.n)
+
+        for k in range(self.n-1):
+
+            self.k = k  # current index (in time), why self..?
+
+            acceleration1 = self.relativity(k, beta)
+
+            self.r[:,k+1,:]  = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*acceleration1*dt**2
+            acceleration2    = self.relativity(k+1, beta)
+            self.v[:,k+1,:]  = self.v[:,k,:] + 0.5*(acceleration1+acceleration2)*dt
+        return self.r, self.v, self.ts
+
+
     def solve(self, method, beta=2, SunInMotion=False):
         """
         Solves the system of ODEs using either Forward Euler or Velocity Verlet
         methods.
         method: string object with name of desired method.
         """
-        #initalize r and v matrices
+
+        # initalize r and v matrices
         self.r[:,0,:] = self.r0
         self.v[:,0,:] = self.v0
 

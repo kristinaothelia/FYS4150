@@ -11,13 +11,20 @@ from Solver                 import Solver
 from SolarSystem            import SolarSystem
 #------------------------------------------------------------------------------
 
-planet_names = ["Earth", "Jupiter"]
-planets = SolarSystem(planet_names)
+# Should maybe be below name=main, or...?
+
+planet_names_ = ['Earth', 'Jupiter']
+planets_      = SolarSystem(planet_names_)
+
+#print(help(planets_))
+#print(dir(planets_))
+#print(planets_.__dict__)
+
 
 yr      = 365*24*60*60          # [s]
 M_Sun   = 1.989*10**30          # [kg]
-M_E     = planets.mass[0]       # [kg]
-M_J     = planets.mass[1]       # [kg]
+M_E     = planets_.mass[0]      # [kg]
+M_J     = planets_.mass[1]      # [kg]
 
 AU      = 149597870691          # AU [m]
 
@@ -26,6 +33,7 @@ GMJ     = 4*np.pi*(M_J/M_Sun)   # G*M_J, Astro units, [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
 n = int(1e4)         # because of computational time
+
 
 def Energy(vel, pos, time, title=''):
 
@@ -73,7 +81,7 @@ def Figure_noSunPlot(title=''):
     plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.axis('equal'); plt.tight_layout()
 
-def Ex3cd(n, T=10, Np=1, test_stability=False):
+def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
     """
     n       : Integration points
     T       : Time to run the simulation. Default 10 years. [yr]
@@ -107,7 +115,9 @@ def Ex3cd(n, T=10, Np=1, test_stability=False):
             plt.plot(pos_V[0,0,0], pos_V[1,0,0], "kx", label="Init. pos.")
 
             Figure(title="Earth-Sun system. Over %g years \n Object oriented. n=$10^%g$" %(T, i+1))
-            plt.savefig("Results/Integration_points/3b_stability_%g.png" %(i+1)); plt.show()
+            if save_plot==True:
+                plt.savefig("Results/Integration_points/3b_stability_%g.png" %(i+1))
+            plt.show()
         sys.exit()
 
     # Using the class
@@ -124,22 +134,32 @@ def Ex3cd(n, T=10, Np=1, test_stability=False):
 
     # Make figure
     Figure(title="Earth-Sun system. Over %g years \n Object oriented" %T)
-    plt.savefig("Results/3b_Earth_Sun_system_object_.png"); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3b_Earth_Sun_system_object_.png")
+    plt.show()
 
     # Energy and momentum, Forward Euler:
     Energy(vel_E, pos_E, t_E, "Earth-Sun system. Energy conservation \n Forward Euler")
-    plt.savefig("Results/3c_Earth_Sun_system_energy_object_E.png"); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3c_Earth_Sun_system_energy_object_E.png")
+    plt.show()
     angular_momentum(vel_E, pos_E, t_E, "Earth-Sun system. Angular momentum \n Forward Euler") # OBS! NOE GALT
-    plt.savefig("Results/3c_Earth_Sun_system_momentum_object_E.png"); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3c_Earth_Sun_system_momentum_object_E.png")
+    plt.show()
 
     # Energy and momentum, Verlet:
     Energy(vel_V, pos_V, t_V, "Earth-Sun system. Energy conservation \n Verlet")
-    plt.savefig("Results/3c_Earth_Sun_system_energy_object_V.png"); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3c_Earth_Sun_system_energy_object_V.png")
+    plt.show()
     angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system. Angular momentum \n Verlet") # OBS! NOE GALT
-    plt.savefig("Results/3c_Earth_Sun_system_momentum_object_V.png"); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3c_Earth_Sun_system_momentum_object_V.png")
+    plt.show()
 
 
-def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi):
+def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi, save_plot=False):
     """
     n       : Integration points
     T       : Time to run the simulation. Default 10 years. [yr]
@@ -165,7 +185,9 @@ def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi):
 
         # Make figure
         Figure(title="Earth-Sun system. Over %g years \n v0=%g AU/yr" %(T, v0))
-        plt.savefig("Results/3e_beta_Earth_Sun_system_v0%g.png" %v0); plt.show()
+        if save_plot==True:
+            plt.savefig("Results/3e_beta_Earth_Sun_system_v0%g.png" %v0)
+        plt.show()
 
 
     else:
@@ -185,10 +207,12 @@ def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi):
 
         # Make figure
         Figure(title="Earth-Sun system. Over %g years \n Different $\\beta$ values. v0=2$\\pi$" %T)
-        plt.savefig("Results/3e_beta_Earth_Sun_system.png"); plt.show()
+        if save_plot==True:
+            plt.savefig("Results/3e_beta_Earth_Sun_system.png")
+        plt.show()
 
 
-def Ex3f(n, T=10, Np=1, v_esc_test=[0.9, 1.1, 1.3, 1.35, 1.4, 1.415]):
+def Ex3f(n, T=10, Np=1, v_esc_test=[0.9, 1.1, 1.3, 1.35, 1.4, 1.415], save_plot=False):
     """
     n       : Integration points
     T       : Time to run the simulation. Default 10 years. [yr]
@@ -227,13 +251,15 @@ def Ex3f(n, T=10, Np=1, v_esc_test=[0.9, 1.1, 1.3, 1.35, 1.4, 1.415]):
 
     # Make figure
     Figure(title="Earth-Sun system. Over %g years \n Escape velocity" %T)
-    plt.savefig("Results/3f_v_esc_Earth_Sun_system_yr%g.png" %T); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3f_v_esc_Earth_Sun_system_yr%g.png" %T)
+    plt.show()
 
 
-def Ex3g(n, T, m=1):
+def Ex3g(n, T, m=1, save_plot=False):
     """
     n       : Integration points
-    T       : Time to run the simulation. Default 10 years. [yr]
+    T       : Time to run the simulation.
     m       : Factor to change Jupiter mass
     """
 
@@ -262,13 +288,15 @@ def Ex3g(n, T, m=1):
 
         # Make figure
         Figure(title="Solar system. Over %g years \n Verlet method. $M_J$=$M_J$*%g" %(T,m[M]))
-        plt.savefig("Results/3g_E_J_Sun_system_m%g.png" %m[M]); plt.show()
+        if save_plot==True:
+            plt.savefig("Results/3g_E_J_Sun_system_m%g.png" %m[M])
+        plt.show()
 
 
-def Ex3h(n, T, planet_names):
+def Ex3h(n, T, planet_names, save_plot=False):
     """
     n       : Integration points
-    T       : Time to run the simulation. Default 10 years. [yr]
+    T       : Time to run the simulation.
 
     planet_names : Import of wanted planets (and/or Sun)
     """
@@ -292,7 +320,41 @@ def Ex3h(n, T, planet_names):
 
     # Make figure
     Figure_noSunPlot(title="Solar system. Over %g years \n Verlet method" %(T))
-    plt.savefig("Results/3h_solar_system_nrPlanets_%g.png" %Np); plt.show()
+    if save_plot==True:
+        plt.savefig("Results/3h_solar_system_nrPlanets_%g.png" %Np)
+    plt.show()
+
+
+def Ex3i(planet_names, n, T=100):
+    """
+    #print(issubclass(bool, int))
+    #print(isinstance(planets.mass, object))
+    #print(isinstance(M_M, np.ndarray))
+    #print(planets.__init__.__doc__)
+    """
+
+    n = int(n)
+
+    planets  = SolarSystem(planet_names, PrintTable=True)
+    M_M      = planets.mass 
+
+    Np       = len(planets.mass)     # Nr. of planets
+
+    masses   = planets.mass
+    #init_pos = planets.initPos
+    #init_vel = planets.initVel
+    init_pos = np.array([[0.3075,0]])   # [AU]
+    init_vel = np.array([[0,12.44]])    # [AU/yr]
+    init_pos = np.transpose(init_pos)
+    init_vel = np.transpose(init_vel)
+
+    # Using the class
+    solver = Solver(masses, init_pos, init_vel, Np, T, n)
+    pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
+
+    plt.plot(pos_V[0,:,0], pos_V[1,:,0])
+    plt.plot(pos_V[0,0,0], pos_V[1,0,0])
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -374,11 +436,17 @@ if __name__ == '__main__':
         print("--------------------------------------------------------------")
 
         SEJ = ["Sun", "Earth", "Jupiter"]
-        SS  = ["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptun", "Pluto"]
+        SS  = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptun', 'Pluto']
 
         Ex3h(n, T=100, planet_names=SEJ)
         Ex3h(n, T=250, planet_names=SS)
 
 
     elif ex_3i == True:
+        print("--------------------------------------------------------------")
         print("The perihelion precession of Mercury")
+        print("--------------------------------------------------------------")
+
+        SM = ['Mercury']
+
+        Ex3i(planet_names=SM, n=1e6, T=100)
