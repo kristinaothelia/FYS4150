@@ -32,7 +32,7 @@ class Solver:
         # initial positions and velocities
         self.r0 = r0
         self.v0 = v0
-        print(self.r0)
+        #print(self.r0)
 
         # number of planets
         self.Np = int(Np)
@@ -185,7 +185,7 @@ class Solver:
         if SunInMotion == True:
 
             for k in range(self.n-1):
-                print("%.2f" % (100*k/(self.n-1)))
+                #print("%.2f" % (100*k/(self.n-1)))
                 self.k = k  #current index (in time)
 
 
