@@ -26,11 +26,13 @@ class Solver:
         self.M_Sun = 1.989*10**30        # [kg]
         self.GM    = 4*np.pi**2          # [AU^3/yr^2] (G*M_sun, Astro units)
         self.G     = self.GM/self.M_Sun
+        print(self.G)
         self.c     = 63239.7             # [AU/yr]
 
         # initial positions and velocities
         self.r0 = r0
         self.v0 = v0
+        print(self.r0)
 
         # number of planets
         self.Np = int(Np)
