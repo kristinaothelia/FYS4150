@@ -32,7 +32,7 @@ AU      = 149597870691          # AU [m]
 GMJ     = 4*np.pi*(M_J/M_Sun)   # G*M_J, Astro units, [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
-n = int(1e4)         # because of computational time
+n = int(1e5)         # because of computational time
 
 
 def Energy(vel, pos, time, title=''):
@@ -156,7 +156,7 @@ def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
     # Energy and momentum, Verlet:
     Energy(vel_V, pos_V, t_V, "Earth-Sun system. Energy conservation \n Verlet")
     if save_plot==True:
-        plt.savefig("Results/3c_Earth_Sun_system_energy_object_V.png")
+         plt.savefig("Results/3c_Earth_Sun_system_energy_object_V.png")
     plt.show()
     angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system. Angular momentum \n Verlet") # OBS! NOE GALT
     if save_plot==True:
@@ -341,7 +341,7 @@ def Ex3i(planet_names, n, T=100):
     n = int(n)
 
     planets  = SolarSystem(planet_names, PrintTable=True)
-    M_M      = planets.mass 
+    M_M      = planets.mass
 
     Np       = len(planets.mass)     # Nr. of planets
 

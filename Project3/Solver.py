@@ -56,6 +56,7 @@ class Solver:
 
             acceleration_sum = 0
             for i in range(self.Np):
+                #print(i)
                 if i != n:
                     temp_r = self.r[:,k_val,n] - self.r[:,k_val,i]
                     unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
@@ -147,6 +148,23 @@ class Solver:
         self.r[:,0,:] = self.r0
         self.v[:,0,:] = self.v0
 
+        #center of mass correction
+        total_mass = np.sum(self.M)
+
+        R = np.zeros(2)
+        V = np.zeros(2)
+        Rx = np.sum(self.M*self.r[0,0,:])/total_mass
+        Ry = np.sum(self.M*self.r[1,0,:])/total_mass
+        Vx = np.sum(self.M*self.v[0,0,:])/total_mass
+        Vy = np.sum(self.M*self.v[1,0,:])/total_mass
+        R = np.array([Rx, Ry])
+        V = np.array([Vx, Vy])
+
+
+        for i in range(self.Np):
+            self.r[:,0,i] -= R
+            self.v[:,0,i] -= V
+
         #size of time step (use as argument instead of T or n?)
         dt = self.ts[1] - self.ts[0]
 
@@ -165,7 +183,10 @@ class Solver:
         if SunInMotion == True:
 
             for k in range(self.n-1):
+                print("%.2f" % (100*k/(self.n-1)))
                 self.k = k  #current index (in time)
+
+
 
                 acceleration1 = self.acc_sun_in_motion(k, beta)
 
