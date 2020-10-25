@@ -1,7 +1,7 @@
 """
 Main program for FYS4150 - Project 3: Solar system
 """
-import sys, os
+import sys, os, time
 import argparse
 import numpy                as np
 import matplotlib.pyplot    as plt
@@ -105,8 +105,13 @@ def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
             # Using the class
             solver1 = Solver(M_E, init_pos, init_vel, Np, T, int(n[i]))
             solver2 = Solver(M_E, init_pos, init_vel, Np, T, int(n[i]))
+
+            start_time = time.time()
             pos_E, vel_E, t_E = solver1.solve(method = "Euler")
+            print("Forward Euler time: ", time.time()-start_time)
+            start_time_V = time.time()
             pos_V, vel_V, t_V = solver2.solve(method = "Verlet")
+            print("Vel. Verlet time:   ", time.time()-start_time_V)
 
             # Plot for Euler and Verlet
             plt.plot(pos_E[0,:,0], pos_E[1,:,0], label="Forward Euler")
