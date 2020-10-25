@@ -32,7 +32,7 @@ AU      = 149597870691          # AU [m]
 GMJ     = 4*np.pi*(M_J/M_Sun)   # G*M_J, Astro units, [AU^3/yr^2]
 GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
 
-n = int(1e5)         # because of computational time
+n = 5*int(1e5)         # because of computational time
 
 
 def Energy(vel, pos, time, title=''):
@@ -443,7 +443,8 @@ if __name__ == '__main__':
         SEJ = ["Sun", "Earth", "Jupiter"]
         SS  = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptun', 'Pluto']
 
-        Ex3h(n, T=100, planet_names=SEJ)
+
+        #Ex3h(n, T=100, planet_names=SEJ)
         Ex3h(n, T=250, planet_names=SS)
 
 
