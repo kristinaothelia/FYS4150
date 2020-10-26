@@ -356,8 +356,10 @@ def Ex3i(planet_names, n, T=100):
     pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
 
     distances = np.linalg.norm(pos_V, axis=0)
+    min_dist = np.min(distances)
+    max_dist = np.max(distances)
     distances = distances[-3000:]
-    index = np.where(distances ==  np.min(distances, axis=0))[0]
+    index = np.where(np.abs(distances - min_dist) < 0.001)[0][-1]
     print(index)#; sys.exit(1)
 
     #calculate the perihelion angle
@@ -473,4 +475,4 @@ if __name__ == '__main__':
 
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=1e6, T=100)
+        Ex3i(planet_names=SM, n=1e7, T=100)
