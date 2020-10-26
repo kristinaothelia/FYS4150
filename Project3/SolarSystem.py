@@ -27,12 +27,6 @@ class SolarSystem:
         PrintTable : bool
             When True, a DataFrame with planet (names) information is printed.
 
-        
-        I will remove this later (just idea for testing other functions):
-        Doctest raises TypeError if __init__ returns other than None
-        
-        >>> SolarSystem(['Earth', 'Jupiter', 'Mercury', 'Saturn'])
-        None
         """
         
         # Setting index_col=0 to easier work with the DataFrame
