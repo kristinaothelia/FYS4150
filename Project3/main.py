@@ -81,6 +81,20 @@ def Figure_noSunPlot(title=''):
     plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.axis('equal'); plt.tight_layout()
 
+
+    # easy to use in pytest later
+def something():
+    #plan to make a function and pytest on this:
+    #distances = [1, 1, 1, 1, 1, 1, 2, 4, 3, 7, 0.3, 6, 7, 8, 9, 10] # length 16
+    #distances = distances[-9:]     # [4, 3, 7, 0.3, 6, 7, 8, 9, 10] # length 9
+
+    # looping backwards to find the last minimum
+    index = int(len(distances)-2)
+    while distances[index] < distances[index + 1]:
+        #print('index', index);print(distances[index]);print(distances[index+1])
+        index -= 1
+    pass
+
 def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
     """
     n       : Integration points
@@ -330,7 +344,7 @@ def Ex3h(n, T, planet_names, save_plot=False):
     plt.show()
 
 
-def Ex3i(planet_names, n, T=100):
+def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     """
     #print(issubclass(bool, int))
     #print(isinstance(planets.mass, object))
@@ -338,12 +352,19 @@ def Ex3i(planet_names, n, T=100):
     #print(planets.__init__.__doc__)
     """
 
-    n = int(n)
+    n      = int(n)
+    last_n = int(slice_n)
+
+    # noe litt mer fancy med raise error ish?
+    # check if they can be equal without causing problems
+    if n < slice_n:
+        print('slice_n must be smaller than n')
+        sys.exit()
 
     planets  = SolarSystem(planet_names, PrintTable=True)
-    M_M      = planets.mass
+    M_M      = planets.mass             # 0.1660*10**(-6) []
 
-    Np       = len(planets.mass)     # Nr. of planets
+    Np       = len(planets.mass)        # Nr. of planets
 
     masses   = planets.mass
     init_pos = np.array([[0.3075,0]])   # [AU]
@@ -351,27 +372,74 @@ def Ex3i(planet_names, n, T=100):
     init_pos = np.transpose(init_pos)
     init_vel = np.transpose(init_vel)
 
-    # Using the class
-    solver = Solver(masses, init_pos, init_vel, Np, T, n)
-    pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
+    res_path = 'Results/Mercury/'
+    dat_file = '_T[%g]_n[%g]_' %(T, n)
 
-    distances = np.linalg.norm(pos_V, axis=0)
-    min_dist = np.min(distances)
-    max_dist = np.max(distances)
-    distances = distances[-3000:]
-    index = np.where(np.abs(distances - min_dist) < 0.001)[0][-1]
-    print(index)#; sys.exit(1)
 
-    #calculate the perihelion angle
-    per_angle_t0 = np.arctan(pos_V[0,0,0]/pos_V[1,0,0])     #angle at t=0
-    per_angle_t100 = np.arctan(pos_V[0,index,0]/pos_V[1,index,0]) #angle at t=100 yrs
+    ''''
+    Problem: for 1e7, file too big to upload to git 
+             reducing numpy arrays or using .copy() may work?
+             saving only slice wourd work, but maybe bad for 
 
-    per_angle_t0 = np.rad2deg(per_angle_t0)
+    if not os.path.isfile(res_path+'dist'+dat_file+'.npy'):
+        # Using the class
+        solver            = Solver(masses, init_pos, init_vel, Np, T, n)
+        pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
+        distances_all     = np.linalg.norm(pos_V, axis=0)
+        print(type(pos_V), vel_V, t_V)
+
+        np.save(res_path+'pos_V'+dat_file+'.npy', pos_V)
+        np.save(res_path+'vel_V'+dat_file+'.npy', vel_V)
+        np.save(res_path+'t_V'+dat_file,+'.npy', t_V)
+        np.save(res_path+'dist'+dat_file+'.npy', distances_all)
+
+    else:
+        pos_V = np.load(res_path+'pos_V'+dat_file+'.npy')
+        vel_V = np.load(res_path+'vel_V'+dat_file+'.npy')
+        t_V   = np.load(res_path+'t_V'+dat_file+'.npy')
+
+        distances_all = np.load(res_path+'dist'+dat_file++'.npy')
+    '''
+
+    min_dist       = np.min(distances_all)
+    max_dist       = np.max(distances_all)
+    distances      = distances_all[-last_n:]  # last_n distances 
+
+    # works for now, but afraid it can fail?
+    #index_numpy    = np.where(np.abs(distances - min_dist) < 0.009)[0][-1]
+    #print('\nindex_numpy:', index_numpy)
+
+    # have planned this as function to test in pytest..?
+    #plan to make a function and pytest on this:
+    #distances = [1, 1, 1, 1, 1, 1, 2, 4, 3, 7, 0.3, 6, 7, 8, 9, 10] # length 16
+    #distances = distances[-9:]     # [4, 3, 7, 0.3, 6, 7, 8, 9, 10] # length 9
+
+    # looping backwards to find the last minimum
+    index = int(len(distances)-2)
+    while distances[index] < distances[index + 1]:
+        #print('index', index);print(distances[index]);print(distances[index+1])
+        index -= 1
+
+
+    # find index of minimum, find value
+    # convert index to corresponding time_index, check if value equal
+    index_minimum = index+1
+    time_index    = (len(pos_V[0,:,0])-len(pos_V[0,-last_n:,0]))+index_minimum
+    print(index_minimum, distances[index_minimum], distances_all[time_index])
+
+    # calculate the perihelion angle
+    #per_angle_t0   = np.arctan(pos_V[0,0,0]/pos_V[1,0,0])         # angle at t=0, (np.pi/2)
+    per_angle_t0   = atan2(pos_V[0,0,0],pos_V[1,0,0])              # avoids RuntimeWarning
+    per_angle_t100 = np.arctan(pos_V[0,index,0]/pos_V[1,index,0])  # angle at t=100 yrs
+
+    per_angle_t0   = np.rad2deg(per_angle_t0)
     per_angle_t100 = np.rad2deg(per_angle_t100)
 
-    print("t = 0, theta = ", per_angle_t0*60*60)
-    print("t = 100 yrs, theta = ", per_angle_t100*60*60)  #arc seconds
-    print("delta theta = ", (per_angle_t100 - per_angle_t0))
+    delta_theta = (per_angle_t100 - per_angle_t0)
+
+    print('\nt = 0   yrs, theta = ', per_angle_t0*60*60)
+    print('t = 100 yrs, theta = ',   per_angle_t100*60*60)  # arc seconds
+    print('\ndelta theta = ',        delta_theta)
 
     plt.plot(pos_V[0,:,0], pos_V[1,:,0])
     plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'bx')
@@ -475,4 +543,4 @@ if __name__ == '__main__':
 
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=1e7, T=100)
+        Ex3i(planet_names=SM, n=1e4, T=100)
