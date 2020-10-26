@@ -11,30 +11,6 @@ from Solver                 import Solver
 from SolarSystem            import SolarSystem
 #------------------------------------------------------------------------------
 
-# Should maybe be below name=main, or...?
-
-planet_names_ = ['Earth', 'Jupiter']
-planets_      = SolarSystem(planet_names_)
-
-#print(help(planets_))
-#print(dir(planets_))
-#print(planets_.__dict__)
-
-
-yr      = 365*24*60*60          # [s]
-M_Sun   = 1.989*10**30          # [kg]
-M_E     = planets_.mass[0]      # [kg]
-M_J     = planets_.mass[1]      # [kg]
-
-AU      = 149597870691          # AU [m]
-
-# GMJ blir feil..? GM*(M_J/M_Sun)..?
-GMJ     = 4*np.pi*(M_J/M_Sun)   # G*M_J, Astro units, [AU^3/yr^2]
-GM      = 4*np.pi**2            # G*M_sun, Astro units, [AU^3/yr^2]
-
-n = 5*int(1e5)         # because of computational time
-
-
 def Energy(vel, pos, time, title=''):
 
     K    = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
@@ -346,10 +322,10 @@ def Ex3h(n, T, planet_names, save_plot=False):
 
 def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     """
-    #print(issubclass(bool, int))
-    #print(isinstance(planets.mass, object))
-    #print(isinstance(M_M, np.ndarray))
-    #print(planets.__init__.__doc__)
+    print(issubclass(bool, int))
+    print(isinstance(planets.mass, object))
+    print(isinstance(M_M, np.ndarray))
+    print(planets.__init__.__doc__)
     """
 
     n      = int(n)
@@ -450,9 +426,30 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     plt.show()
 
 
+# Should maybe be below name=main, or...????
+planet_names_ = ['Earth', 'Jupiter']
+planets_      = SolarSystem(planet_names_)
+
+
+
+yr      = 365*24*60*60          # [s]
+M_Sun   = 1.989*10**30          # [kg]
+M_E     = planets_.mass[0]      # [kg]
+M_J     = planets_.mass[1]      # [kg]
+
+AU      = 149597870691          # [m]
+
+# GMJ blir feil..? GM*(M_J/M_Sun)..????????????????
+
+GMJ     = 4*np.pi*(M_J/M_Sun)   # [AU^3/yr^2] (G*M_J, Astro units,)
+GM      = 4*np.pi**2            # [AU^3/yr^2] ( G*M_sun, Astro units,)
+
+n       = 5*int(1e5)            # because of computational time
+
+
 if __name__ == '__main__':
 
-    # For ex. 3b) Run 3b.py only
+    # For ex. 3b) Run >>>3b.py only
 
     parser = argparse.ArgumentParser(description="Solar system")
 

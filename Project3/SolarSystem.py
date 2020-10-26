@@ -1,3 +1,4 @@
+
 """
 FYS4150 - Project 3: Solar system class
 """
@@ -58,7 +59,6 @@ class SolarSystem:
 
 
         # Creating instance attributes; mass, InitPos and InitVel 
-        # of type np.ndarray with dtypes float64
         self.mass    = self.TableWithPlanets.eval(\
                        self.TableWithPlanets['Mass'])\
                        .astype('float64')                    # shape (Number_of_Planets,)
@@ -66,53 +66,33 @@ class SolarSystem:
         self.initPos = np.array((x0, y0), dtype='float64')   # shape (2, Number_of_Planets)
         self.initVel = np.array((vx0, vy0), dtype='float64') # shape (2, Number_of_Planets)
 
-
-    '''
-    def init_cond(self, x0, y0, vx0, vy0):
-        """ Creating arrays for initial conditions
-
-        Returns
-        -------
-        InitPos : type
-            InitPos description
-
-        Use Doctest somehow to check return types?:
-        #>>> init_cond()
-        type of arrays
-        """
-
-        self.initPos = np.array((x0, y0))
-        self.initVel = np.array((vx0, vy0))
-        return #self.initPos, self.initVel
-    '''
     
-
 
 if __name__ == '__main__':
 
-    ''' Usage of the SolarSystem class '''
+    ''' Example usage of the SolarSystem class '''
 
     planets_ex = SolarSystem(['Earth', 'Jupiter', 'Mercury', 'Saturn'], PrintTable=True)
 
-    '''
-    # Planning to do some prints to illustrate
     masses_ex  = planets_ex.mass
     initPos_ex = planets_ex.initPos
     initVel_ex = planets_ex.initVel
 
-    print('\n Mass of planets')
-    print('-- type', type(masses_ex))
-    print(masses_ex)
+    print('\nThe mass of the planets is an object of type')
+    print(47*'-')
+    print(masses_ex.__class__, 'with dtype',\
+         masses_ex.dtype, 'and shape', masses_ex.shape)
+    print(masses_ex, '\n')
 
-    print('\n Initial position of planets (type: %s):\n'\
-    %type(planets_ex.initPos))
-    print(planets_ex.initPos)
-    print(planets_ex.initPos.shape, planets_ex.initPos.size)
+    print('The initial positions of the planets is an object of type')
+    print(initPos_ex.__class__, 'with dtype',\
+          initPos_ex.dtype, 'and shape', initPos_ex.shape)
+    print(initPos_ex, '\n')
 
-    print('\n Initial velocity of planets (type: %s):\n'\
-    %type(planets_ex.initVel))
-    print(planets_ex.initVel)
-    '''
+    print('The initial velocity of the planets is an object of type')
+    print(initVel_ex.__class__, 'with dtype',\
+          initVel_ex.dtype, 'and shape', initVel_ex.shape)
+    print(initVel_ex, '\n')
 
 
     '''
