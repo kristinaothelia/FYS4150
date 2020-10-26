@@ -346,8 +346,6 @@ def Ex3i(planet_names, n, T=100):
     Np       = len(planets.mass)     # Nr. of planets
 
     masses   = planets.mass
-    #init_pos = planets.initPos
-    #init_vel = planets.initVel
     init_pos = np.array([[0.3075,0]])   # [AU]
     init_vel = np.array([[0,12.44]])    # [AU/yr]
     init_pos = np.transpose(init_pos)
@@ -357,8 +355,28 @@ def Ex3i(planet_names, n, T=100):
     solver = Solver(masses, init_pos, init_vel, Np, T, n)
     pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
 
+    distances = np.linalg.norm(pos_V, axis=0)
+    distances = distances[-3000:]
+    index = np.where(distances ==  np.min(distances, axis=0))[0]
+    print(index)#; sys.exit(1)
+
+    #calculate the perihelion angle
+    per_angle_t0 = np.arctan(pos_V[0,0,0]/pos_V[1,0,0])     #angle at t=0
+    per_angle_t100 = np.arctan(pos_V[0,index,0]/pos_V[1,index,0]) #angle at t=100 yrs
+
+    per_angle_t0 = np.rad2deg(per_angle_t0)
+    per_angle_t100 = np.rad2deg(per_angle_t100)
+
+    print("t = 0, theta = ", per_angle_t0*60*60)
+    print("t = 100 yrs, theta = ", per_angle_t100*60*60)  #arc seconds
+    print("delta theta = ", (per_angle_t100 - per_angle_t0))
+
     plt.plot(pos_V[0,:,0], pos_V[1,:,0])
-    plt.plot(pos_V[0,0,0], pos_V[1,0,0])
+    plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'bx')
+
+    plt.plot(pos_V[0,-500,0], pos_V[1,-500,0], 'gx')
+    plt.plot(pos_V[0,-1000,0], pos_V[1,-1000,0], 'rx')
+
     plt.show()
 
 

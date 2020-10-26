@@ -96,24 +96,48 @@ class Solver:
     def relativity(self, k_val, beta=2):
         """Calculates acceleration with relativistic correction, fixed sun?"""
 
+
         acceleration = np.zeros((2, self.Np))
 
+        for n in range(self.Np):
+            #self.n = n
+            acceleration_sum = 0
+            for i in range(self.Np):
+                if i != n:
+                    temp_r = self.r[:,k_val,n] - self.r[:,k_val,i]
+                    unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
+                    #acceleration_sum += (self.G*self.M[i])/np.linalg.norm(temp_r, axis=0)**2*unit_r
+                    acceleration_sum += (self.G*self.M[i])/np.linalg.norm(temp_r, axis=0)**beta*corr*unit_r
+                else:
+                    pass
+
+            l = np.cross(self.r[:,k_val,n], self.v[:,k_val,n], axis=0)#; print(l)
+            l = np.linalg.norm(l);
+            r_sun = self.r[:,k_val,n]
+            unit_r_sun = self.r[:,k_val,n]/np.linalg.norm(self.r[:,k_val,n], axis=0)
+            corr = 1 + (3*l**2/(np.linalg.norm(self.r[:,k_val,n], axis=0)**beta*self.c**2))
+
+            #acceleration[:,n] = acceleration_sum - self.G*self.M_Sun/np.linalg.norm(self.r[:,k_val,n], axis=0)**2*unit_r_sun
+            acceleration[:,n] = acceleration_sum - self.G*self.M_Sun/np.linalg.norm(self.r[:,k_val,n], axis=0)**beta*corr*unit_r_sun
+
+
+        """
+        Merc = 0
         # axis wrong...?
-        ang    = np.cross(self.r[:,k_val,:], self.v[:,k_val,:], axis=0) # orbital angular momentum
-        l      = np.linalg.norm(ang, axis=0)                            # magnitude of ang / unit mass
+        ang    = np.cross(self.r[:,k_val,Merc], self.v[:,k_val,0], axis=Merc) # orbital angular momentum
+        l      = np.linalg.norm(ang)                            # magnitude of ang / unit mass
 
-        radius = np.linalg.norm(self.r[:,k_val,:], axis=0)              # distance/radius, axis 0 or 1?
-        corr   = [1 + (3*l**2)/(radius[0]**beta * self.c**2)]           # relativistic correction
-
-        #print('ang', ang)
-        #print('l', l)
-        #print('r', radius)
-        #print('correction', corr)
-        #print('type corr', type(corr))
-        #print(self.r[:,k_val,:])
+        radius = np.linalg.norm(self.r[:,k_val,Merc], axis=0)            # distance/radius, axis 0 or 1?
+        unit_r = self.r[:,k_val,Merc]/radius
+        corr   = [1 + (3*l**2)/(radius**beta * self.c**2)]           # relativistic correction
 
         # Denne er nok helt på jordet, haha
-        acceleration -= (self.r[:,k_val,:]*self.G/radius[0]**(1+beta)) * corr[0]
+        A = (-self.G*self.M[0])/radius**2*(1 + 3*l**2/(radius**2*self.c**2))*unit_r
+        #print(A.shape)#; sys.exit(1)
+        #print(acceleration.shape)
+        A = np.reshape(A, [2,1])
+        acceleration = A
+        """
 
         return acceleration
 
@@ -124,8 +148,8 @@ class Solver:
         self.r[:,0,:] = self.r0
         self.v[:,0,:] = self.v0
 
-        dt     = self.ts[1] - self.ts[0]
-        #self.n = int(self.n)
+        #size of time step (use as argument instead of T or n?)
+        dt = self.ts[1] - self.ts[0]
 
         for k in range(self.n-1):
 
@@ -150,23 +174,6 @@ class Solver:
         self.r[:,0,:] = self.r0
         self.v[:,0,:] = self.v0
 
-        #center of mass correction
-        total_mass = np.sum(self.M)
-
-        R = np.zeros(2)
-        V = np.zeros(2)
-        Rx = np.sum(self.M*self.r[0,0,:])/total_mass
-        Ry = np.sum(self.M*self.r[1,0,:])/total_mass
-        Vx = np.sum(self.M*self.v[0,0,:])/total_mass
-        Vy = np.sum(self.M*self.v[1,0,:])/total_mass
-        R = np.array([Rx, Ry])
-        V = np.array([Vx, Vy])
-
-
-        for i in range(self.Np):
-            self.r[:,0,i] -= R
-            self.v[:,0,i] -= V
-
         #size of time step (use as argument instead of T or n?)
         dt = self.ts[1] - self.ts[0]
 
@@ -183,6 +190,22 @@ class Solver:
         '''
 
         if SunInMotion == True:
+
+            #center of mass correction
+            total_mass = np.sum(self.M)
+
+            R = np.zeros(2)
+            V = np.zeros(2)
+            Rx = np.sum(self.M*self.r[0,0,:])/total_mass
+            Ry = np.sum(self.M*self.r[1,0,:])/total_mass
+            Vx = np.sum(self.M*self.v[0,0,:])/total_mass
+            Vy = np.sum(self.M*self.v[1,0,:])/total_mass
+            R = np.array([Rx, Ry])
+            V = np.array([Vx, Vy])
+
+            for i in range(self.Np):
+                self.r[:,0,i] -= R
+                self.v[:,0,i] -= V
 
             for k in range(self.n-1):
                 #print("%.2f" % (100*k/(self.n-1)))
