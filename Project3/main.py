@@ -35,28 +35,8 @@ def angular_momentum(vel, pos, time, title=''):
     L = np.linalg.norm(L, axis=1)
     time = time[:-1]
 
-    print(np.min(L), np.max(L))
-
-    print(np.max(L)-np.min(L))
-    '''
-    if (np.max(L)-np.min(L)) < 1e-11:
-        print('euler')
-        min_L = np.min(L)*1e-11
-        max_L = np.max(L)*1e-11
-        print(min_L, max_L)
-        range_y = np.linspace(min_L, max_L).round(15)
-    else:
-        print('verlet')
-        range_y = np.linspace(np.min(L), np.max(L), 10).round(2)
-    '''
-    #print(range_y)
-    print('----')
-
     plt.plot(time, L) # :100
-    plt.yticks(fontsize=13)
-    #plt.xticks([0, 2, 4, 6, 8, 10], fontsize=13)
-    #plt.yticks(range_y, fontsize=13)
-    #plt.yticks(fontsize=13)
+    plt.yticks(fontsize=13); plt.xticks(fontsize=13)
     plt.axis([np.min(time),np.max(time), 0,10])
     plt.title(title, fontsize=15)
     plt.xlabel('Time [yr]', fontsize=15)
@@ -377,20 +357,17 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     distances      = distances_all[-last_n:]  # last_n distances
 
 
-    # looping backwards to find the last minimum
-    index = int(len(distances)-2)
-    while distances[index] < distances[index + 1]:
-        index -= 1
+    index_minimum = find_last_min(distances)
 
-
-    # find index of minimum, find value
-    # convert index to corresponding time_index, check if value equal
-    index_minimum = index+1
     time_index    = (len(pos_V[0,:,0])-len(pos_V[0,-last_n:,0]))+index_minimum
-    #print(index_minimum, distances[index_minimum], distances_all[time_index])
 
-    # calculate the perihelion angle (det var her jeg glemte index -> time_index)
-    per_angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])         # avoids RuntimeWarning
+    if distances[index_minimum] != distances_all[time_index]:
+        print('%f != %f'\
+            %(distances[index_minimum], distances_all[time_index]))
+        sys.exit()
+
+
+    per_angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])                   # angle at t=0 (pi/2)
     per_angle_t100 = np.arctan(pos_V[0,time_index,0]/pos_V[1,time_index,0])  # angle at t=100 yrs
 
     per_angle_t0   = np.rad2deg(per_angle_t0)
@@ -445,12 +422,10 @@ M_J     = planets_.mass[1]      # [kg]
 
 AU      = 149597870691          # [m]
 
-# GMJ blir feil..? GM*(M_J/M_Sun)..????????????????
-
 GMJ     = 4*np.pi*(M_J/M_Sun)   # [AU^3/yr^2] (G*M_J, Astro units,)
 GM      = 4*np.pi**2            # [AU^3/yr^2] ( G*M_sun, Astro units,)
 
-n       = 5*int(1e5)            # because of computational time
+n       = 5*int(1e5)            # integration points
 
 
 if __name__ == '__main__':
@@ -498,10 +473,10 @@ if __name__ == '__main__':
 
         #b  = np.linspace(2, 3, 6)
         b  = [3, 2.9, 2]                        # Beta values
-        Ex3e(n=n, T=50, Np=1, beta=b)
+        Ex3e(n=n, T=50, Np=1, beta=b, save_plot=True)
 
         # bare med beta=2
-        Ex3e(n=n, T=10, Np=1, beta=2, v0=5)
+        Ex3e(n=n, T=10, Np=1, beta=2, v0=5, save_plot=True)
 
 
     elif ex_3f == True:
@@ -510,8 +485,8 @@ if __name__ == '__main__':
         print("--------------------------------------------------------------")
 
         list = [0.9, 1.1, 1.3, 1.35, 1.4, 1.415]
-        Ex3f(n=n, T=10,  Np=1, v_esc_test=list)
-        Ex3f(n=n, T=100, Np=1, v_esc_test=list)
+        Ex3f(n=n, T=10,  Np=1, v_esc_test=list, save_plot=True)
+        Ex3f(n=n, T=100, Np=1, v_esc_test=list, save_plot=True)
 
 
     elif ex_3g == True:
@@ -519,15 +494,16 @@ if __name__ == '__main__':
         print("The three-body problem. Earth-Jupiter-Sun")
         print("--------------------------------------------------------------")
 
-        m = [1, 10, 1000]           # Factors to change the mass of Jupiter
-        Ex3g(n=n, T=100, m=m)
+        # Factors to change the mass of Jupiter
+        m = [1, 10, 1000]
+        Ex3g(n=n, T=100, m=m, save_plot=True)
 
 
     elif ex_3h == True:
-        """
-        Planets and the Sun have to orbit around the center of mass, not a
-        stationary Sun.
-        """
+        '''
+        Planets and the Sun have to orbit around
+        the center of mass, not a stationary Sun.
+        '''
         print("--------------------------------------------------------------")
         print("Model for all planets of the solar system. Sun in motion")
         print("--------------------------------------------------------------")
@@ -536,8 +512,8 @@ if __name__ == '__main__':
         SS  = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptun', 'Pluto']
 
 
-        #Ex3h(n, T=100, planet_names=SEJ)
-        Ex3h(n, T=250, planet_names=SS)
+        Ex3h(n, T=100, planet_names=SEJ, save_plot=True)
+        Ex3h(n, T=250, planet_names=SS, save_plot=True)
 
 
     elif ex_3i == True:
@@ -549,28 +525,3 @@ if __name__ == '__main__':
 
         Ex3i(planet_names=SM, n=1e4, T=100, slice_n=3000)
 
-
-        '''
-        Problem: for 1e7, file too big to upload to git
-                reducing numpy arrays or using .copy() may work?
-                saving only slice wourd work, but maybe bad for
-
-        if not os.path.isfile(res_path+'dist'+dat_file+'.npy'):
-                # Using the class
-                solver            = Solver(masses, init_pos, init_vel, Np, T, n)
-                pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
-                distances_all     = np.linalg.norm(pos_V, axis=0)
-                print(type(pos_V), vel_V, t_V)
-
-                np.save(res_path+'pos_V'+dat_file+'.npy', pos_V)
-                np.save(res_path+'vel_V'+dat_file+'.npy', vel_V)
-                np.save(res_path+'t_V'+dat_file,+'.npy', t_V)
-                np.save(res_path+'dist'+dat_file+'.npy', distances_all)
-
-        else:
-                pos_V = np.load(res_path+'pos_V'+dat_file+'.npy')
-                vel_V = np.load(res_path+'vel_V'+dat_file+'.npy')
-                t_V   = np.load(res_path+'t_V'+dat_file+'.npy')
-
-                distances_all = np.load(res_path+'dist'+dat_file++'.npy')
-        '''
