@@ -82,7 +82,6 @@ class Solver:
                 if i != n:
                     temp_r = self.r[:,k_val,n] - self.r[:,k_val,i]
                     unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
-                    #acceleration_sum += (self.G*self.M[i])/np.linalg.norm(temp_r, axis=0)**2*unit_r
                     acceleration_sum += (self.G*self.M[i])/np.linalg.norm(temp_r, axis=0)**beta*unit_r
                 else:
                     pass
@@ -158,7 +157,7 @@ class Solver:
 
         if SunInMotion == True:
 
-            #center of mass correction
+            # center of mass correction
             total_mass = np.sum(self.M)
 
             R = np.zeros(2)
