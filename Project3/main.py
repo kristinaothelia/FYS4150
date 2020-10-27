@@ -13,8 +13,8 @@ from SolarSystem            import SolarSystem
 
 def Energy(vel, pos, time, title=''):
 
-    K    = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
-    U    = -(GM*M_E)/np.linalg.norm(pos, axis=0)
+    K    = 0.5*np.linalg.norm(vel, axis=0)**2
+    U    = -(GM)/np.linalg.norm(pos, axis=0)
     K    = np.ravel(K)
     U    = np.ravel(U)
     time = time[:-1]
@@ -24,8 +24,8 @@ def Energy(vel, pos, time, title=''):
     plt.plot(time, U+K, label="Total energy")
     plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.title(title, fontsize=15)
-    plt.xlabel(r'Time $[yr]$', fontsize=15)
-    plt.ylabel(r'Energy $[kg AU^3/yr^2]$', fontsize=15)
+    plt.xlabel('Time [yr]', fontsize=15)
+    plt.ylabel('Energy/mass [AU^3/yr^2]', fontsize=15)
     plt.legend(fontsize=13)
     return K, U
 
@@ -49,17 +49,17 @@ def angular_momentum(vel, pos, time, title=''):
         print('verlet')
         range_y = np.linspace(np.min(L), np.max(L), 10).round(2)
     '''
-    print(range_y)
+    #print(range_y)
     print('----')
 
     plt.plot(time, L) # :100
     plt.yticks(fontsize=13)
     #plt.xticks([0, 2, 4, 6, 8, 10], fontsize=13)
-    plt.yticks(range_y, fontsize=13)
+    #plt.yticks(range_y, fontsize=13)
     #plt.yticks(fontsize=13)
     plt.title(title, fontsize=15)
-    plt.xlabel(r'Time $[yr]$', fontsize=15)
-    plt.ylabel(r'L $[AU^2/yr]$', fontsize=15)
+    plt.xlabel('Time [yr]', fontsize=15)
+    plt.ylabel('L/mass [AU^2/yr]', fontsize=15)
     return L
 
 def Figure(title=''):
@@ -369,11 +369,11 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     solver            = Solver(masses, init_pos, init_vel, Np, T, n)
     pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
     distances_all     = np.linalg.norm(pos_V, axis=0)
-    
+
 
     min_dist       = np.min(distances_all)
     max_dist       = np.max(distances_all)
-    distances      = distances_all[-last_n:]  # last_n distances 
+    distances      = distances_all[-last_n:]  # last_n distances
 
 
     # looping backwards to find the last minimum
@@ -403,7 +403,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
 
         f.write('\nt = 0   yrs, theta = %f \n' %(per_angle_t0*60*60))
         f.write('t = 100 yrs, theta = %f \n'   %(per_angle_t100*60*60))  # arc seconds
-        
+
         f.write('\ndelta theta = %f \n' %delta_theta)
         f.write('last time step: %f \n' %t_V[-1])
 
@@ -550,9 +550,9 @@ if __name__ == '__main__':
 
 
         '''
-        Problem: for 1e7, file too big to upload to git 
+        Problem: for 1e7, file too big to upload to git
                 reducing numpy arrays or using .copy() may work?
-                saving only slice wourd work, but maybe bad for 
+                saving only slice wourd work, but maybe bad for
 
         if not os.path.isfile(res_path+'dist'+dat_file+'.npy'):
                 # Using the class
@@ -572,4 +572,4 @@ if __name__ == '__main__':
                 t_V   = np.load(res_path+'t_V'+dat_file+'.npy')
 
                 distances_all = np.load(res_path+'dist'+dat_file++'.npy')
-        '''    
+        '''
