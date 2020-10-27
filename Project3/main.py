@@ -365,9 +365,9 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     time_index    = (len(pos_V[0,:,0])-len(pos_V[0,-last_n:,0]))+index_minimum
     #print(index_minimum, distances[index_minimum], distances_all[time_index])
 
-    # calculate the perihelion angle
+    # calculate the perihelion angle (det var her jeg glemte index -> time_index)
     per_angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])         # avoids RuntimeWarning
-    per_angle_t100 = np.arctan(pos_V[0,index,0]/pos_V[1,index,0])  # angle at t=100 yrs
+    per_angle_t100 = np.arctan(pos_V[0,time_index,0]/pos_V[1,time_index,0])  # angle at t=100 yrs
 
     per_angle_t0   = np.rad2deg(per_angle_t0)
     per_angle_t100 = np.rad2deg(per_angle_t100)
@@ -406,7 +406,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     plt.axis('equal'); plt.tight_layout()
 
     plt.savefig('Results/Mercury/_T[%g]_n[%g]_plot.png' %(T, n))
-    #plt.show()
+    plt.show()
 
 
 
@@ -522,7 +522,7 @@ if __name__ == '__main__':
 
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=1e6, T=100, slice_n=1e4)
+        Ex3i(planet_names=SM, n=1e4, T=100, slice_n=3000)
 
 
         '''
