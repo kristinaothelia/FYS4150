@@ -321,12 +321,7 @@ def Ex3h(n, T, planet_names, save_plot=False):
 
 
 def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
-    """
-    print(issubclass(bool, int))
-    print(isinstance(planets.mass, object))
-    print(isinstance(M_M, np.ndarray))
-    print(planets.__init__.__doc__)
-    """
+    """The orbit of Mercury with relativistic precision"""
 
     n      = int(n)
     last_n = int(slice_n)
@@ -390,9 +385,9 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
     print(out_data)
 
 
-    plt.plot(pos_V[0,:,0], pos_V[1,:,0], 'Mercury')
+    plt.plot(pos_V[0,:,0], pos_V[1,:,0], label='Mercury')
     plt.plot(pos_V[0,0,0], pos_V[1,0,0], 'rx', label='Init. pos.')
-    plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'bx', label='Last pos.')
+    plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'kx', label='Last pos.')
 
     #plt.plot(pos_V[0,-500,0], pos_V[1,-500,0], 'gx', label='pos[-500]')
     #plt.plot(pos_V[0,-1000,0], pos_V[1,-1000,0], 'rx', label='pos[-1000]')
@@ -403,17 +398,8 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
     if save_plot==True:
         plt.savefig('Results/Mercury/_T[%g]_n[%g]_plot.png' %(T, n))
     
-    '''
-    plt.plot(0,0,'yo') # label='The Sun'
     #plt.plot([distances[-1],0], [distances[-1],0], '-r')   # Plotte radius til solen kanskje..?
 
-    plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
-    #plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
-    plt.xticks(fontsize=13); plt.yticks(fontsize=13)
-    plt.axis('equal'); plt.tight_layout()
-
-    plt.savefig('Results/Mercury/_T[%g]_n[%g]_plot.png' %(T, n))
-    '''
     plt.show()
 
 
@@ -432,7 +418,7 @@ AU      = 149597870691          # [m]
 GMJ     = 4*np.pi*(M_J/M_Sun)   # [AU^3/yr^2] (G*M_J, Astro units,)
 GM      = 4*np.pi**2            # [AU^3/yr^2] ( G*M_sun, Astro units,)
 
-n       = 5*int(1e5)            # integration points
+n       = int(1e4)              # integration points
 
 
 if __name__ == '__main__':
@@ -501,6 +487,8 @@ if __name__ == '__main__':
         print("The three-body problem. Earth-Jupiter-Sun")
         print("--------------------------------------------------------------")
 
+        n       = 5*int(1e5)  # integration points
+
         # Factors to change the mass of Jupiter
         m = [1, 10, 1000]
         Ex3g(n=n, T=100, m=m, save_plot=True)
@@ -515,6 +503,8 @@ if __name__ == '__main__':
         print("Model for all planets of the solar system. Sun in motion")
         print("--------------------------------------------------------------")
 
+        n       = 5*int(1e5)            # integration points
+
         SEJ = ["Sun", "Earth", "Jupiter"]
         SS  = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptun', 'Pluto']
 
@@ -528,7 +518,9 @@ if __name__ == '__main__':
         print("The perihelion precession of Mercury")
         print("--------------------------------------------------------------")
 
+        n  = 5*int(1e5)            # integration points
+
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=1e4, T=100, slice_n=3000, save_plot=True)
+        Ex3i(planet_names=SM, n=n, T=100, slice_n=3000, save_plot=True)
 
