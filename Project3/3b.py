@@ -26,7 +26,7 @@ def ForwardEuler(G, ts, pos, vel, dt):
 
     Parameters
     ----------
-    G   : float?  [AU^3/yr^2]
+    G   : float  [AU^3/yr^2]
         GravitationalConstant*M_sun, Astro units
     ts  : int 
         time steps
@@ -34,7 +34,7 @@ def ForwardEuler(G, ts, pos, vel, dt):
         positions       (10000, 2)
     vel : numpy.ndarray
         velocites       (10000, 2)
-    dt  : float?
+    dt  : float
 
 
     Returns
@@ -121,6 +121,23 @@ def Plot_Sun_Earth_system(pos, total_time, label=None, save_fig=False):
         plt.savefig("Results/3b_Earth_Sun_system.png")
     
 
+def Energy(M_E, GM, vel, pos, time):
+    K = 0.5*M_E*np.linalg.norm(vel, axis=0)**2
+    U = -(GM*M_E)/np.linalg.norm(pos, axis=0)
+
+    K = np.ravel(K)
+    U = np.ravel(U)
+    time = time[:-1]
+
+    plt.figure(1)
+    plt.plot(time, U, label="potential")
+    plt.plot(time, K, label="kinetic")
+    plt.plot(time, U+K, label="total energy")
+    plt.title("Energy", fontsize=15)
+    plt.xlabel("Time [yr]", fontsize=15); plt.ylabel("Energy [J] ??", fontsize=15)
+    plt.legend()
+    plt.show()
+
 
 GM          = 4*np.pi**2                # G*M_sun, Astro units, [AU^3/yr^2]
 total_time  = 10                        # [yr]
@@ -166,6 +183,6 @@ if __name__ == '__main__':
 
     if energy_calc: 
         M_earth = 5.972e24  #[kg]
-        func.Energy(M_earth, GM, vel_V, pos_V, )
-        plt.savefig("Results/3c_Earth_Sun_system_energy.png"); plt.show()
+        Energy(M_earth, GM, vel_V, pos_V, )
+        savefig("Results/3b_Earth_Sun_system_energy.png")
     

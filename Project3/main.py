@@ -320,7 +320,7 @@ def Ex3h(n, T, planet_names, save_plot=False):
     plt.show()
 
 
-def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
+def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
     """
     print(issubclass(bool, int))
     print(isinstance(planets.mass, object))
@@ -336,7 +336,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
 
 
     planets  = SolarSystem(planet_names, PrintTable=True)
-    M_M      = planets.mass             # 0.1660*10**(-6) []
+    M_M      = planets.mass            
 
     Np       = len(planets.mass)        # Nr. of planets
 
@@ -389,15 +389,21 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     out_data = open('Results/Mercury/_T[%g]_n[%g]_.txt' %(T, n)).read()
     print(out_data)
 
-    #print(distances[-1])
 
-    plt.plot(pos_V[0,:,0], pos_V[1,:,0])
-    plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'bx')
+    plt.plot(pos_V[0,:,0], pos_V[1,:,0], 'Mercury')
+    plt.plot(pos_V[0,0,0], pos_V[1,0,0], 'rx', label='Init. pos.')
+    plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'bx', label='Last pos.')
 
-    plt.plot(pos_V[0,-500,0], pos_V[1,-500,0], 'gx')
-    plt.plot(pos_V[0,-1000,0], pos_V[1,-1000,0], 'rx')
+    #plt.plot(pos_V[0,-500,0], pos_V[1,-500,0], 'gx', label='pos[-500]')
+    #plt.plot(pos_V[0,-1000,0], pos_V[1,-1000,0], 'rx', label='pos[-1000]')
 
     plt.title('The orbit of Mercury for 100 years', fontsize=15)
+
+    Figure(title='The orbit of Mercury for 100 years')
+    if save_plot==True:
+        plt.savefig('Results/Mercury/_T[%g]_n[%g]_plot.png' %(T, n))
+    
+    '''
     plt.plot(0,0,'yo') # label='The Sun'
     #plt.plot([distances[-1],0], [distances[-1],0], '-r')   # Plotte radius til solen kanskje..?
 
@@ -407,6 +413,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     plt.axis('equal'); plt.tight_layout()
 
     plt.savefig('Results/Mercury/_T[%g]_n[%g]_plot.png' %(T, n))
+    '''
     plt.show()
 
 
@@ -523,5 +530,5 @@ if __name__ == '__main__':
 
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=1e4, T=100, slice_n=3000)
+        Ex3i(planet_names=SM, n=1e4, T=100, slice_n=3000, save_plot=True)
 
