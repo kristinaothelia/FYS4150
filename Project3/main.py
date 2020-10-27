@@ -24,9 +24,10 @@ def Energy(vel, pos, time, title=''):
     plt.plot(time, U+K, label="Total energy")
     plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.title(title, fontsize=15)
-    plt.xlabel("Time [yr]", fontsize=15)
-    plt.ylabel("Energy [J] ??", fontsize=15)
+    plt.xlabel(r'Time $[yr]$', fontsize=15)
+    plt.ylabel(r'Energy $[kg AU^3/yr^2]$', fontsize=15)
     plt.legend(fontsize=13)
+    return K, U
 
 def angular_momentum(vel, pos, time, title=''):
 
@@ -34,11 +35,32 @@ def angular_momentum(vel, pos, time, title=''):
     L = np.linalg.norm(L, axis=1)
     time = time[:-1]
 
-    plt.plot(time, L)
-    plt.xticks(fontsize=13); plt.yticks(fontsize=13)
+    print(np.min(L), np.max(L))
+
+    print(np.max(L)-np.min(L))
+    '''
+    if (np.max(L)-np.min(L)) < 1e-11:
+        print('euler')
+        min_L = np.min(L)*1e-11
+        max_L = np.max(L)*1e-11
+        print(min_L, max_L)
+        range_y = np.linspace(min_L, max_L).round(15)
+    else:
+        print('verlet')
+        range_y = np.linspace(np.min(L), np.max(L), 10).round(2)
+    '''
+    print(range_y)
+    print('----')
+
+    plt.plot(time, L) # :100
+    plt.yticks(fontsize=13)
+    #plt.xticks([0, 2, 4, 6, 8, 10], fontsize=13)
+    plt.yticks(range_y, fontsize=13)
+    #plt.yticks(fontsize=13)
     plt.title(title, fontsize=15)
-    plt.xlabel("Time [yr]", fontsize=15)
-    plt.ylabel("??", fontsize=15)
+    plt.xlabel(r'Time $[yr]$', fontsize=15)
+    plt.ylabel(r'L $[AU^2/yr]$', fontsize=15)
+    return L
 
 def Figure(title=''):
 
@@ -65,7 +87,8 @@ def find_last_min(distances):
     while distances[index] < distances[index + 1]:
         #print('index', index);print(distances[index]);print(distances[index+1])
         index -= 1
-    return index
+    index_minimum = index+1
+    return index_minimum
 
 def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
     """
@@ -134,7 +157,7 @@ def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
     if save_plot==True:
         plt.savefig("Results/3c_Earth_Sun_system_energy_object_E.png")
     plt.show()
-    angular_momentum(vel_E, pos_E, t_E, "Earth-Sun system. Angular momentum \n Forward Euler") # OBS! NOE GALT
+    angular_momentum(vel_E, pos_E, t_E, "Earth-Sun system. Angular momentum per mass \n Forward Euler")
     if save_plot==True:
         plt.savefig("Results/3c_Earth_Sun_system_momentum_object_E.png")
     plt.show()
@@ -144,7 +167,7 @@ def Ex3cd(n, T=10, Np=1, test_stability=False, save_plot=False):
     if save_plot==True:
          plt.savefig("Results/3c_Earth_Sun_system_energy_object_V.png")
     plt.show()
-    angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system. Angular momentum \n Verlet") # OBS! NOE GALT
+    angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system. Angular momentum per mass \n Verlet")
     if save_plot==True:
         plt.savefig("Results/3c_Earth_Sun_system_momentum_object_V.png")
     plt.show()
@@ -464,7 +487,8 @@ if __name__ == '__main__':
         print("--------------------------------------------------------------")
 
         #Ex3cd(n=n, T=10, Np=1, test_stability=True)
-        Ex3cd(n=n, T=10, Np=1, test_stability=False)
+        n=int(1e4)
+        Ex3cd(n=n, T=10, Np=1, test_stability=False, save_plot=True)
 
     elif ex_3e == True:
         print("--------------------------------------------------------------")
