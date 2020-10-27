@@ -342,8 +342,6 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     init_pos = np.transpose(init_pos)
     init_vel = np.transpose(init_vel)
 
-    #res_path = 'Results/Mercury/_T[%g]_n[%g]_' %(T, n)
-
 
     solver            = Solver(masses, init_pos, init_vel, Np, T, n)
     pos_V, vel_V, t_V = solver.solver_relativistic(beta=2)
@@ -365,7 +363,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     # convert index to corresponding time_index, check if value equal
     index_minimum = index+1
     time_index    = (len(pos_V[0,:,0])-len(pos_V[0,-last_n:,0]))+index_minimum
-    print(index_minimum, distances[index_minimum], distances_all[time_index])
+    #print(index_minimum, distances[index_minimum], distances_all[time_index])
 
     # calculate the perihelion angle
     per_angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])         # avoids RuntimeWarning
@@ -376,11 +374,19 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
 
     delta_theta = (per_angle_t100 - per_angle_t0)
 
-    print('\nt = 0   yrs, theta = ', per_angle_t0*60*60)
-    print('t = 100 yrs, theta = ',   per_angle_t100*60*60)  # arc seconds
-    print('\ndelta theta = ',        delta_theta)
+    with open('Results/Mercury/_T[%g]_n[%g]_.txt' %(T, n), 'w') as f:
+
+        f.write('\nlast minimum: %f \n' %distances[index_minimum])
+
+        f.write('\nt = 0   yrs, theta = %f \n' %(per_angle_t0*60*60))
+        f.write('t = 100 yrs, theta = %f \n'   %(per_angle_t100*60*60))  # arc seconds
+        
+        f.write('\ndelta theta = %f \n' %delta_theta)
+        f.write('last time step: %f \n' %t_V[-1])
 
 
+    out_data = open('Results/Mercury/_T[%g]_n[%g]_.txt' %(T, n)).read()
+    print(out_data)
 
     #print(distances[-1])
 
@@ -391,11 +397,11 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000):
     plt.plot(pos_V[0,-1000,0], pos_V[1,-1000,0], 'rx')
 
     plt.title('The orbit of Mercury for 100 years', fontsize=15)
-    plt.plot(0,0,'yo', label='The Sun')
+    plt.plot(0,0,'yo') # label='The Sun'
     #plt.plot([distances[-1],0], [distances[-1],0], '-r')   # Plotte radius til solen kanskje..?
 
     plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    #plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
     plt.xticks(fontsize=13); plt.yticks(fontsize=13)
     plt.axis('equal'); plt.tight_layout()
 
@@ -516,7 +522,7 @@ if __name__ == '__main__':
 
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=1e4, T=100, slice_n=1e4)
+        Ex3i(planet_names=SM, n=1e6, T=100, slice_n=1e4)
 
 
         '''
