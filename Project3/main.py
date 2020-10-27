@@ -57,6 +57,7 @@ def angular_momentum(vel, pos, time, title=''):
     #plt.xticks([0, 2, 4, 6, 8, 10], fontsize=13)
     #plt.yticks(range_y, fontsize=13)
     #plt.yticks(fontsize=13)
+    plt.axis([np.min(time),np.max(time), 0,10])
     plt.title(title, fontsize=15)
     plt.xlabel('Time [yr]', fontsize=15)
     plt.ylabel('L/mass [AU^2/yr]', fontsize=15)
