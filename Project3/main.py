@@ -511,13 +511,13 @@ if __name__ == '__main__':
         print("Model for all planets of the solar system. Sun in motion")
         print("--------------------------------------------------------------")
 
-        n       = 5*int(1e5)            # integration points
-
         SEJ = ["Sun", "Earth", "Jupiter"]
         SS  = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptun', 'Pluto']
 
         Ex3h(n, T=100, planet_names=SEJ, save_plot=True)
-        Ex3h(n, T=250, planet_names=SS, save_plot=True)
+
+        n   = 5*int(1e5)            # integration points
+        #Ex3h(n, T=250, planet_names=SS, save_plot=True)
 
 
     elif ex_3i == True:
