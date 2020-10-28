@@ -1,8 +1,0 @@
-
-last minimum: 0.307500 
-
-t = 0   yrs, theta = 324000.000000 
-t = 100 yrs, theta = -320224.840320 
-
-delta theta = -178.951345 
-last time step: 100.000000 

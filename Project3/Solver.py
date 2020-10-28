@@ -133,7 +133,7 @@ class Solver:
             self.r[:,k+1,:]  = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*acceleration1*dt**2
             acceleration2    = self.relativity(k+1, beta)
             self.v[:,k+1,:]  = self.v[:,k,:] + 0.5*(acceleration1+acceleration2)*dt
-        return self.r, self.v, self.ds
+        return self.r, self.v, self.ts
 
 
     def solve(self, method, beta=2, SunInMotion=False):
