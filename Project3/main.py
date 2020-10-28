@@ -46,7 +46,7 @@ def angular_momentum(vel, pos, time, title=''):
 def Figure(title=''):
 
     plt.title(title, fontsize=15)
-    plt.plot(0,0,'yo', label='The Sun') # Plotte radius til solen kanskje..?
+    plt.plot(0,0,'yo', label='The Sun')
     plt.xlabel("x [AU]", fontsize=15); plt.ylabel("y [AU]", fontsize=15)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
     plt.xticks(fontsize=13); plt.yticks(fontsize=13)
@@ -182,6 +182,12 @@ def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi, save_plot=False):
         Figure(title="Earth-Sun system. Over %g years \n v0=%g AU/yr" %(T, v0))
         if save_plot==True:
             plt.savefig("Results/3e_beta_Earth_Sun_system_v0%g.png" %v0)
+        plt.show()
+
+        # Energy and momentum, Verlet:
+        Energy(vel_V, pos_V, t_V, "Earth-Sun system, v0=%g. Energy conservation \n Verlet" %v0)
+        plt.show()
+        angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system, v0=%g. Angular momentum \n Verlet" %v0) # OBS! NOE GALT
         plt.show()
 
 
@@ -331,7 +337,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
 
 
     planets  = SolarSystem(planet_names, PrintTable=True)
-    M_M      = planets.mass            
+    M_M      = planets.mass
 
     Np       = len(planets.mass)        # Nr. of planets
 
@@ -370,10 +376,10 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
     angle_t100_per_year = np.abs(angle_t100)/100
 
     delta_rad = (angle_t0_per_year - angle_t100_per_year)
-    
+
     arc_seconds = np.rad2deg(delta_rad)*60*60
 
-    
+
     with open('Results/Mercury/new_T[%g]_n[%g]_.txt' %(T, n), 'w') as f:
 
         f.write('\nthe perihelion position: (%f, %f) \n'\
@@ -387,7 +393,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
 
         f.write('\ndelta rad   = %f \n' %delta_rad)
         f.write('\narc seconds = %f \n' %arc_seconds)
-    
+
 
     out_data = open('Results/Mercury/new_T[%g]_n[%g]_.txt' %(T, n)).read()
     print(out_data)
@@ -440,9 +446,6 @@ if __name__ == '__main__':
     group.add_argument('-5', '--h3',  action="store_true", help="Project 3, h)")
     group.add_argument('-6', '--i3',  action="store_true", help="Project 3, i)")
 
-    # Optional argument for habitable zone calculations
-    #parser.add_argument('-X', '--hab', action='store_true', help="Habitable zone calculations", required=False)
-
     if len(sys.argv) <= 1:
         sys.argv.append('--help')
 
@@ -473,8 +476,8 @@ if __name__ == '__main__':
         b  = [3, 2.9, 2]                        # Beta values
         Ex3e(n=n, T=50, Np=1, beta=b, save_plot=True)
 
-        # bare med beta=2
-        Ex3e(n=n, T=10, Np=1, beta=2, v0=5, save_plot=True)
+        # Just for beta=2
+        Ex3e(n=n, T=10, Np=1, beta=2, v0=5)
 
 
     elif ex_3f == True:
@@ -492,7 +495,7 @@ if __name__ == '__main__':
         print("The three-body problem. Earth-Jupiter-Sun")
         print("--------------------------------------------------------------")
 
-        n       = 5*int(1e5)  # integration points
+        n = 5*int(1e5)                  # integration points
 
         # Factors to change the mass of Jupiter
         m = [1, 10, 1000]
@@ -513,7 +516,6 @@ if __name__ == '__main__':
         SEJ = ["Sun", "Earth", "Jupiter"]
         SS  = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptun', 'Pluto']
 
-
         Ex3h(n, T=100, planet_names=SEJ, save_plot=True)
         Ex3h(n, T=250, planet_names=SS, save_plot=True)
 
@@ -523,9 +525,8 @@ if __name__ == '__main__':
         print("The perihelion precession of Mercury")
         print("--------------------------------------------------------------")
 
-        #n  = 5*int(1e5)            # integration points
+        #n  = 5*int(1e5)                # integration points
 
         SM = ['Mercury']
 
         Ex3i(planet_names=SM, n=4.5*1e5, T=100, slice_n=3000, save_plot=True)
-
