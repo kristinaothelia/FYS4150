@@ -185,9 +185,9 @@ def Ex3e(n, T=10, Np=1, beta=2, v0=2*np.pi, save_plot=False):
         plt.show()
 
         # Energy and momentum, Verlet:
-        Energy(vel_V, pos_V, t_V, "Earth-Sun system, v0=%g. Energy conservation \n Verlet" %v0)
+        Energy(vel_V, pos_V, t_V, "Earth-Sun system, v0=%g AU/yr \n Energy conservation with  Verlet" %v0)
         plt.show()
-        angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system, v0=%g. Angular momentum \n Verlet" %v0) # OBS! NOE GALT
+        angular_momentum(vel_V, pos_V, t_V, "Earth-Sun system, v0=%g AU/yr \n Angular momentum with Verlet" %v0) # OBS! NOE GALT
         plt.show()
 
 
