@@ -362,43 +362,48 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
         sys.exit()
 
 
-    per_angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])                   # angle at t=0 (pi/2)
-    per_angle_t100 = np.arctan(pos_V[0,time_index,0]/pos_V[1,time_index,0])  # angle at t=100 yrs
-
-    per_angle_t0   = np.rad2deg(per_angle_t0)
-    per_angle_t100 = np.rad2deg(per_angle_t100)
-
-    delta_theta = (per_angle_t100 - per_angle_t0)
-
-    with open('Results/Mercury/_T[%g]_n[%g]_.txt' %(T, n), 'w') as f:
-
-        f.write('\nlast minimum: %f \n' %distances[index_minimum])
-
-        f.write('\nt = 0   yrs, theta = %f \n' %(per_angle_t0*60*60))
-        f.write('t = 100 yrs, theta = %f \n'   %(per_angle_t100*60*60))  # arc seconds
-
-        f.write('\ndelta theta = %f \n' %delta_theta)
-        f.write('last time step: %f \n' %t_V[-1])
+    angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])                   # angle at t=0 (pi/2)
+    angle_t100 = np.arctan(pos_V[0,time_index,0]/pos_V[1,time_index,0])  # angle at t=100 yrs
 
 
-    out_data = open('Results/Mercury/_T[%g]_n[%g]_.txt' %(T, n)).read()
+    angle_t0_per_year   = np.abs(angle_t0)/100
+    angle_t100_per_year = np.abs(angle_t100)/100
+
+    delta_rad = (angle_t0_per_year - angle_t100_per_year)
+    
+    arc_seconds = np.rad2deg(delta_rad)*60*60
+
+    
+    with open('Results/Mercury/new_T[%g]_n[%g]_.txt' %(T, n), 'w') as f:
+
+        f.write('\nthe perihelion position: (%f, %f) \n'\
+              %(pos_V[0,time_index,0],pos_V[1,time_index,0]))
+
+        f.write('\nt = 0   yrs, theta = %f \n' %(angle_t0))
+        f.write('t = 100 yrs, theta = %f \n'   %(angle_t100))
+
+        f.write('\ntheta per year = %f \n' %(angle_t0/100))
+        f.write('theta per year = %f \n'   %(angle_t100/100))
+
+        f.write('\ndelta rad   = %f \n' %delta_rad)
+        f.write('\narc seconds = %f \n' %arc_seconds)
+    
+
+    out_data = open('Results/Mercury/new_T[%g]_n[%g]_.txt' %(T, n)).read()
     print(out_data)
 
 
     plt.plot(pos_V[0,:,0], pos_V[1,:,0], label='Mercury')
     plt.plot(pos_V[0,0,0], pos_V[1,0,0], 'rx', label='Init. pos.')
     plt.plot(pos_V[0,-1,0], pos_V[1,-1,0], 'kx', label='Last pos.')
+    plt.plot(pos_V[0,time_index,0], pos_V[1,time_index,0], 'mx', label='Last min.')
 
-    #plt.plot(pos_V[0,-500,0], pos_V[1,-500,0], 'gx', label='pos[-500]')
-    #plt.plot(pos_V[0,-1000,0], pos_V[1,-1000,0], 'rx', label='pos[-1000]')
 
     plt.title('The orbit of Mercury for 100 years', fontsize=15)
 
     Figure(title='The orbit of Mercury for 100 years')
     if save_plot==True:
-        plt.savefig('Results/Mercury/_T[%g]_n[%g]_plot.png' %(T, n))
-    
-    #plt.plot([distances[-1],0], [distances[-1],0], '-r')   # Plotte radius til solen kanskje..?
+        plt.savefig('Results/Mercury/new_T[%g]_n[%g]_plot.png' %(T, n))
 
     plt.show()
 
@@ -518,9 +523,9 @@ if __name__ == '__main__':
         print("The perihelion precession of Mercury")
         print("--------------------------------------------------------------")
 
-        n  = 5*int(1e5)            # integration points
+        #n  = 5*int(1e5)            # integration points
 
         SM = ['Mercury']
 
-        Ex3i(planet_names=SM, n=n, T=100, slice_n=3000, save_plot=True)
+        Ex3i(planet_names=SM, n=4.5*1e5, T=100, slice_n=3000, save_plot=True)
 

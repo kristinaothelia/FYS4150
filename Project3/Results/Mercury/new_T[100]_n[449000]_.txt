@@ -1,0 +1,12 @@
+
+the perihelion position: (0.307365, -0.009128) 
+
+t = 0   yrs, theta = 1.570796 
+t = 100 yrs, theta = -1.541106 
+
+theta per year = 0.015708 
+theta per year = -0.015411 
+
+delta rad   = 0.000297 
+
+arc seconds = 61.240826 

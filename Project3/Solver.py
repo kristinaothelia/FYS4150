@@ -26,13 +26,12 @@ class Solver:
         self.M_Sun = 1.989*10**30        # [kg]
         self.GM    = 4*np.pi**2          # [AU^3/yr^2] (G*M_sun, Astro units)
         self.G     = self.GM/self.M_Sun
-        #print(self.G)
+
         self.c     = 63239.7             # [AU/yr]
 
         # initial positions and velocities
         self.r0 = r0
         self.v0 = v0
-        #print(self.r0)
 
         # number of planets
         self.Np = int(Np)
@@ -58,7 +57,6 @@ class Solver:
 
             acceleration_sum = 0
             for i in range(self.Np):
-                #print(i)
                 if i != n:
                     temp_r = self.r[:,k_val,n] - self.r[:,k_val,i]
                     unit_r = temp_r/np.linalg.norm(temp_r, axis=0)
@@ -124,19 +122,19 @@ class Solver:
         self.r[:,0,:] = self.r0
         self.v[:,0,:] = self.v0
 
-        # size of time step (use as argument instead of T or n?)
+        # size of time step
         dt = self.ts[1] - self.ts[0]
 
         for k in range(self.n-1):
 
-            self.k = k  # current index (in time), why self..?
+            self.k = k  # current index (in time)
 
             acceleration1 = self.relativity(k, beta)
 
             self.r[:,k+1,:]  = self.r[:,k,:] + self.v[:,k,:]*dt + 0.5*acceleration1*dt**2
             acceleration2    = self.relativity(k+1, beta)
             self.v[:,k+1,:]  = self.v[:,k,:] + 0.5*(acceleration1+acceleration2)*dt
-        return self.r, self.v, self.ts
+        return self.r, self.v, self.ds
 
 
     def solve(self, method, beta=2, SunInMotion=False):
