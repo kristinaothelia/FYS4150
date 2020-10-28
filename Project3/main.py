@@ -367,9 +367,10 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
             %(distances[index_minimum], distances_all[time_index]))
         sys.exit()
 
-
-    angle_t0   = np.arctan2(pos_V[0,0,0],pos_V[1,0,0])                   # angle at t=0 (pi/2)
-    angle_t100 = np.arctan(pos_V[0,time_index,0]/pos_V[1,time_index,0])  # angle at t=100 yrs
+    # we discovered we first used (x,y), not (y,x)
+    # but the result is the same, just different direction
+    angle_t0   = np.arctan2(pos_V[1,0,0],pos_V[0,0,0])                   # angle at t=0 (pi/2)
+    angle_t100 = np.arctan(pos_V[1,time_index,0]/pos_V[0,time_index,0])  # angle at t=100 yrs
 
 
     angle_t0_per_year   = np.abs(angle_t0)/100
@@ -380,7 +381,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
     arc_seconds = np.rad2deg(delta_rad)*60*60
 
 
-    with open('Results/Mercury/new_T[%g]_n[%g]_.txt' %(T, n), 'w') as f:
+    with open('Results/Mercury/new4_T[%g]_n[%g]_.txt' %(T, n), 'w') as f:
 
         f.write('\nthe perihelion position: (%f, %f) \n'\
               %(pos_V[0,time_index,0],pos_V[1,time_index,0]))
@@ -395,7 +396,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
         f.write('\narc seconds = %f \n' %arc_seconds)
 
 
-    out_data = open('Results/Mercury/new_T[%g]_n[%g]_.txt' %(T, n)).read()
+    out_data = open('Results/Mercury/new4_T[%g]_n[%g]_.txt' %(T, n)).read()
     print(out_data)
 
 
@@ -409,7 +410,7 @@ def Ex3i(planet_names, n=1e4, T=100, slice_n=3000, save_plot=False):
 
     Figure(title='The orbit of Mercury for 100 years')
     if save_plot==True:
-        plt.savefig('Results/Mercury/new_T[%g]_n[%g]_plot.png' %(T, n))
+        plt.savefig('Results/Mercury/new4_T[%g]_n[%g]_plot.png' %(T, n))
 
     plt.show()
 
