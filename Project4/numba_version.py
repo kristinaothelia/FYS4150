@@ -38,9 +38,9 @@ def monteCarlo(temp, NSpins, MCcycles):
     Input:
     - temp     : np.float64
         Temperature to calculate for
-    - NSpins   : int 
+    - NSpins   : int
         dimension of square matrix
-    - MCcycles : int 
+    - MCcycles : int
         Monte-carlo MCcycles (how many times do we flip the matrix?)
 
     Output:
@@ -140,7 +140,7 @@ def model(InitialT, FinalT, NumberTsteps, NSpins, MCcycles):
     for T in range(NumberTsteps):
         Temp[T] = InitialT + T*Tsteps
         Energy[T], SpecificHeat[T], Magnetization[T], Susceptibility[T], MagnetizationAbs[T] = monteCarlo(Temp[T],NSpins,MCcycles)
-   
+
     return Energy, SpecificHeat, Magnetization, Susceptibility, MagnetizationAbs, Temp
 
 if __name__ == "__main__":
@@ -205,3 +205,21 @@ if __name__ == "__main__":
     f.subplots_adjust(top=0.89)
 
     plt.show()
+
+
+
+    def test_2x2(Initial=1, FinalT=1, NumberTsteps=NumberTsteps, NSpins=2, MCcycles=MCcycles):
+
+        Energy, SpecificHeat, Magnetization, Susceptibility, MagnetizationAbs, Temp = model(InitialT, FinalT, NumberTsteps, NSpins, MCcycles)
+        print(Energy)
+        print(SpecificHeat)
+        print(Susceptibility)
+
+        # hmmmm stemmer ikke som two_x_two.py
+        print('Mean energy:             %f' % np.mean(Energy))
+        print('Specific Heat:           %f' % np.mean(SpecificHeat))
+        print('Mean Magenetization:     %f' % np.mean(Magnetization))
+        print('Susceptibility:          %f' % np.mean(Susceptibility))
+        print('Mean abs. Magnetization: %f' % np.mean(MagnetizationAbs))
+
+    test_2x2(Initial=1, FinalT=1, NumberTsteps=NumberTsteps, NSpins=2, MCcycles=MCcycles)

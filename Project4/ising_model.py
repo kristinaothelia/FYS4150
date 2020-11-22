@@ -1,3 +1,7 @@
+"""
+The Ising model
+"""
+
 import numpy as np
 import numba
 
