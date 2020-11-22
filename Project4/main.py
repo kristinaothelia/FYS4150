@@ -48,9 +48,9 @@ if __name__ == '__main__':
         J          = 1
 
         # MC
-        #I2.twoXtwo(L, temp, max_cycles)
+        I2.twoXtwo(L, temp, max_cycles)
         # Analytic solutions
-        #I2.Analythical_2x2(J, L, temp)
+        I2.Analythical_2x2(J, L, temp)
 
 
     elif ex_4d == True:
