@@ -140,21 +140,25 @@ def model(InitialT, FinalT, NumberTsteps, NSpins, MCcycles):
     for T in range(NumberTsteps):
         Temp[T] = InitialT + T*Tsteps
         Energy[T], SpecificHeat[T], Magnetization[T], Susceptibility[T], MagnetizationAbs[T] = monteCarlo(Temp[T],NSpins,MCcycles)
+        
+        #print(Energy[T], SpecificHeat[T], Magnetization[T], Susceptibility[T], MagnetizationAbs[T])
+        #sys.exit()
 
     return Energy, SpecificHeat, Magnetization, Susceptibility, MagnetizationAbs, Temp
 
 if __name__ == "__main__":
 
     # temperature steps, initial temperature, final temperature
-    NumberTsteps = 20
-    InitialT     = 1.5
-    FinalT       = 2.5
+    NumberTsteps = 1 #20
+    InitialT     = 1 #2.4 #1 #1.5
+    FinalT       = 1 #2.4 #1 #2.5
 
     # Define number of spins. Er dette L? Som skal vere 2 i starten..?
-    NSpins = 20
+    NSpins = 2
 
     # Define number of Monte Carlo cycles
-    MCcycles = 10000
+    MCcycles = 10000000 #10000
+
 
     # this is probably bad way to calc time (should use timeit)
     start = time.time()
@@ -164,14 +168,52 @@ if __name__ == "__main__":
     end      = time.time()
     run_time = end - start
 
-    print('Execution time (with compilation) : %f s' %run_time)
+    print('\nExecution time (with compilation) : %f s\n' %run_time)
 
     # better way to measure execution time ('without' compilation time)
     #execution_time = timeit.timeit(lambda:model(InitialT, FinalT, NumberTsteps, NSpins, MCcycles), number=3)
     #print(execution_time/3)
 
+    print('Energy:', np.sum(Energy)/len(Energy))                    
+    print('SpecificHeat:', np.sum(SpecificHeat)/len(SpecificHeat))         
+    print('Magnetization:', np.sum(Magnetization)/len(Magnetization))  
+    print('Susceptibility:', np.sum(Susceptibility)/len(Susceptibility))
+    print('MagnetizationAbs:', np.sum(MagnetizationAbs)/len(MagnetizationAbs))
+
+    '''
+    T=1, NSpins=2, MCcycles=10000000:
+    ---------------------------------
+    Execution time (with compilation) : 2.870548 s
+
+    Energy: -1.9960468
+    SpecificHeat: 0.031563088839039466
+    Magnetization: 0.01723985
+    Susceptibility: 3.99222105028791
+    MagnetizationAbs: 0.99868155
+
+    T=1, NSpins=20, MCcycles=10000000:
+    ----------------------------------
+    Execution time (with compilation) : 194.809163 s
+
+    Energy: -1.997162759
+    SpecificHeat: 0.023367653403256555
+    Magnetization: 0.9992764169999999
+    Susceptibility: 0.0015686570569232571
+    MagnetizationAbs: 0.9992764169999999
+
+    T=2.4, NSpins=20, MCcycles=10000000:
+    ------------------------------------
+    Execution time (with compilation) : 229.515274 s (after ctrl+c)
+
+    Energy: -1.236161381
+    SpecificHeat: 1.4060732704286667
+    Magnetization: 0.0029550325
+    Susceptibility: 42.92205587090398
+    MagnetizationAbs: 0.4521837215
+    '''
+
     #monteCarlo.inspect_types()
-    #sys.exit()
+    sys.exit()
 
     # And finally plot
     f = plt.figure(figsize=(15,8)) # 18,10
@@ -207,8 +249,10 @@ if __name__ == "__main__":
     plt.show()
 
 
-
     def test_2x2(Initial=1, FinalT=1, NumberTsteps=NumberTsteps, NSpins=2, MCcycles=MCcycles):
+
+        # med MCcycles = 10000000 får jeg basically samme
+        # som two_x_two.py og analytisk 
 
         Energy, SpecificHeat, Magnetization, Susceptibility, MagnetizationAbs, Temp = model(InitialT, FinalT, NumberTsteps, NSpins, MCcycles)
         print(Energy)

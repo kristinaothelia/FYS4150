@@ -1,6 +1,8 @@
 """
 Analythical and numerical solution of the 2x2 Ising model
 """
+import sys, time
+
 import numpy             as np
 import ising_model       as ising
 

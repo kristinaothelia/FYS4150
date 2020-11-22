@@ -13,8 +13,6 @@ import numpy             as np
 
 
 
-
-
 # Global parameters
 # ??
 
