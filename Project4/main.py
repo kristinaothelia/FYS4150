@@ -1,6 +1,7 @@
 """
 Main program for FYS4150 - Project 4
-                           Studies of phase transitions in magnetic systems
+
+Studies of phase transitions in magnetic systems
 """
 
 import ising_model       as ising
@@ -18,11 +19,12 @@ import numpy             as np
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description="Solar system")
+    parser = argparse.ArgumentParser(description=__doc__)
     group  = parser.add_mutually_exclusive_group()
 
     group.add_argument('-1', '--c4', action="store_true", help="Project 4, c)")
     group.add_argument('-2', '--d4',  action="store_true", help="Project 4, d)")
+
 
     if len(sys.argv) <= 1:
         sys.argv.append('--help')
@@ -31,6 +33,7 @@ if __name__ == '__main__':
     ex_4c = args.c4
     ex_4d = args.d4
 
+    print(parser.description)
 
     if ex_4c == True:
         print("--------------------------------------------------------------")
@@ -45,9 +48,9 @@ if __name__ == '__main__':
         J          = 1
 
         # MC
-        I2.twoXtwo(L, temp, max_cycles)
+        #I2.twoXtwo(L, temp, max_cycles)
         # Analytic solutions
-        I2.Analythical_2x2(J, L, temp)
+        #I2.Analythical_2x2(J, L, temp)
 
 
     elif ex_4d == True:
