@@ -5,6 +5,7 @@ import sys, time
 
 import numpy             as np
 import ising_model       as ising
+import pandas            as pd
 
 # -----------------------------------------------------------------------------
 
@@ -35,8 +36,9 @@ def numerical_solution(spin_matrix, n_cycles, temp, L):
 
     return Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility
 
-def twoXtwo(L, temp, max_cycles):
+def twoXtwo(L, temp, runs):
 
+    '''
     # Array of Monte Carlo runs we want to evaluate, logarithmic spacing
     runs        = np.logspace(2, int(np.log10(max_cycles)), (int(np.log10(max_cycles))-1), endpoint=True)
     spin_matrix = np.ones((L, L), np.int8)
@@ -53,6 +55,16 @@ def twoXtwo(L, temp, max_cycles):
         print('Mean Magenetization:     %f' % Magnetization)
         print('Susceptibility:          %f' % Susceptibility)
         print('Mean abs. Magnetization: %f' % MagnetizationAbs)
+    '''
+    spin_matrix = np.ones((L, L), np.int8)
+    list_num_df = []
+
+    for n_cycles in runs:
+        Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility = \
+        numerical_solution(spin_matrix, n_cycles, temp, L)
+        list_num_df.append(DataFrameSolution(Energy, SpecificHeat, Magnetization, Susceptibility, MagnetizationAbs, n_cycles))
+
+    return list_num_df
 
 
 def Analythical_2x2(J, L, temp):
@@ -75,12 +87,52 @@ def Analythical_2x2(J, L, temp):
     A_MagnetizationAbs  = M_abs_avg / L**2
     A_Susceptibility    = M_var / (temp * L**2)     # Chi, (32/(4*Z))*(1+np.exp(ang))
 
+    '''
     print("\nAnalytical solutions:")
     print("Mean energy:             %f" %A_Energy)
     print("Specific heat:           %f" %A_SpecificHeat)
     print("Mean Magenetization:     %f" %A_Magnetization)
     print("Susceptibility:          %f" %A_Susceptibility)
     print("Mean abs. Magnetization: %f" %A_MagnetizationAbs)
+    '''
+
+    return A_Energy, A_SpecificHeat, A_Magnetization, A_Susceptibility, A_MagnetizationAbs
+
+def DataFrameSolution(E, CP, M, CHI, MAbs, N=None):
+    """Function creating dataframe with solution values.
+
+    Parameters
+    ----------
+    N : None, float
+        N is None  - used for analytical dataframe
+        N is float - number of MC cycles used in numerical calc. 
+
+    TODO
+    ----
+        Making it more general if 
+        useful in further exercises...
+    """
+
+    if N == None:
+        solutions = [{'MeanEnergy' : E,\
+                      'SpecificHeat' : CP,\
+                      'MeanMagnetization' : M,\
+                      'Susceptibility' : CHI,\
+                      'MeanMagnetizationAbs' : MAbs}]
+
+        dataframe = pd.DataFrame(solutions)
+    else:
+        solutions = [{'MCcycles' : N,\
+                      'MeanEnergy' : E,\
+                      'SpecificHeat' : CP,\
+                      'MeanMagnetization' : M,\
+                      'Susceptibility' : CHI,\
+                      'MeanMagnetizationAbs' : MAbs}]
+
+        dataframe = pd.DataFrame(solutions)
+        dataframe.set_index('MCcycles', inplace=True)
+
+    return dataframe
 
 """ Sample run
 
