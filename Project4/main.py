@@ -60,11 +60,11 @@ if __name__ == '__main__':
         # Initial conditions
         max_cycles = 1e7            # Max. MC cycles
         max_cycles = 10000000
-        
+
         L  = 20      # Number of spins
         T1 = 1.0     # [kT/J] Temperature
         T2 = 2.4     # [kT/J] Temperature
 
         # MC
-        I2.twoXtwo(L, T1, max_cycles)
-        I2.twoXtwo(L, T2, max_cycles)
+        #I2.twoXtwo(L, T1, max_cycles)
+        #I2.twoXtwo(L, T2, max_cycles)
