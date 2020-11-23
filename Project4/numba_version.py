@@ -30,7 +30,7 @@ def periodic(i, limit, add):
     return (i+limit+add) % limit
 
 #@jit(double(float64,intp,intp))      # forceobj=True  parallel=True
-@jit
+@jit(cache=True, parallel=True)
 def monteCarlo(temp, NSpins, MCcycles):
     """
     Calculate the energy and magnetization
@@ -157,8 +157,18 @@ if __name__ == "__main__":
     NSpins = 2
 
     # Define number of Monte Carlo cycles
-    MCcycles = 10000000 #10000
+    MCcycles = 10000 #10000
 
+    for m_cycles in [100,1000,10000,100000,1000000,10000000]:
+        for i in range(20):
+            E_av, E_variance, M_av, M_variance, Mabs_av = monteCarlo(1, NSpins, m_cycles)
+            plt.semilogx(m_cycles, M_av, 'mo-')
+    
+    plt.title('Spread of expected magnetic field of matrix\n(averaged over MCcycles, normalized to L**2)')
+    plt.xlabel('Number of MC cycles')
+    plt.ylabel('<M>')
+    plt.show()
+    sys.exit()
 
     # this is probably bad way to calc time (should use timeit)
     start = time.time()
