@@ -25,7 +25,7 @@ def Analythical_2x2(J, L, temp):
     A_Magnetization     = M_avg / L**2
     A_MagnetizationAbs  = M_abs_avg / L**2
     A_Susceptibility    = M_var / (temp * L**2)     # Chi, (32/(4*Z))*(1+np.exp(ang))
-    
+
     return A_Energy, A_SpecificHeat, A_Magnetization, A_Susceptibility, A_MagnetizationAbs
 
 
@@ -36,7 +36,7 @@ def DataFrameSolution(E, CP, M, CHI, MAbs, N=None):
     ----------
     N : None, float
         N is None  - used for analytical dataframe
-        N is float - number of MC cycles used in numerical calc. 
+        N is float - number of MC cycles used in numerical calc.
 
     Returns
     -------
@@ -87,7 +87,7 @@ def initial_energy(spin_matrix, n_spins):
 
 @njit(cache=True)
 def MC(spin_matrix, n_cycles, temp):
-
+    #print("MC", temp)
     n_spins     = len(spin_matrix)
 
     # Matrix for storing calculated expectation and variance values, five variables
@@ -96,9 +96,10 @@ def MC(spin_matrix, n_cycles, temp):
 
     # Initial energy and magnetization
     E, M        = initial_energy(spin_matrix, n_spins)
+    #print("initial E = ", E/L**2)
 
     for i in range(1, n_cycles+1):
-        for j in range(n_spins*n_spins):
+        for j in range(n_spins**2):
 
             # Picking a random lattice position
             ix = np.random.randint(n_spins)  # dont include n_spins
@@ -112,12 +113,13 @@ def MC(spin_matrix, n_cycles, temp):
 
             # Calculating the energy change
             dE = (2 * spin_matrix[ix, iy] * (left + right + above + below))
-
+            #print(spin_matrix)
+            #sys.exit(1)
+            #print(temp)
             # Evaluating the proposet new configuration
-            if np.random.random() <= np.exp(-dE / temp):
-
+            if np.random.random() <= np.exp(-dE/temp):
                 # Changing the configuration if accepted
-                spin_matrix[ix, iy] *= -1.0
+                spin_matrix[ix, iy] *= -1.0  #flip spin
                 E                   += dE
                 M                   += 2*spin_matrix[ix, iy]
                 accepted[i]         += 1
@@ -184,11 +186,30 @@ def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
     for m in range(2):
         for t in range(len(temp)):
 
-            spin_matrix      = ground_spin_mat if m==0 else random_spin_mat
+            #m=0 is ground state, all spin-up
+            #m=1 is random state
+            if m==0:
+                spin_matrix = ground_spin_mat
+            else:
+                s_mat_random = np.ones((L, L), np.int8)   # a random spin orientation
+                #generate spin matrix of ones, then random indices are given 1 og -1sys
+                for sw in range(len(s_mat_random)):
+                    for sl in range(len(s_mat_random)):
+                        rint = np.random.randint(-1,1)
+                        if rint == -1:
+                            s_mat_random[sw,sl] *= -1
+                spin_matrix = s_mat_random
+
+            #spin_matrix      = ground_spin_mat if m==0 else random_spin_mat
+            print("m =", m)
+            print(spin_matrix)
+                #sys.exit
+            #print(temp[t])
             quantities, Nacc = MC(spin_matrix, n_cycles, temp[t])
+            #print("EE", E)
 
             norm = 1.0/np.arange(1, n_cycles+1)
-            
+
             E_avg      = np.cumsum(quantities[:,0])*norm
             M_avg      = np.cumsum(quantities[:,1])*norm
             E2_avg     = np.cumsum(quantities[:,2])*norm
@@ -200,8 +221,9 @@ def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
             Energy           = E_avg    /(L**2)
             Magnetization    = M_avg    /(L**2)
             MagnetizationAbs = M_abs_avg/(L**2)
+            #skal ogsaa deles paa L^2?
             SpecificHeat     = E_var    /(temp[t]**2)
-            Susceptibility   = M_var    /(temp[t])   
+            Susceptibility   = M_var    /(temp[t])
 
             E[m,t,:]       = Energy
             Mag[m,t,:]     = Magnetization
@@ -210,7 +232,7 @@ def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
             Suscept[m,t,:] = Susceptibility
 
             Naccept[m,t,:] = Nacc
-        
+
     return E, Mag, MagAbs, SH, Suscept, Naccept
 
 def plot_expected_net_mag(L, temp, runs):
@@ -223,13 +245,13 @@ def plot_expected_net_mag(L, temp, runs):
     inspo from rapport (u know who)...
 
     should probably increase N...?
-    not sure what it 'should be' or why... 
+    not sure what it 'should be' or why...
     """
 
     colors      = ['rosybrown','lightcoral','indianred','firebrick','darkred','red']
     spin_matrix = np.ones((L, L), np.int8)
 
-    plt.figure(figsize=(10, 6)) 
+    plt.figure(figsize=(10, 6))
 
     N     = 30  # number of times to run n_cycles
     count = 0
@@ -242,7 +264,7 @@ def plot_expected_net_mag(L, temp, runs):
 
             E, Mag, MagAbs, SH, Suscept, Naccept = numerical_solution(spin_matrix, int(n_cycles), temp, L)
             plt.semilogx(int(n_cycles), Mag, 'o', color=c)
-    
+
     plt.title('Spread of Expected Magnetic Field of Matrix', fontsize=15)
     plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
     plt.ylabel(r'\langle M \rangle', fontsize=15)
@@ -258,7 +280,7 @@ def plot_MCcycles_vs_err(mc_cycles, error):
     New title, xlabel, ylabel etc.
     """
     plt.figure(figsize=(15, 10))
-    
+
     #plt.loglog(mc_cycles, error, 'bo-')
     plt.semilogx(mc_cycles, error, 'bo-') # or loglog?
 
@@ -296,14 +318,19 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
     """
     Function for plotting expectation values vs. MC cycles,
     - two temperatures in two different initial states.
+
+    expected has structure [temp, physical quantity, ...]
     """
+    #expecteds = [E, Mag, MagAbs, SH, Suscept]
+    print("hey")
+
 
     names     = ['Energy','Magnetization','Abs. Magnetization',\
                  'Specific Heat','Susceptibility']
-    
-    ylabels   = [r'$\langle\epsilon\rangle$', r'$\langle M \rangle$',\
+
+    ylabels   = [r'$\langle E\rangle$', r'$\langle M \rangle$',\
                  r'$\langle|M|\rangle$', r'$C_P$', r'$\chi$']
-    
+
     save_as   = ['energy','mag','Mabs','CP','CHI']
 
     x = np.linspace(1,MCcycles,MCcycles, endpoint=True).astype(np.float_)
@@ -311,20 +338,20 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
     for i, val in enumerate(expected):
 
         plt.figure(figsize=(7,5))
-        plt.semilogx(x, val[0,0,:], linewidth=0.8,\
+        plt.semilogx(x, val[0,0,:], linewidth=1.0,\
                                     label=f'T={T1} (order)',\
                                     color='tab:blue')
-        plt.semilogx(x, val[0,1,:], linewidth=0.8,\
+        plt.semilogx(x, val[0,1,:], linewidth=1.0,\
                                     label=f'T={T2} (order)',\
                                     color='tab:red')
 
-        plt.semilogx(x, val[1,0,:], '--', linewidth=0.8,\
+        plt.semilogx(x, val[1,0,:], '--', linewidth=1.0,\
                                           label=f'T={T1} (disorder)',\
                                           color='tab:blue')
-        plt.semilogx(x, val[1,1,:], '--', linewidth=0.8,\
+        plt.semilogx(x, val[1,1,:], '--', linewidth=1.0,\
                                           label=f'T={T2} (disorder)',\
                                           color='tab:red')
-        
+
         plt.title(f'Expectation Values of {names[i]}', fontsize=15)
         plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
         plt.ylabel(f'{ylabels[i]}', fontsize=15)
@@ -333,10 +360,11 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
         plt.tight_layout()
         plt.savefig(f'results/plots/4d/expected_{save_as[i]}_{MCcycles}')
         plt.show()
+        #sys.exit(1)
 
 def plot_n_accepted(MCcycles, Naccs):
-    # blæ, sliter med denne.... 
-    # bare sett på plottet til nils, bør vel se nærmere på koden... 
+    # blæ, sliter med denne....
+    # bare sett på plottet til nils, bør vel se nærmere på koden...
 
     print(Naccs)
     print(Naccs.shape)
@@ -353,7 +381,7 @@ def plot_n_accepted(MCcycles, Naccs):
     plt.plot(x, Naccs[0,1,:],label=f'T={T2} (order)',color='tab:red')
     plt.plot(x, Naccs[1,0,:], '--',label=f'T={T1} (disorder)',color='tab:blue')
     plt.plot(x, Naccs[1,1,:], '--',label=f'T={T2} (disorder)',color='tab:red')
-    
+
     plt.title('Total Number of Accepted Configurations', fontsize=15)
     plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
     plt.ylabel('Number of Accepted Configurations', fontsize=15)
@@ -362,8 +390,8 @@ def plot_n_accepted(MCcycles, Naccs):
     plt.tight_layout()
     plt.savefig(f'results/plots/4d/AcceptedConfigs')
     plt.show()
-    
-    sys.exit()
+
+    #sys.exit()
 
 
 ex_c = False
@@ -379,7 +407,7 @@ max_cycles = 10000000
 
 #set_num_threads(3)
 
-if ex_c: 
+if ex_c:
     L          = 2            # Number of spins
     temp       = 1            # [kT/J] Temperature
     J          = 1
@@ -387,7 +415,7 @@ if ex_c:
     log_scale = np.logspace(2, int(np.log10(max_cycles)),\
                            (int(np.log10(max_cycles))-1), endpoint=True)
     MC_runs   = np.outer(log_scale, [1,5]).flatten() # taking the outer product
-    MC_runs   = MC_runs[1:-1]                        # removing first and last value 
+    MC_runs   = MC_runs[1:-1]                        # removing first and last value
 
     # Analytic solutions
     A_E, A_SH, A_Mag, A_Suscept, A_MagAbs = Analythical_2x2(J, L, temp)
@@ -423,24 +451,32 @@ if ex_c:
 
 if ex_d:
 
+    #print("hi")
     L  = 20    # Number of spins
     T1 = 1.0   # [kT/J] Temperature
     T2 = 2.4   # [kT/J] Temperature
 
     temp_arr = np.array([T1, T2])
-    MC_runs  = 10000
+    MC_runs  = int(1e7)
+
 
     s_mat_ground = np.ones((L, L), np.int8)   # initial state (ground state)
-    s_mat_random = np.ones((L,L), np.int8)    # a random spin orientation
+    """
+    s_mat_random = np.ones((L, L), np.int8)   # a random spin orientation
+    #generate spin matrix of ones, then random indices are given 1 og -1sys
     for sw in range(len(s_mat_random)):
         for sl in range(len(s_mat_random)):
             rint = np.random.randint(-1,1)
             if rint == -1:
                 s_mat_random[sw,sl] *= -1
+    """
 
+    s_mat_random = 0
     E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(s_mat_ground, s_mat_random, L, MC_runs, temp_arr)
 
+    #print("before")
     plot_n_accepted(MC_runs, n_acc)
+    #print("after")
 
     expecteds = [E, Mag, MagAbs, SH, Suscept]
     expected_vals_two_temp(MC_runs, T1, T2, expecteds)
@@ -457,5 +493,5 @@ if ex_e:
     MC_runs  = 10000
 
 
-    #Tenkte å prøve og skrive om dette eller noe kanskje.. 
+    #Tenkte å prøve og skrive om dette eller noe kanskje..
     #https://github.com/siljeci/FYS4150/blob/master/Project4/CODES/prob.py

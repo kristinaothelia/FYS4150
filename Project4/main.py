@@ -22,7 +22,7 @@ def plot_MCcycles_vs_err(mc_cycles, error):
     """
 
     plt.figure(figsize=(7, 4))   # plot the calculated values, (12, 7)
-    
+
     #plt.loglog(mc_cycles, error, 'bo-')
     plt.semilogx(mc_cycles, error, 'bo-') # or loglog?
 
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
         # Initial conditions
         max_cycles = 1e7            # Max. MC cycles
-        max_cycles = 10000000
+        #max_cycles = 10000000
         L          = 2              # Number of spins
         temp       = 1              # [kT/J] Temperature
         J          = 1
@@ -102,13 +102,13 @@ if __name__ == '__main__':
 
         log_scale   = np.logspace(2, int(np.log10(max_cycles)), (int(np.log10(max_cycles))-1), endpoint=True)
 
-        error_vs_cycles = True
+        error_vs_cycles = False
 
         if error_vs_cycles:
 
             # Expand array of max_cycles to run:
             MC_runs   = np.outer(log_scale, [1,5]).flatten() # taking the outer product
-            MC_runs   = MC_runs[1:-1] # removing first and last value, maybe not? 
+            MC_runs   = MC_runs[1:-1] # removing first and last value, maybe not?
 
             # Numerical solutions
             list_num_dfs = I2.twoXtwo(L, temp, MC_runs)
