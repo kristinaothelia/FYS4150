@@ -460,23 +460,23 @@ if ex_f:
     """
     skriv noe
     """
-    L  = [40, 60, 80, 100]    # Number of spins
-    T1 = 2.0   # [kT/J] Temperature
-    T2 = 2.3   # [kT/J] Temperature
+    L  = [40, 60, 80, 100]          # Number of spins
+    T1 = 2.0                        # [kT/J] Temperature
+    T2 = 2.3                        # [kT/J] Temperature
     dT = 0.02
-    N = int(round((T2 - T1)/dT))  #nr of steps
+    N  = int(round((T2 - T1)/dT))   # nr of steps
     NL = int(len(L))
-    T = np.linspace(T1, T2, N)
+    T  = np.linspace(T1, T2, N)
 
     names       = ['Energy','Magnetization','Abs. Magnetization',\
-               'Specific Heat','Susceptibility']
+                   'Specific Heat','Susceptibility']
 
     ylabels      = [r'$\langle E\rangle$', r'$\langle M \rangle$',\
-                r'$\langle|M|\rangle$', r'$C_V$', r'$\chi$']
+                    r'$\langle|M|\rangle$', r'$C_V$', r'$\chi$']
 
     save_as      = ['energy','mag','Mabs','CV','CHI']
 
-    MC_runs     = int(1e3)
+    MC_runs     = int(1e6)
     stable      = int(0.10*MC_runs)
 
     E_val       = np.zeros((NL, N))  # rows L, columns N (temperature)
@@ -502,6 +502,7 @@ if ex_f:
     vals = [E_val, M_val, M_abs_val, Cv_val, X_val]
 
     for i in range(len(names)):
+        plt.figure()
         val = vals[i]
         for l in range(NL):
             plt.plot(T, val[l,:], label="L=%g" %L[l])
