@@ -11,25 +11,43 @@ from   numba import jit, njit, prange, set_num_threads
 
 # -----------------------------------------------------------------------------
 
-def Analythical_2x2(J, L, temp):
+def Analytical_2x2(J, L, temp):
+    """
+    Computes the analytical solutions to the 2x2 lattice.
+    input:
+    - J: binding constant
+    - L: dimension of 2D lattice
+    - temp: temperature of system
+    returns:
+    - E: expectation value of energy
+    - Cv: specific heat capacity
+    - M: expectation value of magnetization
+    - X: susceptablity
+    - MAbs: expectation value of mean value of magnetization
+    """
 
-    ang  = 8*J/temp
-    Z    = 12 + 2*np.exp(-ang) + 2*np.exp(ang)
+    const = 8*J/temp
 
-    E_avg       = 16*J*    (np.exp(-ang) - np.exp(ang)) / Z
-    E2_avg      = 128*J**2*(np.exp(-ang) + np.exp(ang)) / Z
+    # the partition function
+    Z    = 12 + 2*np.exp(-const) + 2*np.exp(const)
+
+    # expectation values for E
+    E_avg       = 16*J*    (np.exp(-const) - np.exp(const)) / Z
+    E2_avg      = 128*J**2*(np.exp(-const) + np.exp(const)) / Z
     E_var       = E2_avg - E_avg**2 # 512*J**2 * (Z-6) / Z**2 ??
 
+    # expectation values for M
     M_avg       = 0
-    M2_avg      = 32*(1 + np.exp(ang)) / Z
-    M_abs_avg   = 8*(2 + np.exp(ang))  / Z
+    M2_avg      = 32*(1 + np.exp(const)) / Z
+    M_abs_avg   = 8*(2 + np.exp(const))  / Z
     M_var       = M2_avg - M_avg**2
 
+    # scaling by L? why is this correct?
     A_Energy            = E_avg / L**2
-    A_SpecificHeat      = E_var / (temp**2 * L**2)  # C_V
+    A_SpecificHeat      = E_var / (temp**2 * L**2)  # Cv
     A_Magnetization     = M_avg / L**2
     A_MagnetizationAbs  = M_abs_avg / L**2
-    A_Susceptibility    = M_var / (temp * L**2)     # Chi, (32/(4*Z))*(1+np.exp(ang))
+    A_Susceptibility    = M_var / (temp * L**2)     # X, (32/(4*Z))*(1+np.exp(ang))
 
     return A_Energy, A_SpecificHeat, A_Magnetization, A_Susceptibility, A_MagnetizationAbs
 
@@ -135,36 +153,38 @@ def MC(spin_matrix, n_cycles, temp):
 
     return quantities, accepted
 
+@njit(cache=True)
 def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
 
     # Compute quantities
     quantities, Naccept = MC(spin_matrix, n_cycles, temp)
 
-    norm                = 1.0/float(n_cycles)
-    E_avg               = np.sum(quantities[:,0])*norm
-    M_avg               = np.sum(quantities[:,1])*norm
-    E2_avg              = np.sum(quantities[:,2])*norm
-    M2_avg              = np.sum(quantities[:,3])*norm
-    M_abs_avg           = np.sum(quantities[:,4])*norm
+    E_avg               = np.mean(quantities[:,0])
+    M_avg               = np.mean(quantities[:,1])
+    E2_avg              = np.mean(quantities[:,2])
+    M2_avg              = np.mean(quantities[:,3])
+    M_abs_avg           = np.mean(quantities[:,4])
 
+    # variance for E and M
     E_var               = (E2_avg - E_avg**2)/(L**2)
     if abs:
         M_var = (M2_avg - M_abs_avg**2)/(L**2)
     else:
         M_var               = (M2_avg - M_avg**2)/(L**2)
 
+    # scale with L^2
     Energy              = E_avg    /(L**2)
     Magnetization       = M_avg    /(L**2)
     MagnetizationAbs    = M_abs_avg/(L**2)
-    SpecificHeat        = E_var    /(temp**2)  # * L**2?, no because E_var already /L**2
-    Susceptibility      = M_var    /(temp)     # * L**2?
+    SpecificHeat        = E_var    /(temp**2)
+    Susceptibility      = M_var    /(temp)
 
     return Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept
 
 def twoXtwo(L, temp, runs):
 
     spin_matrix = np.ones((L, L), np.int8)
-    list_num_df = []
+    list_num_df = []  #what does df mean?
 
     for n_cycles in runs:
         Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept = \
@@ -208,24 +228,10 @@ def two_temps(L, n_cycles, temp):
                 spin_matrix = s_mat_random
 
 
-            quantities, Nacc = MC(spin_matrix, n_cycles, temp[t])
+            print("hi")#; sys.exit(1)
+            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Nacc \
+             = numerical_solution(spin_matrix, n_cycles, temp[t], L, abs=False)
 
-            norm       = 1.0/np.arange(1, n_cycles+1)
-
-            E_avg      = np.cumsum(quantities[:,0])*norm
-            M_avg      = np.cumsum(quantities[:,1])*norm
-            E2_avg     = np.cumsum(quantities[:,2])*norm
-            M2_avg     = np.cumsum(quantities[:,3])*norm
-            M_abs_avg  = np.cumsum(quantities[:,4])*norm
-
-            E_var            = (E2_avg - E_avg**2)/(L**2)
-            M_var            = (M2_avg - M_avg**2)/(L**2)
-            Energy           = E_avg    /(L**2)
-            Magnetization    = M_avg    /(L**2)
-            MagnetizationAbs = M_abs_avg/(L**2)
-            #skal ogsaa deles paa L^2?
-            SpecificHeat     = E_var    /(temp[t]**2)
-            Susceptibility   = M_var    /(temp[t])
 
             E[m,t,:]         = Energy
             Mag[m,t,:]       = Magnetization
@@ -237,14 +243,93 @@ def two_temps(L, n_cycles, temp):
 
     return E, Mag, MagAbs, SH, Suscept, Naccept
 
+def plot_MCcycles_vs_err(mc_cycles, error):
+    """Plotting error vs. number of MC cycles.
+
+    loglog or semilog?
+    Need better adjustment of plot.
+    New title, xlabel, ylabel etc.
+    """
+    plt.figure(figsize=(15, 10))
+
+    plt.semilogx(mc_cycles, error, 'bo-') # or loglog? semilog, only one axis is logarithmic
+
+    # zip joins x and y coordinates in pairs
+    for x,y in zip(mc_cycles,error):
+
+        label = f'{y:10.2e}'
+
+        plt.annotate(label, # this is the text
+                     (x,y), # this is the point to label
+                     textcoords="offset points", # how to position the text
+                     xytext=(0,-10), # distance from text to points (x,y)
+                     color='black',
+                     weight='bold',
+                     size='smaller',
+                     rotation='0',   # plot seems weird w/angle other than 0 or 360..?
+                     va='top',       #  [ 'center' | 'top' | 'bottom' | 'baseline' ]
+                     ha='right')     #  [ 'left' | 'right' | 'center']
+
+    #what does this do? remove comments?
+    xmin = 0.50e2 #f'{np.min(mc_cycles):10.2e}'  #0.5e2
+    xmax = 1.5e7  #f'{np.max(mc_cycles):10.2e}'  #1.1e7
+    #plt.ylim(error.min(), error.max()); #plt.ylim(1e-6, 1e-3)
+    #plt.xlim(xmin, xmax)
+
+    plt.title('Error of the Mean Abs. Magnetization',fontsize=15)
+    plt.xlabel('Number of Monte-Carlo Cycles',fontsize=15)
+    plt.ylabel('error',fontsize=15)
+    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+    plt.tight_layout()
+    plt.savefig(f'results/plots/4c/ErrorMeanMagnetizationAbs')
+    plt.show()
+
+
+def plot_expected_net_mag(L, temp, runs):
+    """
+    plotting expected net mag
+
+    the plots show that value goes to zero (expected value)
+    for large (1e7) number of mc-cycles.
+
+    inspo from rapport (u know who)...
+
+    should probably increase N...?
+    not sure what it 'should be' or why...
+    """
+
+    colors      = ['rosybrown','lightcoral','indianred','firebrick','darkred','red']
+    spin_matrix = np.ones((L, L), np.int8)
+
+    plt.figure(figsize=(10, 6))
+
+    N     = 30  # number of times to run n_cycles
+    count = 0
+
+    for n_cycles in runs:
+
+        c     = colors[count]
+        count += 1
+        for i in range(N):
+
+            E, Mag, MagAbs, SH, Suscept, Naccept = numerical_solution(spin_matrix, int(n_cycles), temp, L)
+            plt.semilogx(int(n_cycles), Mag, 'o', color=c)
+
+    plt.title('Spread of Expected Magnetic Field of Matrix', fontsize=15)
+    plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
+    plt.ylabel(r'\langle M \rangle', fontsize=15)
+    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+    plt.savefig(f'results/plots/4c/SpreadOfExpectedMagneticField')
+    plt.show()
+
 
 
 
 
 ex_c = False
-ex_d = False
+ex_d = True
 ex_e = False
-ex_f = True
+ex_f = False
 ex_g = False
 
 
@@ -252,21 +337,23 @@ ex_g = False
 
 if ex_c:
 
-    # Initial conditions
-    max_cycles = 1e7          # Max. MC cycles
-    max_cycles = 10000000
+    # Initial conditions for Monte Carlo simulation
+    max_cycles = 1e7          # Max MC cycles
     L          = 2            # Number of spins
     temp       = 1            # [kT/J] Temperature
-    J          = 1
+    J          = 1            # binding constant
 
+
+    ###-->
     log_scale = np.logspace(2, int(np.log10(max_cycles)),\
                            (int(np.log10(max_cycles))-1), endpoint=True)
     MC_runs   = np.outer(log_scale, [1,5]).flatten() # taking the outer product
     MC_runs   = MC_runs[1:-1]                        # removing first and last value
+    ###<---
 
     # Analytic solutions
-    A_E, A_SH, A_Mag, A_Suscept, A_MagAbs = Analythical_2x2(J, L, temp)
-    Analyticals  = DataFrameSolution(A_E, A_SH, A_Mag, A_Suscept, A_MagAbs)
+    A_E, A_Cv, A_M, A_X, A_MAbs = Analytical_2x2(J, L, temp)
+    Analyticals  = DataFrameSolution(A_E, A_Cv, A_M, A_X, A_MAbs)
 
     # Numerical solutions
     list_num_dfs = twoXtwo(L, temp, MC_runs)
@@ -277,11 +364,10 @@ if ex_c:
     print('\n\nTable of Numerical Solutions of 2x2 Ising-Model:','\n'+'-'*48+'\n')
     print(Numericals)
 
-    error_vs_cycles        = False
+    error_vs_cycles        = True  #visualize error as function of MC runs
     expected_net_magnetism = False
 
     if error_vs_cycles:
-
         # Get array of MeanMagnetizationAbs for plotting
         numeric_MAbs  = Numericals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
         analytic_MAbs = Analyticals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
@@ -291,9 +377,8 @@ if ex_c:
         plot_MCcycles_vs_err(MC_runs, error)
 
     if expected_net_magnetism:
-
         # Plotting expected mean magnetism
-        P.plot_expected_net_mag(L, temp, runs=log_scale)
+        plot_expected_net_mag(L, temp, runs=log_scale)
 
 
 if ex_d:
@@ -383,25 +468,46 @@ if ex_f:
     NL = int(len(L))
     T = np.linspace(T1, T2, N)
 
-    MC_runs = int(1e3)
-    stable = int(0.10*MC_runs)
+    names       = ['Energy','Magnetization','Abs. Magnetization',\
+               'Specific Heat','Susceptibility']
 
-    E_val = np.zeros((NL, N))  #rows L, columns N (temperature)
-    M_val = np.zeros_like(E_val)
-    Cv_val = np.zeros_like(E_val)
-    X_val = np.zeros_like(E_val)
-    M_abs_val = np.zeros_like(E_val)
+    ylabels      = [r'$\langle E\rangle$', r'$\langle M \rangle$',\
+                r'$\langle|M|\rangle$', r'$C_V$', r'$\chi$']
+
+    save_as      = ['energy','mag','Mabs','CV','CHI']
+
+    MC_runs     = int(1e6)
+    stable      = int(0.10*MC_runs)
+
+    E_val       = np.zeros((NL, N))  # rows L, columns N (temperature)
+    M_val       = np.zeros_like(E_val); Cv_val    = np.zeros_like(E_val)
+    X_val       = np.zeros_like(E_val); M_abs_val = np.zeros_like(E_val)
+
 
     for l in range(NL):
-        spin_matrix = np.ones((L[l], L[l]), np.int8)
-        for i in range(N):
-            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
-             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
-            E_val[l,i] = Energy
 
-    plt.plot(T, E_val[0,:])
-    plt.plot(T, E_val[1,:])
-    plt.show()
+    spin_matrix = np.ones((L[l], L[l]), np.int8)
+    print("PT for L=", L[l])
+
+    for i in range(N):
+        Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
+         = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
+        E_val[l,i]      = Energy
+        M_val[l,i]      = Magnetization
+        M_abs_val[l,i]  = MagnetizationAbs
+        Cv_val[l,i]     = SpecificHeat
+        X_val[l,i]      = Susceptibility
+
+    # Make and save plots for all metrics, for all L
+    vals = [E_val, M_val, M_abs_val, Cv_val, X_val]
+
+    for i in range(len(names)):
+    val = vals[i]
+    for l in range(NL):
+        plt.plot(T, val[l,:], label="L=%g" %L[l])
+
+    print("Saving phase transition plot for %s" %names[i])
+    P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
 
 
 if ex_g:

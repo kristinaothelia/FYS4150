@@ -155,3 +155,12 @@ def plot_n_accepted(MCcycles, Naccs, T1, T2):
     plt.tight_layout()
     plt.savefig(f'results/plots/4d/AcceptedConfigs')
     plt.show()
+
+def plot_4f(name, ylabel, save_as):
+    plt.title(f'Phase transition for {name}', fontsize=15)
+    plt.xlabel('Temperature [kT/J]', fontsize=15)
+    plt.ylabel(f'{ylabel}', fontsize=15)
+    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+    plt.legend(fontsize=13)
+    plt.tight_layout()
+    plt.savefig(f'results/plots/4f/PT_{save_as}.png')
