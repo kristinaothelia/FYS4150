@@ -182,7 +182,7 @@ def two_temps(L, n_cycles, temp):
 
     Naccept = np.zeros((2, len(temp), n_cycles))
 
-    s_mat_ground = np.ones((L, L), np.int8)   # initial state (ground state)
+    ground_spin_mat = np.ones((L, L), np.int8)   # initial state (ground state)
 
     for m in range(2):
         for t in range(len(temp)):
@@ -201,8 +201,6 @@ def two_temps(L, n_cycles, temp):
                             s_mat_random[sw,sl] *= -1
                 spin_matrix = s_mat_random
 
-            print("m =", m)
-            print(spin_matrix)
 
             quantities, Nacc = MC(spin_matrix, n_cycles, temp[t])
 
@@ -331,7 +329,7 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
     x = np.linspace(1,MCcycles,MCcycles, endpoint=True).astype(np.float_)
 
     for i, val in enumerate(expected):
-
+        print(names[i])
         plt.figure(figsize=(7,5))
         plt.semilogx(x, val[0,0,:], linewidth=1.0,\
                                     label=f'T={T1} (order)',\
@@ -448,14 +446,12 @@ if ex_d:
     T2 = 2.4   # [kT/J] Temperature
 
     temp_arr = np.array([T1, T2])
-    MC_runs  = int(1e7)
+    MC_runs  = int(1e6)
 
     E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr)
 
-    print("before")
     plot_n_accepted(MC_runs, n_acc)
 
-    print("after")
     expecteds = [E, Mag, MagAbs, SH, Suscept]
     expected_vals_two_temp(MC_runs, T1, T2, expecteds)
 
