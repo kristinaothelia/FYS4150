@@ -327,9 +327,9 @@ def plot_expected_net_mag(L, temp, runs):
 
 
 ex_c = False
-ex_d = True
+ex_d = False
 ex_e = False
-ex_f = False
+ex_f = True
 ex_g = False
 
 
@@ -476,7 +476,7 @@ if ex_f:
 
     save_as      = ['energy','mag','Mabs','CV','CHI']
 
-    MC_runs     = int(1e6)
+    MC_runs     = int(1e3)
     stable      = int(0.10*MC_runs)
 
     E_val       = np.zeros((NL, N))  # rows L, columns N (temperature)
@@ -486,29 +486,29 @@ if ex_f:
 
     for l in range(NL):
 
-    spin_matrix = np.ones((L[l], L[l]), np.int8)
-    print("PT for L=", L[l])
+        spin_matrix = np.ones((L[l], L[l]), np.int8)
+        print("PT for L=", L[l])
 
-    for i in range(N):
-        Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
-         = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
-        E_val[l,i]      = Energy
-        M_val[l,i]      = Magnetization
-        M_abs_val[l,i]  = MagnetizationAbs
-        Cv_val[l,i]     = SpecificHeat
-        X_val[l,i]      = Susceptibility
+        for i in range(N):
+            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
+             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
+            E_val[l,i]      = Energy
+            M_val[l,i]      = Magnetization
+            M_abs_val[l,i]  = MagnetizationAbs
+            Cv_val[l,i]     = SpecificHeat
+            X_val[l,i]      = Susceptibility
 
     # Make and save plots for all metrics, for all L
     vals = [E_val, M_val, M_abs_val, Cv_val, X_val]
 
     for i in range(len(names)):
-    val = vals[i]
-    for l in range(NL):
-        plt.plot(T, val[l,:], label="L=%g" %L[l])
+        val = vals[i]
+        for l in range(NL):
+            plt.plot(T, val[l,:], label="L=%g" %L[l])
 
-    print("Saving phase transition plot for %s" %names[i])
-    P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
-
+        print("Saving phase transition plot for %s" %names[i])
+        P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
+        #plt.show()
 
 if ex_g:
     """

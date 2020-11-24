@@ -1,0 +1,57 @@
+Under plots.py
+---------------------------------------------------------
+
+def plot_4f(name, ylabel, save_as):
+    plt.title(f'Phase transition for {name}', fontsize=15)
+    plt.xlabel('Temperature [kT/J]', fontsize=15)
+    plt.ylabel(f'{ylabel}', fontsize=15)
+    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+    plt.legend(fontsize=13)
+    plt.tight_layout()
+    plt.savefig(f'results/plots/4f/PT_{save_as}.png')
+
+
+
+Under new_main, f) (Etter T)
+---------------------------------------------------------
+
+    names       = ['Energy','Magnetization','Abs. Magnetization',\
+                   'Specific Heat','Susceptibility']
+
+    ylabels      = [r'$\langle E\rangle$', r'$\langle M \rangle$',\
+                    r'$\langle|M|\rangle$', r'$C_V$', r'$\chi$']
+
+    save_as      = ['energy','mag','Mabs','CV','CHI']
+
+    MC_runs     = int(1e6)
+    stable      = int(0.10*MC_runs)
+
+    E_val       = np.zeros((NL, N))  # rows L, columns N (temperature)
+    M_val       = np.zeros_like(E_val); Cv_val    = np.zeros_like(E_val)
+    X_val       = np.zeros_like(E_val); M_abs_val = np.zeros_like(E_val)
+
+
+    for l in range(NL):
+
+        spin_matrix = np.ones((L[l], L[l]), np.int8)
+        print("PT for L=", L[l])
+
+        for i in range(N):
+            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
+             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
+            E_val[l,i]      = Energy
+            M_val[l,i]      = Magnetization
+            M_abs_val[l,i]  = MagnetizationAbs
+            Cv_val[l,i]     = SpecificHeat
+            X_val[l,i]      = Susceptibility
+
+    # Make and save plots for all metrics, for all L
+    vals = [E_val, M_val, M_abs_val, Cv_val, X_val]
+
+    for i in range(len(names)):
+        val = vals[i]
+        for l in range(NL):
+            plt.plot(T, val[l,:], label="L=%g" %L[l])
+
+        print("Saving phase transition plot for %s" %names[i])
+        P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
