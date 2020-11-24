@@ -6,6 +6,8 @@ import pandas            as pd
 
 from   numba import jit, njit, prange, set_num_threads
 
+# -----------------------------------------------------------------------------
+
 def Analythical_2x2(J, L, temp):
 
     ang  = 8*J/temp
@@ -87,7 +89,7 @@ def initial_energy(spin_matrix, n_spins):
 
 @njit(cache=True)
 def MC(spin_matrix, n_cycles, temp):
-    #print("MC", temp)
+
     n_spins     = len(spin_matrix)
 
     # Matrix for storing calculated expectation and variance values, five variables
@@ -96,7 +98,6 @@ def MC(spin_matrix, n_cycles, temp):
 
     # Initial energy and magnetization
     E, M        = initial_energy(spin_matrix, n_spins)
-    #print("initial E = ", E/L**2)
 
     for i in range(1, n_cycles+1):
         for j in range(n_spins**2):
@@ -113,9 +114,7 @@ def MC(spin_matrix, n_cycles, temp):
 
             # Calculating the energy change
             dE = (2 * spin_matrix[ix, iy] * (left + right + above + below))
-            #print(spin_matrix)
-            #sys.exit(1)
-            #print(temp)
+
             # Evaluating the proposet new configuration
             if np.random.random() <= np.exp(-dE/temp):
                 # Changing the configuration if accepted
@@ -170,7 +169,7 @@ def twoXtwo(L, temp, runs):
 
 
 @njit(cache=True)
-def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
+def two_temps(L, n_cycles, temp):
     """
     Calculating the two temps with 2 different start conditions
     """
@@ -182,6 +181,8 @@ def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
     Suscept = np.zeros((2, len(temp), n_cycles))
 
     Naccept = np.zeros((2, len(temp), n_cycles))
+
+    s_mat_ground = np.ones((L, L), np.int8)   # initial state (ground state)
 
     for m in range(2):
         for t in range(len(temp)):
@@ -200,15 +201,12 @@ def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
                             s_mat_random[sw,sl] *= -1
                 spin_matrix = s_mat_random
 
-            #spin_matrix      = ground_spin_mat if m==0 else random_spin_mat
             print("m =", m)
             print(spin_matrix)
-                #sys.exit
-            #print(temp[t])
-            quantities, Nacc = MC(spin_matrix, n_cycles, temp[t])
-            #print("EE", E)
 
-            norm = 1.0/np.arange(1, n_cycles+1)
+            quantities, Nacc = MC(spin_matrix, n_cycles, temp[t])
+
+            norm       = 1.0/np.arange(1, n_cycles+1)
 
             E_avg      = np.cumsum(quantities[:,0])*norm
             M_avg      = np.cumsum(quantities[:,1])*norm
@@ -225,13 +223,13 @@ def two_temps(ground_spin_mat, random_spin_mat, L, n_cycles, temp):
             SpecificHeat     = E_var    /(temp[t]**2)
             Susceptibility   = M_var    /(temp[t])
 
-            E[m,t,:]       = Energy
-            Mag[m,t,:]     = Magnetization
-            MagAbs[m,t,:]  = MagnetizationAbs
-            SH[m,t,:]      = SpecificHeat
-            Suscept[m,t,:] = Susceptibility
+            E[m,t,:]         = Energy
+            Mag[m,t,:]       = Magnetization
+            MagAbs[m,t,:]    = MagnetizationAbs
+            SH[m,t,:]        = SpecificHeat
+            Suscept[m,t,:]   = Susceptibility
 
-            Naccept[m,t,:] = Nacc
+            Naccept[m,t,:]   = Nacc
 
     return E, Mag, MagAbs, SH, Suscept, Naccept
 
@@ -321,9 +319,6 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
 
     expected has structure [temp, physical quantity, ...]
     """
-    #expecteds = [E, Mag, MagAbs, SH, Suscept]
-    print("hey")
-
 
     names     = ['Energy','Magnetization','Abs. Magnetization',\
                  'Specific Heat','Susceptibility']
@@ -359,12 +354,9 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
         plt.legend(fontsize=12)
         plt.tight_layout()
         plt.savefig(f'results/plots/4d/expected_{save_as[i]}_{MCcycles}')
-        plt.show()
-        #sys.exit(1)
+        #plt.show()
 
 def plot_n_accepted(MCcycles, Naccs):
-    # blæ, sliter med denne....
-    # bare sett på plottet til nils, bør vel se nærmere på koden...
 
     print(Naccs)
     print(Naccs.shape)
@@ -451,7 +443,6 @@ if ex_c:
 
 if ex_d:
 
-    #print("hi")
     L  = 20    # Number of spins
     T1 = 1.0   # [kT/J] Temperature
     T2 = 2.4   # [kT/J] Temperature
@@ -459,25 +450,12 @@ if ex_d:
     temp_arr = np.array([T1, T2])
     MC_runs  = int(1e7)
 
+    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr)
 
-    s_mat_ground = np.ones((L, L), np.int8)   # initial state (ground state)
-    """
-    s_mat_random = np.ones((L, L), np.int8)   # a random spin orientation
-    #generate spin matrix of ones, then random indices are given 1 og -1sys
-    for sw in range(len(s_mat_random)):
-        for sl in range(len(s_mat_random)):
-            rint = np.random.randint(-1,1)
-            if rint == -1:
-                s_mat_random[sw,sl] *= -1
-    """
-
-    s_mat_random = 0
-    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(s_mat_ground, s_mat_random, L, MC_runs, temp_arr)
-
-    #print("before")
+    print("before")
     plot_n_accepted(MC_runs, n_acc)
-    #print("after")
 
+    print("after")
     expecteds = [E, Mag, MagAbs, SH, Suscept]
     expected_vals_two_temp(MC_runs, T1, T2, expecteds)
 
