@@ -4,6 +4,8 @@ import sys, os, time, argparse
 import numpy             as np
 import pandas            as pd
 import plots             as P
+import matplotlib.pyplot as plt
+import scipy.integrate as integrate
 
 from   numba import jit, njit, prange, set_num_threads
 
@@ -133,7 +135,7 @@ def MC(spin_matrix, n_cycles, temp):
 
     return quantities, accepted
 
-def numerical_solution(spin_matrix, n_cycles, temp, L):
+def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
 
     # Compute quantities
     quantities, Naccept = MC(spin_matrix, n_cycles, temp)
@@ -146,7 +148,10 @@ def numerical_solution(spin_matrix, n_cycles, temp, L):
     M_abs_avg           = np.sum(quantities[:,4])*norm
 
     E_var               = (E2_avg - E_avg**2)/(L**2)
-    M_var               = (M2_avg - M_avg**2)/(L**2)
+    if abs:
+        M_var = (M2_avg - M_abs_avg**2)/(L**2)
+    else:
+        M_var               = (M2_avg - M_avg**2)/(L**2)
 
     Energy              = E_avg    /(L**2)
     Magnetization       = M_avg    /(L**2)
@@ -237,9 +242,9 @@ def two_temps(L, n_cycles, temp):
 
 
 ex_c = False
-ex_d = True
+ex_d = False
 ex_e = False
-ex_f = False
+ex_f = True
 ex_g = False
 
 
@@ -317,7 +322,50 @@ if ex_e:
     T2 = 2.4   # [kT/J] Temperature
 
     temp_arr = np.array([T1, T2])
-    MC_runs  = int(1e6)
+    MC_runs  = int(1e7)
+    new_arrays = False
+    if new_arrays:
+        print("making npy files, 10^7 MC runs")
+        E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr)
+        np.save("E.npy", E)
+        np.save("Mag.npy", Mag)
+        np.save("MagAbs.npy", MagAbs)
+        np.save("SH.npy", SH)
+        np.save("Suscept.npy", Suscept)
+        np.save("n_acc.npy", n_acc)
+        print("file saved!")
+        sys.exit(1)
+
+    E = np.load("E.npy")
+    SH = np.load("SH.npy")
+    lim = int(0.90*MC_runs) #last 10% of data points
+
+    E_T1 = E[0, 1, lim:-1]#*L**2
+    #plt.plot(E_T1, 'o-')
+    #plt.show()
+
+    plt.hist(E_T1, bins=20, density=True)
+    print(E_T1)
+
+    plt.show()
+
+
+    """
+    histo = np.histogram(E_T1, bins=300)
+    print(histo[1])
+    area = np.abs(integrate.trapz(histo[1]))
+    print(area)
+    print(histo[1]/area)
+    A = histo[1]/area
+    var_1 = np.var(A)
+    print(var_1)
+
+    Cv_mean = np.mean(SH[0,1,lim:])
+    print("Cv = ", Cv_mean)
+    kB = 1.38064852e-23
+    var_2 = T2**2*Cv_mean*L**2
+    print(var_2)
+    """
 
 
     #Tenkte å prøve og skrive om dette eller noe kanskje..
@@ -330,7 +378,31 @@ if ex_f:
     L  = [40, 60, 80, 100]    # Number of spins
     T1 = 2.0   # [kT/J] Temperature
     T2 = 2.3   # [kT/J] Temperature
-    dT = 0.05
+    dT = 0.02
+    N = int(round((T2 - T1)/dT))  #nr of steps
+    NL = int(len(L))
+    T = np.linspace(T1, T2, N)
+
+    MC_runs = int(1e3)
+    stable = int(0.10*MC_runs)
+
+    E_val = np.zeros((NL, N))  #rows L, columns N (temperature)
+    M_val = np.zeros_like(E_val)
+    Cv_val = np.zeros_like(E_val)
+    X_val = np.zeros_like(E_val)
+    M_abs_val = np.zeros_like(E_val)
+
+    for l in range(NL):
+        spin_matrix = np.ones((L[l], L[l]), np.int8)
+        for i in range(N):
+            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
+             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
+            E_val[l,i] = Energy
+
+    plt.plot(T, E_val[0,:])
+    plt.plot(T, E_val[1,:])
+    plt.show()
+
 
 if ex_g:
     """
