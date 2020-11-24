@@ -4,13 +4,17 @@ All code in one file.
 Just a program for trying out stuff.
 """
 
+# https://numba.pydata.org/numba-doc/latest/user/parallel.html
+# https://numba.pydata.org/numba-doc/latest/user/threading-layer.html
+
 # trying out some documentation things
 # https://stackoverflow.com/questions/1523427/what-is-the-common-header-format-of-python-files
 __author__  = "Anna Eliassen"
 __version__ = "3.7.4"
 
+from numba import jit, njit, prange, set_num_threads
 
-import sys, os, time, numba, argparse
+import sys, os, time, argparse
 
 import matplotlib.pyplot as plt
 import numpy             as np
@@ -67,7 +71,7 @@ def Analythical_2x2(J, L, temp):
 
     E_avg       = 16*J*    (np.exp(-ang) - np.exp(ang)) / Z
     E2_avg      = 128*J**2*(np.exp(-ang) + np.exp(ang)) / Z
-    E_var       = E2_avg - E_avg**2
+    E_var       = E2_avg - E_avg**2 # 512*J**2 * (Z-6) / Z**2 ??
 
     M_avg       = 0
     M2_avg      = 32*(1 + np.exp(ang)) / Z
@@ -79,17 +83,9 @@ def Analythical_2x2(J, L, temp):
     A_Magnetization     = M_avg / L**2
     A_MagnetizationAbs  = M_abs_avg / L**2
     A_Susceptibility    = M_var / (temp * L**2)     # Chi, (32/(4*Z))*(1+np.exp(ang))
-
-    '''
-    print("\nAnalytical solutions:")
-    print("Mean energy:             %f" %A_Energy)
-    print("Specific heat:           %f" %A_SpecificHeat)
-    print("Mean Magenetization:     %f" %A_Magnetization)
-    print("Susceptibility:          %f" %A_Susceptibility)
-    print("Mean abs. Magnetization: %f" %A_MagnetizationAbs)
-    '''
-
+    
     return A_Energy, A_SpecificHeat, A_Magnetization, A_Susceptibility, A_MagnetizationAbs
+
 
 def DataFrameSolution(E, CP, M, CHI, MAbs, N=None):
     """Function creating dataframe with solution values.
@@ -128,13 +124,15 @@ def DataFrameSolution(E, CP, M, CHI, MAbs, N=None):
 
     return dataframe
 
-@numba.njit(cache = True)
+@njit()
 def initial_energy(spin_matrix, n_spins):
     """
     E and M are int
     """
 
-    E = 0; M = 0
+    E = 0
+    M = 0
+    #M = spin_matrix.sum()
 
     for i in range(n_spins):
         for j in range(n_spins):
@@ -147,7 +145,8 @@ def initial_energy(spin_matrix, n_spins):
 
     return E, M
 
-@numba.njit(cache=True)
+#Numba will release the GIL when entering such a compiled function if you passed nogil=True.
+@njit()   #fastmath=True
 def MC(spin_matrix, n_cycles, temp):
 
     n_spins     = len(spin_matrix)
@@ -162,8 +161,9 @@ def MC(spin_matrix, n_cycles, temp):
         for j in range(n_spins*n_spins):
 
             # Picking a random lattice position
-            ix = np.random.randint(n_spins)      # random int (0-n_spins), dont include n_spins
-            iy = np.random.randint(n_spins)      # random int (0-n_spins), dont include n_spins
+            ix = np.random.randint(n_spins)  # dont include n_spins
+            iy = np.random.randint(n_spins)  # dont include n_spins
+
 
             # Finding the surrounding spins using periodic boundary conditions
             left  = spin_matrix[ix - 1, iy] if ix > 0 else spin_matrix[n_spins - 1, iy]
@@ -175,12 +175,13 @@ def MC(spin_matrix, n_cycles, temp):
             dE = (2 * spin_matrix[ix, iy] * (left + right + above + below))
 
             # Evaluating the proposet new configuration
+            #if np.float64(np.random.random()) <= np.float64(np.exp(-dE / temp)):
             if np.random.random() <= np.exp(-dE / temp):
 
                 # Changing the configuration if accepted
                 spin_matrix[ix, iy] *= -1.0
-                E                    = E + dE
-                M                    = M + 2*spin_matrix[ix, iy]
+                E                   += dE
+                M                   += 2*spin_matrix[ix, iy]
                 accepted            += 1
 
         # update expectation values and store in output matrix
@@ -230,7 +231,7 @@ def twoXtwo(L, temp, runs):
     return list_num_df
 
 
-#@numba.jit(cache=True, parallel=True)
+#@jit(cache=True, parallel=True)
 def n_x_n(L, temp1, temp2, runs, ordered=True):
 
     num_df_T1 = []
@@ -259,14 +260,13 @@ def n_x_n(L, temp1, temp2, runs, ordered=True):
         #num_accept.append(Naccept)
     return num_df_T1, num_df_T2 #, num_accept
 
-
-#@numba.njit(cache=True, parallel=True)
-@numba.njit(cache=True)
+'''
+#@njit(cache=True, parallel=True)
+@njit(cache=True)
 def two_temps(ground_spin_mat, random_spin_mat, L, temp1, temp2, runs):
     """
     Calculating the two temps with 2 different start conditions
     """
-    
     E1       = np.zeros((2, len(runs)))
     E2       = np.zeros((2, len(runs)))
 
@@ -283,52 +283,122 @@ def two_temps(ground_spin_mat, random_spin_mat, L, temp1, temp2, runs):
     for m in range(2):
         for r in range(len(runs)):
 
-            spin_matrix = ground_spin_mat if m==0 else random_spin_mat
+        spin_matrix = ground_spin_mat if m==0 else random_spin_mat
 
-            n_cycles  = int(runs[r])
+        n_cycles  = int(runs[r])
 
-            quantities1, Naccept1 = MC(spin_matrix, n_cycles, temp1)
-            quantities2, Naccept2 = MC(spin_matrix, n_cycles, temp2)
+        quantities1, Naccept1 = MC(spin_matrix, n_cycles, temp1)
+        quantities2, Naccept2 = MC(spin_matrix, n_cycles, temp2)
 
-            norm                  = 1.0/float(n_cycles)
+        norm                  = 1.0/float(n_cycles)
 
-            E_avg1               = np.sum(quantities1[:,0])*norm
-            M_avg1               = np.sum(quantities1[:,1])*norm
-            E2_avg1              = np.sum(quantities1[:,2])*norm
-            M2_avg1              = np.sum(quantities1[:,3])*norm
-            M_abs_avg1           = np.sum(quantities1[:,4])*norm
-            E_var1               = (E2_avg1 - E_avg1**2)/(L**2)
-            M_var1               = (M2_avg1 - M_avg1**2)/(L**2)
-            Energy1              = E_avg1    /(L**2)
-            Magnetization1       = M_avg1    /(L**2)
-            MagnetizationAbs1    = M_abs_avg1/(L**2)
-            SpecificHeat1        = E_var1    /(temp1**2)
-            Susceptibility1      = M_var1    /(temp1)   
+        E_avg1               = np.sum(quantities1[:,0])*norm
+        M_avg1               = np.sum(quantities1[:,1])*norm
+        E2_avg1              = np.sum(quantities1[:,2])*norm
+        M2_avg1              = np.sum(quantities1[:,3])*norm
+        M_abs_avg1           = np.sum(quantities1[:,4])*norm
+        E_var1               = (E2_avg1 - E_avg1**2)/(L**2)
+        M_var1               = (M2_avg1 - M_avg1**2)/(L**2)
+        Energy1              = E_avg1    /(L**2)
+        Magnetization1       = M_avg1    /(L**2)
+        MagnetizationAbs1    = M_abs_avg1/(L**2)
+        SpecificHeat1        = E_var1    /(temp1**2)
+        Susceptibility1      = M_var1    /(temp1)   
 
-            E1[m,r]=Energy1
-            Mag1[m,r]=Magnetization1
-            MagAbs1[m,r]=MagnetizationAbs1
-            SH1[m,r]=SpecificHeat1
-            Suscept1[m,r]=Susceptibility1
+        E1[m,r]=Energy1
+        Mag1[m,r]=Magnetization1
+        MagAbs1[m,r]=MagnetizationAbs1
+        SH1[m,r]=SpecificHeat1
+        Suscept1[m,r]=Susceptibility1
 
-            E_avg2               = np.sum(quantities2[:,0])*norm
-            M_avg2               = np.sum(quantities2[:,1])*norm
-            E2_avg2              = np.sum(quantities2[:,2])*norm
-            M2_avg2              = np.sum(quantities2[:,3])*norm
-            M_abs_avg2           = np.sum(quantities2[:,4])*norm
-            E_var2               = (E2_avg2 - E_avg2**2)/(L**2)
-            M_var2               = (M2_avg2 - M_avg2**2)/(L**2)
-            Energy2              = E_avg2    /(L**2)
-            Magnetization2       = M_avg2    /(L**2)
-            MagnetizationAbs2    = M_abs_avg2/(L**2)
-            SpecificHeat2        = E_var2    /(temp2**2)
-            Susceptibility2      = M_var2    /(temp2) 
+        E_avg2               = np.sum(quantities2[:,0])*norm
+        M_avg2               = np.sum(quantities2[:,1])*norm
+        E2_avg2              = np.sum(quantities2[:,2])*norm
+        M2_avg2              = np.sum(quantities2[:,3])*norm
+        M_abs_avg2           = np.sum(quantities2[:,4])*norm
+        E_var2               = (E2_avg2 - E_avg2**2)/(L**2)
+        M_var2               = (M2_avg2 - M_avg2**2)/(L**2)
+        Energy2              = E_avg2    /(L**2)
+        Magnetization2       = M_avg2    /(L**2)
+        MagnetizationAbs2    = M_abs_avg2/(L**2)
+        SpecificHeat2        = E_var2    /(temp2**2)
+        Susceptibility2      = M_var2    /(temp2) 
 
-            E2[m,r]=Energy2
-            Mag2[m,r]=Magnetization2
-            MagAbs2[m,r]=MagnetizationAbs2
-            SH2[m,r]=SpecificHeat2
-            Suscept2[m,r]=Susceptibility2
+        E2[m,r]=Energy2
+        Mag2[m,r]=Magnetization2
+        MagAbs2[m,r]=MagnetizationAbs2
+        SH2[m,r]=SpecificHeat2
+        Suscept2[m,r]=Susceptibility2
+    
+    return E1,E2,Mag1,Mag2,MagAbs1,MagAbs2,SH1,SH2,Suscept1,Suscept2
+'''
+
+@njit()    # nogil=True, parallel=True
+def two_temps(ground_spin_mat, random_spin_mat, L, temp1, temp2, n_cycles):
+    """
+    Calculating the two temps with 2 different start conditions
+    """
+    E1       = np.zeros((2, n_cycles))  # dtype=np.float32
+    E2       = np.zeros((2, n_cycles))
+
+    Mag1     = np.zeros((2, n_cycles))
+    MagAbs1  = np.zeros((2, n_cycles))
+    SH1      = np.zeros((2, n_cycles))
+    Suscept1 = np.zeros((2, n_cycles))
+
+    Mag2     = np.zeros((2, n_cycles))
+    MagAbs2  = np.zeros((2, n_cycles))
+    SH2      = np.zeros((2, n_cycles))
+    Suscept2 = np.zeros((2, n_cycles))
+
+    for m in range(2):
+
+        spin_matrix = ground_spin_mat if m==0 else random_spin_mat
+
+        quantities1, Naccept1 = MC(spin_matrix, n_cycles, temp1)
+        quantities2, Naccept2 = MC(spin_matrix, n_cycles, temp2)
+
+        norm              = 1.0/np.arange(1, n_cycles+1)
+        
+        E_avg1            = np.cumsum(quantities1[:,0])*norm
+        M_avg1            = np.cumsum(quantities1[:,1])*norm
+        E2_avg1           = np.cumsum(quantities1[:,2])*norm
+        M2_avg1           = np.cumsum(quantities1[:,3])*norm
+        M_abs_avg1        = np.cumsum(quantities1[:,4])*norm
+
+        E_var1            = (E2_avg1 - E_avg1**2)/(L**2)
+        M_var1            = (M2_avg1 - M_avg1**2)/(L**2)
+        Energy1           = E_avg1    /(L**2)
+        Magnetization1    = M_avg1    /(L**2)
+        MagnetizationAbs1 = M_abs_avg1/(L**2)
+        SpecificHeat1     = E_var1    /(temp1**2)
+        Susceptibility1   = M_var1    /(temp1)   
+
+        E1[m,:]       = Energy1
+        Mag1[m,:]     = Magnetization1
+        MagAbs1[m,:]  = MagnetizationAbs1
+        SH1[m,:]      = SpecificHeat1
+        Suscept1[m,:] = Susceptibility1
+        
+        E_avg2             = np.cumsum(quantities2[:,0])*norm
+        M_avg2             = np.cumsum(quantities2[:,1])*norm
+        E2_avg2            = np.cumsum(quantities2[:,2])*norm
+        M2_avg2            = np.cumsum(quantities2[:,3])*norm
+        M_abs_avg2         = np.cumsum(quantities2[:,4])*norm
+
+        E_var2             = (E2_avg2 - E_avg2**2)/(L**2)
+        M_var2             = (M2_avg2 - M_avg2**2)/(L**2)
+        Energy2            = E_avg2    /(L**2)
+        Magnetization2     = M_avg2    /(L**2)
+        MagnetizationAbs2  = M_abs_avg2/(L**2)
+        SpecificHeat2      = E_var2    /(temp2**2)
+        Susceptibility2    = M_var2    /(temp2) 
+
+        E2[m,:]       = Energy2
+        Mag2[m,:]     = Magnetization2
+        MagAbs2[m,:]  = MagnetizationAbs2
+        SH2[m,:]      = SpecificHeat2
+        Suscept2[m,:] = Susceptibility2
         
     return E1,E2,Mag1,Mag2,MagAbs1,MagAbs2,SH1,SH2,Suscept1,Suscept2
 
@@ -452,11 +522,13 @@ def expected_vals_two_temp(MC_runs, T1, T2, val1, val2, name, ylab):
     - two temperatures in two different initial states.
     """
 
-    plt.semilogx(MC_runs, val1[0,:], label=f'T={T1} (order)', color='tab:blue')
-    plt.semilogx(MC_runs, val2[0,:], label=f'T={T2} (order)', color='tab:red')
+    x = np.linspace(1,MC_runs,MC_runs, endpoint=True).astype(np.float_)
 
-    plt.semilogx(MC_runs, val1[1,:], '--', label=f'T={T1} (disorder)',color='tab:blue')
-    plt.semilogx(MC_runs, val2[1,:], '--', label=f'T={T2} (disorder)',color='tab:red')
+    plt.semilogx(x, val1[0,:], linewidth=0.8, label=f'T={T1} (order)', color='tab:blue')
+    plt.semilogx(x, val2[0,:], linewidth=0.8, label=f'T={T2} (order)', color='tab:red')
+
+    plt.semilogx(x, val1[1,:], '--', linewidth=0.8, label=f'T={T1} (disorder)',color='tab:blue')
+    plt.semilogx(x, val2[1,:], '--', linewidth=0.8, label=f'T={T2} (disorder)',color='tab:red')
     
     plt.title(f'Expectation of {name} vs. MC Cycles', fontsize=15)
     plt.xlabel('Number of MC cycles', fontsize=15)
@@ -476,6 +548,7 @@ ex_d = True
 max_cycles = 1e7          # Max. MC cycles
 max_cycles = 10000000
 
+#set_num_threads(3)
 
 if ex_c: 
     L          = 2            # Number of spins
@@ -522,44 +595,52 @@ if ex_c:
 
 
 if ex_d:
+
     L  = 20    # Number of spins
     T1 = 1.0   # [kT/J] Temperature
     T2 = 2.4   # [kT/J] Temperature
 
-    log_scale = [1.0,10.0,100.0,1000.0]
+    #log_scale = [1.0,10.0,100.0,1000.0]
     #log_scale = np.logspace(0, int(np.log10(max_cycles)-2), (int(np.log10(max_cycles))-1), endpoint=True)
-    multip    = np.arange(1, 10, 0.5) #np.arange(2, 11, 2)   # np.arange(1,6,4) #
-    MC_runs   = np.outer(log_scale, multip).flatten() # taking the outer product
+    #multip    = np.arange(1, 10, 0.5) #np.arange(2, 11, 2)   # np.arange(1,6,4) #
+    #MC_runs   = np.outer(log_scale, multip).flatten() # taking the outer product
     #MC_runs   = MC_runs[3:-1]
-    
-    print(log_scale);print(multip);print(MC_runs);print(len(MC_runs))
-
-    ordered = False
+    #print(log_scale);print(multip);print(MC_runs);print(len(MC_runs))
 
     s_mat_random = np.ones((L,L), np.int8)
-    for s in range(len(s_mat_random)):
-        rint = np.random.randint(-1,1)
-        if rint == -1:
-            s_mat_random[s] *= -1
+
+    for sw in range(len(s_mat_random)):
+        for sl in range(len(s_mat_random)):
+            rint = np.random.randint(-1,1)
+            if rint == -1:
+                s_mat_random[sw,sl] *= -1
 
     # this crashes with numba i think...
     #spin_matrix = np.random.choice((-1, 1), (L*L)) # random start configuration
     
     s_mat_ground = np.ones((L, L), np.int8)         # initial state (ground state)
 
-    start=time.time()
+    MC_runs = 10000 #np.int32(10000)
+
     E1,E2,Mag1,Mag2,MagAbs1,MagAbs2,SH1,SH2,Suscept1,Suscept2 = two_temps(s_mat_ground, s_mat_random, L, T1, T2, MC_runs)
-    end=time.time()
-    print(end-start)
 
     list_expect_vals = [[E1,E2],[Mag1,Mag2],[MagAbs1,MagAbs2],[SH1,SH2],[Suscept1,Suscept2]]
     print(len(list_expect_vals))
+
+    print(E1)
+    print(E1[0,:])
+    print(E2[0,:])
+    print(E2[1,:])
+
+    #print(E1.nbytes)
+    #print(E1[0,:].nbytes)
+    #print(E1[1,:].nbytes)
 
     names   = ['Energy','Magnetization','Abs. Magnetization','Specific Heat','Susceptibility']
     ylabels = [r'<$\epsilon$>', 'M', 'MAbs', 'CP', r'$\chi$',]
 
     # the names may be mixed up, havent checked yet..
-
+    
     for v in range(5):
 
         val1 = list_expect_vals[v][0]
@@ -567,52 +648,11 @@ if ex_d:
 
         expected_vals_two_temp(MC_runs, T1, T2, val1, val2, names[v], ylabels[v])
         plt.show()
-
-
-    '''
-    plt.semilogx(MC_runs, E1[0,:], label=f'T={T1} (order)', color='tab:blue')
-    plt.semilogx(MC_runs, E2[0,:], label=f'T={T2} (order)', color='tab:red')
-    plt.semilogx(MC_runs, E1[1,:], '--', label=f'T={T1} (disorder)',color='tab:blue')
-    plt.semilogx(MC_runs, E2[1,:], '--', label=f'T={T2} (disorder)',color='tab:red')
-    plt.title('Energy')
-    plt.legend()
-    plt.show()
-
-    plt.semilogx(MC_runs, Mag1[0,:], label=f'T={T1} (order)', color='tab:blue')
-    plt.semilogx(MC_runs, Mag2[0,:], label=f'T={T2} (order)', color='tab:red')
-    plt.semilogx(MC_runs, Mag1[1,:], '--', label=f'T={T1} (disorder)', color='tab:blue')
-    plt.semilogx(MC_runs, Mag2[1,:], '--', label=f'T={T2} (disorder)', color='tab:red')
-    plt.title('M')
-    plt.legend()
-    plt.show()
-
-    plt.semilogx(MC_runs, MagAbs1[0,:], label=f'T={T1} (order)', color='tab:blue')
-    plt.semilogx(MC_runs, MagAbs2[0,:], label=f'T={T2} (order)', color='tab:red')
-    plt.semilogx(MC_runs, MagAbs1[1,:], '--', label=f'T={T1} (disorder)', color='tab:blue')
-    plt.semilogx(MC_runs, MagAbs2[1,:], '--', label=f'T={T2} (disorder)', color='tab:red')
-    plt.title('Abs M')
-    plt.legend()
-    plt.show()
-
-    plt.semilogx(MC_runs, SH1[0,:], label=f'T={T1} (order)', color='tab:blue')
-    plt.semilogx(MC_runs, SH2[0,:], label=f'T={T2} (order)', color='tab:red')
-    plt.semilogx(MC_runs, SH1[1,:], '--', label=f'T={T1} (disorder)', color='tab:blue')
-    plt.semilogx(MC_runs, SH2[1,:], '--', label=f'T={T2} (disorder)', color='tab:red')
-    plt.title('Specific Heat')
-    plt.legend()
-    plt.show()
-
-    plt.semilogx(MC_runs, Suscept1[0,:], label=f'T={T1} (order)', color='tab:blue')
-    plt.semilogx(MC_runs, Suscept2[0,:], label=f'T={T2} (order)', color='tab:red')
-    plt.semilogx(MC_runs, Suscept1[1,:], '--', label=f'T={T1} (disorder)', color='tab:blue')
-    plt.semilogx(MC_runs, Suscept2[1,:], '--', label=f'T={T2} (disorder)', color='tab:red')
-    plt.title('Susceptibility')
-    plt.legend()
-    plt.show()
-    '''
+    
+    #Partition function:
+    #It is a sum over the two possible spin values for each spon, either up +1 or down −1. 
 
     ############################################################################
-
 
     '''
     numeric_df_T1, numeric_df_T2 = n_x_n(L, T1, T2, MC_runs)
@@ -635,19 +675,4 @@ if ex_d:
     expectation_vals(T1, T2, Numericals_T1, Numericals_T2, MC_runs)
     '''
 
-    ############################################################################
-
-    # MC
-    '''
-    start = time.time()
-    twoXtwo(L, T1, max_cycles)
-    end   = time.time()
-    print('time:', (end-start))   # 201.3737907409668
-    '''
-    
-    '''
-    start = time.time()
-    twoXtwo(L, T2, max_cycles)
-    end = time.time()
-    print('time:', (end-start))   # 225.60117769241333
-    '''
+    ###########################################################################

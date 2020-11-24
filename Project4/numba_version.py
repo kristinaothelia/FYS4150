@@ -190,6 +190,7 @@ if __name__ == "__main__":
     print('Susceptibility:', np.sum(Susceptibility)/len(Susceptibility))
     print('MagnetizationAbs:', np.sum(MagnetizationAbs)/len(MagnetizationAbs))
 
+
     '''
     T=1, NSpins=2, MCcycles=10000000:
     ---------------------------------
