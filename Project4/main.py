@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
         # Initial conditions
         max_cycles = 1e7            # Max. MC cycles
-        max_cycles = 10000000
+        #max_cycles = 10000000
         L          = 2              # Number of spins
         temp       = 1              # [kT/J] Temperature
         J          = 1
