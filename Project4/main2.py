@@ -1,3 +1,9 @@
+"""
+Main program for FYS4150 - Project 4
+
+Studies of phase transitions in magnetic systems
+"""
+
 import sys, os, time, argparse
 
 #import matplotlib.pyplot as plt
@@ -350,146 +356,167 @@ def probability(prob, temps, steady=1e5):
         plt.show()
 
 
-ex_c = False
-ex_d = False
-ex_e = True
-ex_f = False
-ex_g = False
+if __name__ == '__main__':
+
+    parser    = argparse.ArgumentParser(description=__doc__)
+    exercise  = parser.add_mutually_exclusive_group()
+
+    exercise.add_argument('-c', '--ex_c', action="store_true", help="The ising model for 2x2 matrix")
+    exercise.add_argument('-d', '--ex_d', action="store_true", help="Expectation values for 20x20 matrix")
+    exercise.add_argument('-e', '--ex_e', action="store_true", help="Compute probability P(E) for 20x20 matrix")
+    exercise.add_argument('-f', '--ex_f', action="store_true", help="Phase transitions of LxL (L=40,60,80,100)")
 
 
-#set_num_threads(3)
+    if len(sys.argv) <= 1:
+        sys.argv.append('--help')
 
-if ex_c:
+    args  = parser.parse_args()
+    ex_c = args.ex_c
+    ex_d = args.ex_d
+    ex_e = args.ex_e
+    ex_f = args.ex_f
 
-    # Initial conditions for Monte Carlo simulation
-    max_cycles = 1e7       # Max MC cycles
-    L          = 2            # Number of spins
-    temp       = 1            # [kT/J] Temperature
-    J          = 1            # binding constant
-
-
-    ###-->
-    log_scale = np.logspace(2, int(np.log10(max_cycles)),\
-                           (int(np.log10(max_cycles))-1), endpoint=True)
-    MC_runs   = np.outer(log_scale, [1,5]).flatten() # taking the outer product
-    MC_runs   = MC_runs[1:-1]                        # removing first and last value
-    ###<---
-
-    # Analytic solutions
-    A_E, A_Cv, A_M, A_X, A_MAbs = Analytical_2x2(J, L, temp)
-    Analyticals  = DataFrameSolution(A_E, A_Cv, A_M, A_X, A_MAbs)
-
-    # Numerical solutions
-    list_num_dfs = twoXtwo(L, temp, MC_runs)
-    Numericals   = pd.concat(list_num_dfs)
-
-    print('\nTable of Analytical Solutions of 2x2 Ising-Model:','\n'+'-'*49+'\n')
-    print(Analyticals)
-    print('\n\nTable of Numerical Solutions of 2x2 Ising-Model:','\n'+'-'*48+'\n')
-    print(Numericals)
-
-    error_vs_cycles        = False  #visualize error as function of MC runs
-    expected_net_magnetism = False
-
-    if error_vs_cycles:
-        # Get array of MeanMagnetizationAbs for plotting
-        numeric_MAbs  = Numericals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
-        analytic_MAbs = Analyticals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
-
-        # Calculating the error (use f.ex. rel. error instead?)
-        error = abs(numeric_MAbs-analytic_MAbs)
-        P.plot_MCcycles_vs_err(MC_runs, error)
-
-    if expected_net_magnetism:
-        # Plotting expected mean magnetism
-        plot_expected_net_mag(L, temp, runs=log_scale)
+    print(parser.description)
 
 
-if ex_d:
+    #set_num_threads(3)
 
-    L  = 20    # Number of spins
-    T1 = 1.0   # [kT/J] Temperature
-    T2 = 2.4   # [kT/J] Temperature
+    if ex_c:
+        print('\n'+20*'-'+'2x2 latice'+'-'*20+'\n')
 
-    temp_arr = np.array([T1, T2])
-    MC_runs  = int(1e5)
+        # Initial conditions for Monte Carlo simulation
+        max_cycles = 1e7     # Max MC cycles
+        L          = 2       # Number of spins
+        temp       = 1       # [kT/J] Temperature
+        J          = 1       # binding constant
 
-    E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=2)
+        log_scale = np.logspace(2, int(np.log10(max_cycles)),\
+                               (int(np.log10(max_cycles))-1), endpoint=True)
+        MC_runs   = np.outer(log_scale, [1,5]).flatten() # taking the outer product
+        MC_runs   = MC_runs[1:-1]                        # removing first and last value
 
-    P.plot_n_accepted(MC_runs, n_acc, T1, T2)
+        n_sim = len(MC_runs)
 
-    expecteds = [E, Mag, MagAbs, SH, Suscept]
-    P.expected_vals_two_temp(MC_runs, T1, T2, expecteds)
+        print(f'Running {n_sim} simulations : {MC_runs}')
 
-if ex_e:
-    """
-    Partition function:
-    It is a sum over the two possible spin values for each spin, either up +1 or down −1.
-    """
-    L  = 20    # Number of spins
-    T1 = 1.0   # [kT/J] Temperature
-    T2 = 2.4   # [kT/J] Temperature
+        sys.exit()
 
-    temp_arr = np.array([T1, T2])
-    MC_runs  = 1000000 #400000 
-    
-    E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=1)
+        # Analytic solutions
+        A_E, A_Cv, A_M, A_X, A_MAbs = Analytical_2x2(J, L, temp)
+        Analyticals  = DataFrameSolution(A_E, A_Cv, A_M, A_X, A_MAbs)
 
-    probability(e_prob, temp_arr)
+        # Numerical solutions
+        list_num_dfs = twoXtwo(L, temp, MC_runs)
+        Numericals   = pd.concat(list_num_dfs)
 
+        print('\nTable of Analytical Solutions of 2x2 Ising-Model:','\n'+'-'*49+'\n')
+        print(Analyticals)
+        print('\n\nTable of Numerical Solutions of 2x2 Ising-Model:','\n'+'-'*48+'\n')
+        print(Numericals)
 
-if ex_f:
-    """
-    skriv noe
-    """
-    L  = [40, 60, 80, 100]          # Number of spins
-    T1 = 2.0                        # [kT/J] Temperature
-    T2 = 2.3                        # [kT/J] Temperature
-    dT = 0.02
-    N  = int(round((T2 - T1)/dT))   # nr of steps
-    NL = int(len(L))
-    T  = np.linspace(T1, T2, N)
+        error_vs_cycles        = False  #visualize error as function of MC runs
+        expected_net_magnetism = False
 
-    names       = ['Energy','Magnetization','Abs. Magnetization',\
-                   'Specific Heat','Susceptibility']
+        if error_vs_cycles:
+            # Get array of MeanMagnetizationAbs for plotting
+            numeric_MAbs  = Numericals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
+            analytic_MAbs = Analyticals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
 
-    ylabels      = [r'$\langle E\rangle$', r'$\langle M \rangle$',\
-                    r'$\langle|M|\rangle$', r'$C_V$', r'$\chi$']
+            # Calculating the error (use f.ex. rel. error instead?)
+            error = abs(numeric_MAbs-analytic_MAbs)
+            P.plot_MCcycles_vs_err(MC_runs, error)
 
-    save_as      = ['energy','mag','Mabs','CV','CHI']
-
-    MC_runs     = int(1e6)
-    stable      = int(0.10*MC_runs)
-
-    E_val       = np.zeros((NL, N))  # rows L, columns N (temperature)
-    M_val       = np.zeros_like(E_val); Cv_val    = np.zeros_like(E_val)
-    X_val       = np.zeros_like(E_val); M_abs_val = np.zeros_like(E_val)
+        if expected_net_magnetism:
+            # Plotting expected mean magnetism
+            plot_expected_net_mag(L, temp, runs=log_scale)
 
 
-    for l in range(NL):
+    if ex_d:
+        print('\n'+20*'-'+'20x20 latice'+'-'*20+'\n')
 
-        spin_matrix = np.ones((L[l], L[l]), np.int8)
-        print("PT for L=", L[l])
+        L  = 20    # Number of spins
+        T1 = 1.0   # [kT/J] Temperature
+        T2 = 2.4   # [kT/J] Temperature
 
-        for i in range(N):
-            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility\
-             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs_=True)
-            E_val[l,i]      = Energy
-            M_val[l,i]      = Magnetization
-            M_abs_val[l,i]  = MagnetizationAbs
-            Cv_val[l,i]     = SpecificHeat
-            X_val[l,i]      = Susceptibility
+        temp_arr = np.array([T1, T2])
+        MC_runs  = int(1e5)
 
-    # Make and save plots for all metrics, for all L
-    vals = [E_val, M_val, M_abs_val, Cv_val, X_val]
+        E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=2)
 
-    for i in range(len(names)):
-        plt.figure()
-        val = vals[i]
+        P.plot_n_accepted(MC_runs, n_acc, T1, T2)
+
+        expecteds = [E, Mag, MagAbs, SH, Suscept]
+        P.expected_vals_two_temp(MC_runs, T1, T2, expecteds)
+
+    if ex_e:
+        """
+        Partition function:
+        It is a sum over the two possible spin values for each spin, either up +1 or down −1.
+        """
+        L  = 20    # Number of spins
+        T1 = 1.0   # [kT/J] Temperature
+        T2 = 2.4   # [kT/J] Temperature
+
+        temp_arr = np.array([T1, T2])
+        MC_runs  = 1000000 #400000 
+        
+        E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=1)
+
+        probability(e_prob, temp_arr)
+
+
+    if ex_f:
+        """
+        skriv noe
+        """
+        L  = [40, 60, 80, 100]          # Number of spins
+        T1 = 2.0                        # [kT/J] Temperature
+        T2 = 2.3                        # [kT/J] Temperature
+        dT = 0.02
+        N  = int(round((T2 - T1)/dT))   # nr of steps
+        NL = int(len(L))
+        T  = np.linspace(T1, T2, N)
+
+        names       = ['Energy','Magnetization','Abs. Magnetization',\
+                       'Specific Heat','Susceptibility']
+
+        ylabels      = [r'$\langle E\rangle$', r'$\langle M \rangle$',\
+                        r'$\langle|M|\rangle$', r'$C_V$', r'$\chi$']
+
+        save_as      = ['energy','mag','Mabs','CV','CHI']
+
+        MC_runs     = int(1e6)
+        stable      = int(0.10*MC_runs)
+
+        E_val       = np.zeros((NL, N))  # rows L, columns N (temperature)
+        M_val       = np.zeros_like(E_val); Cv_val    = np.zeros_like(E_val)
+        X_val       = np.zeros_like(E_val); M_abs_val = np.zeros_like(E_val)
+
+
         for l in range(NL):
-            plt.plot(T, val[l,:], label="L=%g" %L[l])
 
-        print("Saving phase transition plot for %s" %names[i])
-        P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
-        #plt.show()
+            spin_matrix = np.ones((L[l], L[l]), np.int8)
+            print("PT for L=", L[l])
+
+            for i in range(N):
+                Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility\
+                 = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs_=True)
+                E_val[l,i]      = Energy
+                M_val[l,i]      = Magnetization
+                M_abs_val[l,i]  = MagnetizationAbs
+                Cv_val[l,i]     = SpecificHeat
+                X_val[l,i]      = Susceptibility
+
+        # Make and save plots for all metrics, for all L
+        vals = [E_val, M_val, M_abs_val, Cv_val, X_val]
+
+        for i in range(len(names)):
+            plt.figure()
+            val = vals[i]
+            for l in range(NL):
+                plt.plot(T, val[l,:], label="L=%g" %L[l])
+
+            print("Saving phase transition plot for %s" %names[i])
+            P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
+            #plt.show()
 
