@@ -6,7 +6,7 @@ Studies of phase transitions in magnetic systems
 
 import sys, os, time, argparse
 
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy             as np
 import pandas            as pd
 import plots             as P
@@ -115,6 +115,7 @@ def initial_energy(spin_matrix, n_spins):
 
 @njit(cache=True)
 def MC(spin_matrix, n_cycles, temp):
+    """Monte-Carlo algorithm"""
 
     n_spins     = len(spin_matrix)
 
@@ -208,7 +209,8 @@ def twoXtwo(L, temp, runs):
 @njit(cache=True)
 def two_temps(L, n_cycles, temp, states=1):
     """
-    Calculating the two temps with 2 different start conditions
+    Calculating the expectation values,
+    two temps with 2 different start conditions
     """
 
     E       = np.zeros((states, len(temp), n_cycles))
@@ -277,7 +279,7 @@ def plot_expected_net_mag(L, temp, runs):
 
     plt.figure(figsize=(10, 6))
 
-    N     = 10  # number of times to run n_cycles
+    N     = 30  # number of times to run n_cycles
     count = 0
 
     for n_cycles in runs:
@@ -404,7 +406,7 @@ if __name__ == '__main__':
         T2 = 2.4   # [kT/J] Temperature
 
         temp_arr = np.array([T1, T2])
-        MC_runs  = int(1e5)
+        MC_runs  = int(1e6)
 
         E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=2)
 
