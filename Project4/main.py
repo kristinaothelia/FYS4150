@@ -96,9 +96,7 @@ def DataFrameSolution(E, CP, M, CHI, MAbs, N=None):
 
 @njit(cache=True)
 def initial_energy(spin_matrix, n_spins):
-    """
-    E and M are int
-    """
+    """Calculates the initial energy of the system"""
 
     E = 0
     M = 0
@@ -121,7 +119,7 @@ def MC(spin_matrix, n_cycles, temp):
     n_spins     = len(spin_matrix)
 
     # Matrix for storing calculated expectation values and accepted
-    quantities  = np.zeros((int(n_cycles), 7))  # dtype=np.float64
+    quantities  = np.zeros((int(n_cycles), 7))
     accept      = 0
 
     energy_array      = np.zeros(int(n_cycles))
@@ -145,10 +143,7 @@ def MC(spin_matrix, n_cycles, temp):
 
             # Calculating the energy change
             dE = (2 * spin_matrix[ix, iy] * (left + right + above + below))
-            #if dE <= 0:
-            #    spin_matrix[ix, iy] *= -1.0  #flip spin
-            #    accept +=1
-            #else:
+
             # Evaluating the proposet new configuration
             if np.random.random() <= np.exp(-dE/temp):
                 # Changing the configuration if accepted
@@ -156,19 +151,6 @@ def MC(spin_matrix, n_cycles, temp):
                 E                   += dE
                 M                   += 2*spin_matrix[ix, iy]
                 accept              += 1
-            '''
-            dE = 2*J*matrix[xind][yind]*(nabo_høyre+nabo_venstre+nabo_over+nabo_under)
-            if dE <= 0:
-                matrix[xind][yind] *= -1
-                energy += dE
-                accepted_configurations += 1
-            else:
-                r = np.random.uniform(0,1)
-                if r <= np.exp(-beta*dE):
-                    matrix[xind][yind] *= -1
-                    energy += dE
-                    accepted_configurations += 1
-            '''
 
         # update expectation values and store in output matrix
         quantities[i-1,0] += E
@@ -213,7 +195,7 @@ def numerical_solution(spin_matrix, n_cycles, temp, L, abs_=False):
 def twoXtwo(L, temp, runs):
 
     spin_matrix = np.ones((L, L), np.int64)
-    list_num_df = []  #what does df mean?
+    list_num_df = []
 
     for n_cycles in runs:
         Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility = \
@@ -288,28 +270,18 @@ def two_temps(L, n_cycles, temp, states=1):
     return E, Mag, MagAbs, SH, Suscept, Naccept, prob_e
 
 def plot_expected_net_mag(L, temp, runs):
-    """
-    plotting expected net mag
-
-    the plots show that value goes to zero (expected value)
-    for large (1e7) number of mc-cycles.
-
-    inspo from rapport (u know who)...
-
-    should probably increase N...?
-    not sure what it 'should be' or why...
-    """
+    """Plotting expectations of net magnetization"""
 
     colors      = ['rosybrown','lightcoral','indianred','firebrick','darkred','red']
     spin_matrix = np.ones((L, L), np.int8)
 
     plt.figure(figsize=(10, 6))
 
-    N     = 30  # number of times to run n_cycles
+    N     = 10  # number of times to run n_cycles
     count = 0
 
     for n_cycles in runs:
-
+        print(f'Simulation with max Monte-Carlo cycles = {n_cycles} is runned {N} times')
         c     = colors[count]
         count += 1
         for i in range(N):
@@ -326,8 +298,7 @@ def plot_expected_net_mag(L, temp, runs):
     plt.show()
 
 def probability(prob, temps, steady=1e5):
-    """
-    """
+    """Plots the probability distribution of the Energy"""
 
     bins_arr = [10, 40]
 
@@ -335,15 +306,11 @@ def probability(prob, temps, steady=1e5):
 
         weights  = np.ones_like(prob[0,t,int(steady):])/len(prob[0,t,int(steady):])
         variance = np.var(prob[0,t,:])
-        sigma    = '\u03C3$^2$'            # unicode character for sigma
+        sigma    = '\u03C3$^2$'        # unicode character for sigma
 
         e    = prob[0,t,int(steady):]
         std  = np.std(e)
         mean = np.mean(e)
-
-        # the Gaussian probability density function
-        #plt.plot(e, norm.pdf(e))
-        #plt.show()
 
         plt.hist(e, bins_arr[t], weights=weights, label=f"{sigma}={variance:.3e}",color='darkmagenta')
         plt.title(f'The probability distribution of the Energy - $k_BT={temps[t]}$',fontsize=15)
@@ -397,9 +364,7 @@ if __name__ == '__main__':
 
         n_sim = len(MC_runs)
 
-        print(f'Running {n_sim} simulations : {MC_runs}')
-
-        sys.exit()
+        print(f'Running {n_sim} simulations, max Monte-Carlo cycles:\n{MC_runs}')
 
         # Analytic solutions
         A_E, A_Cv, A_M, A_X, A_MAbs = Analytical_2x2(J, L, temp)
@@ -422,12 +387,12 @@ if __name__ == '__main__':
             numeric_MAbs  = Numericals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
             analytic_MAbs = Analyticals['MeanMagnetizationAbs'].to_numpy(dtype=np.float64)
 
-            # Calculating the error (use f.ex. rel. error instead?)
+            print(f'\nPlotting the error of |M|:','\n'+'-'*26+'\n')
             error = abs(numeric_MAbs-analytic_MAbs)
             P.plot_MCcycles_vs_err(MC_runs, error)
 
         if expected_net_magnetism:
-            # Plotting expected mean magnetism
+            print(f'\nPlotting expected mean magnetism:','\n'+'-'*33+'\n')
             plot_expected_net_mag(L, temp, runs=log_scale)
 
 
@@ -449,16 +414,17 @@ if __name__ == '__main__':
         P.expected_vals_two_temp(MC_runs, T1, T2, expecteds)
 
     if ex_e:
-        """
-        Partition function:
-        It is a sum over the two possible spin values for each spin, either up +1 or down −1.
-        """
+        print('\n'+10*'-'+'The probability distribution for 20x20 lattice'+'-'*10+'\n')
+
+        #Partition function:
+        #It is a sum over the two possible spin values for each spin, either up +1 or down −1.
+
         L  = 20    # Number of spins
         T1 = 1.0   # [kT/J] Temperature
         T2 = 2.4   # [kT/J] Temperature
 
         temp_arr = np.array([T1, T2])
-        MC_runs  = 1000000 #400000 
+        MC_runs  = 1000000
         
         E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=1)
 
@@ -466,9 +432,8 @@ if __name__ == '__main__':
 
 
     if ex_f:
-        """
-        skriv noe
-        """
+        print('\n'+20*'-'+'Phase transitions'+'-'*20+'\n')
+
         L  = [40, 60, 80, 100]          # Number of spins
         T1 = 2.0                        # [kT/J] Temperature
         T2 = 2.3                        # [kT/J] Temperature
