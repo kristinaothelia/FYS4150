@@ -5,9 +5,10 @@ import numpy             as np
 import pandas            as pd
 import plots             as P
 import matplotlib.pyplot as plt
-import scipy.integrate as integrate
+import scipy.integrate   as integrate
 
-from   numba import jit, njit, prange, set_num_threads
+from numba       import jit, njit, prange, set_num_threads
+from scipy.stats import norm
 
 # -----------------------------------------------------------------------------
 
@@ -109,18 +110,21 @@ def initial_energy(spin_matrix, n_spins):
 
 
 @njit(cache=True)
-def MC(spin_matrix, n_cycles, temp, start=1):
+def MC(spin_matrix, n_cycles, temp):
 
     n_spins     = len(spin_matrix)
 
     # Matrix for storing calculated expectation values and accepted
-    quantities  = np.zeros((int(n_cycles), 6))  # dtype=np.float64
+    quantities  = np.zeros((int(n_cycles), 7))  # dtype=np.float64
     accept      = 0
+
+    energy_array      = np.zeros(int(n_cycles))
 
     # Initial energy and magnetization
     E, M        = initial_energy(spin_matrix, n_spins)
 
-    for i in range(start, n_cycles+1):
+    for i in range(1, n_cycles+1):
+        #accept      = 0
         for j in range(n_spins**2):
 
             # Picking a random lattice position
@@ -135,7 +139,10 @@ def MC(spin_matrix, n_cycles, temp, start=1):
 
             # Calculating the energy change
             dE = (2 * spin_matrix[ix, iy] * (left + right + above + below))
-
+            #if dE <= 0:
+            #    spin_matrix[ix, iy] *= -1.0  #flip spin
+            #    accept +=1
+            #else:
             # Evaluating the proposet new configuration
             if np.random.random() <= np.exp(-dE/temp):
                 # Changing the configuration if accepted
@@ -143,6 +150,19 @@ def MC(spin_matrix, n_cycles, temp, start=1):
                 E                   += dE
                 M                   += 2*spin_matrix[ix, iy]
                 accept              += 1
+            '''
+            dE = 2*J*matrix[xind][yind]*(nabo_høyre+nabo_venstre+nabo_over+nabo_under)
+            if dE <= 0:
+                matrix[xind][yind] *= -1
+                energy += dE
+                accepted_configurations += 1
+            else:
+                r = np.random.uniform(0,1)
+                if r <= np.exp(-beta*dE):
+                    matrix[xind][yind] *= -1
+                    energy += dE
+                    accepted_configurations += 1
+            '''
 
         # update expectation values and store in output matrix
         quantities[i-1,0] += E
@@ -152,13 +172,15 @@ def MC(spin_matrix, n_cycles, temp, start=1):
         quantities[i-1,4] += np.abs(M)
         quantities[i-1,5] += accept
 
+        quantities[i-1,6] += E
+
     return quantities
 
 @njit(cache=True)
-def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
+def numerical_solution(spin_matrix, n_cycles, temp, L, abs_=False):
 
     # Compute quantities
-    quantities, Naccept = MC(spin_matrix, n_cycles, temp)
+    quantities = MC(spin_matrix, n_cycles, temp)
 
     E_avg           = np.mean(quantities[:,0])
     M_avg           = np.mean(quantities[:,1])
@@ -168,10 +190,10 @@ def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
 
     # variance for E and M
     E_var               = (E2_avg - E_avg**2)/(L**2)
-    if abs:
+    if abs_:
         M_var = (M2_avg - M_abs_avg**2)/(L**2)
     else:
-        M_var               = (M2_avg - M_avg**2)/(L**2)
+        M_var           = (M2_avg - M_avg**2)/(L**2)
 
     # scale with L^2
     Energy              = E_avg    /(L**2)
@@ -180,23 +202,23 @@ def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
     SpecificHeat        = E_var    /(temp**2)
     Susceptibility      = M_var    /(temp)
 
-    return Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept
+    return Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility
 
 def twoXtwo(L, temp, runs):
 
-    spin_matrix = np.ones((L, L), np.int8)
+    spin_matrix = np.ones((L, L), np.int64)
     list_num_df = []  #what does df mean?
 
     for n_cycles in runs:
-        Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept = \
-        numerical_solution(spin_matrix, n_cycles, temp, L)
+        Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility = \
+        numerical_solution(spin_matrix, n_cycles, temp, L, abs_=True)
         list_num_df.append(DataFrameSolution(Energy, SpecificHeat, Magnetization,\
                                              Susceptibility, MagnetizationAbs, n_cycles))
     return list_num_df
 
 
 @njit(cache=True)
-def two_temps(L, n_cycles, temp, states=1, begin=1):
+def two_temps(L, n_cycles, temp, states=1):
     """
     Calculating the two temps with 2 different start conditions
     """
@@ -206,6 +228,7 @@ def two_temps(L, n_cycles, temp, states=1, begin=1):
     MagAbs  = np.zeros((states, len(temp), n_cycles))
     SH      = np.zeros((states, len(temp), n_cycles))
     Suscept = np.zeros((states, len(temp), n_cycles))
+    prob_e  = np.zeros((states, len(temp), n_cycles))
 
     Naccept = np.zeros((states, len(temp), n_cycles))
 
@@ -228,9 +251,10 @@ def two_temps(L, n_cycles, temp, states=1, begin=1):
                             s_mat_random[sw,sl] *= -1
                 spin_matrix = s_mat_random
 
-            quantities = MC(spin_matrix, n_cycles, temp[t], start=begin)
+            quantities = MC(spin_matrix, n_cycles, temp[t])
 
             norm       = 1.0/np.arange(1, n_cycles+1)
+            e_arr      = quantities[:,6]/L**2
             
             E_avg          = np.cumsum(quantities[:,0])*norm
             M_avg          = np.cumsum(quantities[:,1])*norm
@@ -253,7 +277,77 @@ def two_temps(L, n_cycles, temp, states=1, begin=1):
             SH[m,t,:]        = SpecificHeat
             Suscept[m,t,:]   = Susceptibility
 
-    return E, Mag, MagAbs, SH, Suscept, Naccept
+            prob_e[m,t,:] = e_arr
+
+    return E, Mag, MagAbs, SH, Suscept, Naccept, prob_e
+
+def plot_expected_net_mag(L, temp, runs):
+    """
+    plotting expected net mag
+
+    the plots show that value goes to zero (expected value)
+    for large (1e7) number of mc-cycles.
+
+    inspo from rapport (u know who)...
+
+    should probably increase N...?
+    not sure what it 'should be' or why...
+    """
+
+    colors      = ['rosybrown','lightcoral','indianred','firebrick','darkred','red']
+    spin_matrix = np.ones((L, L), np.int8)
+
+    plt.figure(figsize=(10, 6))
+
+    N     = 30  # number of times to run n_cycles
+    count = 0
+
+    for n_cycles in runs:
+
+        c     = colors[count]
+        count += 1
+        for i in range(N):
+
+            E, Mag, MagAbs, SH, Suscept = numerical_solution(spin_matrix, int(n_cycles), temp, L)
+            plt.semilogx(int(n_cycles), Mag, 'o', color=c)
+
+    plt.title('Spread of Expected Magnetic Field of Matrix', fontsize=15)
+    plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
+    plt.ylabel(r'$\langle M \rangle$', fontsize=15)
+    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+    plt.savefig(f'results/plots/4c/SpreadOfExpectedMagneticField')
+    plt.tight_layout()
+    plt.show()
+
+def probability(prob, temps, steady=1e5):
+    """
+    """
+
+    bins_arr = [10, 40]
+
+    for t in range(len(temps)):
+
+        weights  = np.ones_like(prob[0,t,int(steady):])/len(prob[0,t,int(steady):])
+        variance = np.var(prob[0,t,:])
+        sigma    = '\u03C3$^2$'            # unicode character for sigma
+
+        e    = prob[0,t,int(steady):]
+        std  = np.std(e)
+        mean = np.mean(e)
+
+        # the Gaussian probability density function
+        #plt.plot(e, norm.pdf(e))
+        #plt.show()
+
+        plt.hist(e, bins_arr[t], weights=weights, label=f"{sigma}={variance:.3e}",color='darkmagenta')
+        plt.title(f'The probability distribution of the Energy - $k_BT={temps[t]}$',fontsize=15)
+        plt.xlabel('E', fontsize=15)
+        plt.ylabel('P(E)', fontsize=15)
+        plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+        plt.legend(fontsize=13)
+        plt.tight_layout()
+        plt.savefig(f'results/plots/4e/EnergyDistribution_{temps[t]}.png')
+        plt.show()
 
 
 ex_c = False
@@ -268,7 +362,7 @@ ex_g = False
 if ex_c:
 
     # Initial conditions for Monte Carlo simulation
-    max_cycles = 1e7          # Max MC cycles
+    max_cycles = 1e7       # Max MC cycles
     L          = 2            # Number of spins
     temp       = 1            # [kT/J] Temperature
     J          = 1            # binding constant
@@ -295,7 +389,7 @@ if ex_c:
     print(Numericals)
 
     error_vs_cycles        = False  #visualize error as function of MC runs
-    expected_net_magnetism = True
+    expected_net_magnetism = False
 
     if error_vs_cycles:
         # Get array of MeanMagnetizationAbs for plotting
@@ -308,7 +402,7 @@ if ex_c:
 
     if expected_net_magnetism:
         # Plotting expected mean magnetism
-        P.plot_expected_net_mag(L, temp, runs=log_scale)
+        plot_expected_net_mag(L, temp, runs=log_scale)
 
 
 if ex_d:
@@ -318,9 +412,9 @@ if ex_d:
     T2 = 2.4   # [kT/J] Temperature
 
     temp_arr = np.array([T1, T2])
-    MC_runs  = int(1e6)
+    MC_runs  = int(1e5)
 
-    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr, states=2)
+    E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=2)
 
     P.plot_n_accepted(MC_runs, n_acc, T1, T2)
 
@@ -337,90 +431,12 @@ if ex_e:
     T2 = 2.4   # [kT/J] Temperature
 
     temp_arr = np.array([T1, T2])
-    MC_runs  = 100000 #1000000
-    steady   = 10000  #100000
+    MC_runs  = 1000000 #400000 
     
-    
-    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr, states=1, begin=steady)
+    E, Mag, MagAbs, SH, Suscept, n_acc, e_prob = two_temps(L, MC_runs, temp_arr, states=1)
 
-    #print(E.shape)
-    #print(E);print('')
-    #print(E[0,1,steady-1:])
-    #print(len(E[0,1,steady-1:]))
+    probability(e_prob, temp_arr)
 
-    E_T1 = E[0,0,steady:]
-    E_T2 = E[0,1,steady:]
-
-    print(E_T1)
-    print(E_T2)
-
-    rounded  = E_T1.round(1)
-    rounded2 = E_T2.round(1)
-    #print(rounded)
-
-    uniques, counts = np.unique(rounded, return_counts=True)
-    uniques2, counts2 = np.unique(rounded2, return_counts=True)
-
-    plt.hist(E_T1)
-    plt.show()
-
-    plt.hist(E_T2)
-    plt.show()
-
-    plt.plot(E_T2)
-    plt.show()
-
-
-    '''
-    plt.bar(uniques, height=counts, align='center')
-    #plt.xticks(np.arange(uniques.min(), uniques.max(), 0.1))
-    plt.show()
-    plt.bar(uniques2, height=counts2, align='center')
-    #plt.xticks(np.arange(uniques.min(), uniques.max(), 0.1))
-    plt.show()
-    '''
-
-    #bins = len(counts) - 0.5
-    #plt.hist(rounded, align='mid', rwidth=2)
-    #plt.title('Some title')
-    #plt.xticks(uniques)
-    #plt.show()
-    
-
-    #plt.bar(u, b, width=0.5, align='center')
-    #plt.gca().set_xticks(u)
-    #plt.show()
-    
-
-    #lim = int(0.90*MC_runs) #last 10% of data points
-
-    '''
-    E_T1 = E[0, 1, lim:-1]#*L**2
-    #plt.plot(E_T1, 'o-')
-    #plt.show()
-
-    plt.hist(E_T1, bins=20, density=True)
-    print(E_T1)
-
-    plt.show()
-    '''
-
-    """
-    histo = np.histogram(E_T1, bins=300)
-    print(histo[1])
-    area = np.abs(integrate.trapz(histo[1]))
-    print(area)
-    print(histo[1]/area)
-    A = histo[1]/area
-    var_1 = np.var(A)
-    print(var_1)
-
-    Cv_mean = np.mean(SH[0,1,lim:])
-    print("Cv = ", Cv_mean)
-    kB = 1.38064852e-23
-    var_2 = T2**2*Cv_mean*L**2
-    print(var_2)
-    """
 
 if ex_f:
     """
@@ -456,8 +472,8 @@ if ex_f:
         print("PT for L=", L[l])
 
         for i in range(N):
-            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Naccept \
-             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs=True)
+            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility\
+             = numerical_solution(spin_matrix, MC_runs, T[i], L[l], abs_=True)
             E_val[l,i]      = Energy
             M_val[l,i]      = Magnetization
             M_abs_val[l,i]  = MagnetizationAbs
@@ -477,7 +493,3 @@ if ex_f:
         P.plot_4f(name=names[i], ylabel=ylabels[i], save_as=save_as[i])
         #plt.show()
 
-if ex_g:
-    """
-    Find T_C
-    """

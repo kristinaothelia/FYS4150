@@ -7,42 +7,6 @@ import sys
 import matplotlib.pyplot as plt
 import numpy             as np
 
-def plot_expected_net_mag(L, temp, runs):
-    """
-    plotting expected net mag
-
-    the plots show that value goes to zero (expected value)
-    for large (1e7) number of mc-cycles.
-
-    inspo from rapport (u know who)...
-
-    should probably increase N...?
-    not sure what it 'should be' or why...
-    """
-
-    colors      = ['rosybrown','lightcoral','indianred','firebrick','darkred','red']
-    spin_matrix = np.ones((L, L), np.int8)
-
-    plt.figure(figsize=(10, 6))
-
-    N     = 30  # number of times to run n_cycles
-    count = 0
-
-    for n_cycles in runs:
-
-        c     = colors[count]
-        count += 1
-        for i in range(N):
-
-            E, Mag, MagAbs, SH, Suscept, Naccept = numerical_solution(spin_matrix, int(n_cycles), temp, L)
-            plt.semilogx(int(n_cycles), Mag, 'o', color=c)
-
-    plt.title('Spread of Expected Magnetic Field of Matrix', fontsize=15)
-    plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
-    plt.ylabel(r'$\langle M \rangle$', fontsize=15)
-    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
-    plt.savefig(f'results/plots/4c/SpreadOfExpectedMagneticField')
-    plt.show()
 
 def plot_MCcycles_vs_err(mc_cycles, error):
     """Plotting error vs. number of MC cycles.
@@ -102,7 +66,7 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
 
     for i, val in enumerate(expected):
 
-        print("Saving plot for: ", names[i])
+        print("\nSaving plot for: ", names[i])
 
         plt.figure(figsize=(7,5))
         plt.semilogx(x, val[0,0,:], linewidth=1.0,\
@@ -155,4 +119,4 @@ def plot_4f(name, ylabel, save_as):
     plt.xticks(fontsize=13);plt.yticks(fontsize=13)
     plt.legend(fontsize=13)
     plt.tight_layout()
-    plt.savefig(f'results/plots/4f/PT_{save_as}.png')
+    #plt.savefig(f'results/plots/4f/PT_{save_as}.png')
