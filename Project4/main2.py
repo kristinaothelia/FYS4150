@@ -109,18 +109,18 @@ def initial_energy(spin_matrix, n_spins):
 
 
 @njit(cache=True)
-def MC(spin_matrix, n_cycles, temp):
+def MC(spin_matrix, n_cycles, temp, start=1):
 
     n_spins     = len(spin_matrix)
 
-    # Matrix for storing calculated expectation and variance values, five variables
+    # Matrix for storing calculated expectation values and accepted
     quantities  = np.zeros((int(n_cycles), 6))  # dtype=np.float64
-    accepted    = np.zeros(int(n_cycles))
+    accept      = 0
 
     # Initial energy and magnetization
     E, M        = initial_energy(spin_matrix, n_spins)
 
-    for i in range(1, n_cycles+1):
+    for i in range(start, n_cycles+1):
         for j in range(n_spins**2):
 
             # Picking a random lattice position
@@ -142,7 +142,7 @@ def MC(spin_matrix, n_cycles, temp):
                 spin_matrix[ix, iy] *= -1.0  #flip spin
                 E                   += dE
                 M                   += 2*spin_matrix[ix, iy]
-                accepted[i]         += 1
+                accept              += 1
 
         # update expectation values and store in output matrix
         quantities[i-1,0] += E
@@ -150,8 +150,9 @@ def MC(spin_matrix, n_cycles, temp):
         quantities[i-1,2] += E**2
         quantities[i-1,3] += M**2
         quantities[i-1,4] += np.abs(M)
+        quantities[i-1,5] += accept
 
-    return quantities, accepted
+    return quantities
 
 @njit(cache=True)
 def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
@@ -159,11 +160,11 @@ def numerical_solution(spin_matrix, n_cycles, temp, L, abs=False):
     # Compute quantities
     quantities, Naccept = MC(spin_matrix, n_cycles, temp)
 
-    E_avg               = np.mean(quantities[:,0])
-    M_avg               = np.mean(quantities[:,1])
-    E2_avg              = np.mean(quantities[:,2])
-    M2_avg              = np.mean(quantities[:,3])
-    M_abs_avg           = np.mean(quantities[:,4])
+    E_avg           = np.mean(quantities[:,0])
+    M_avg           = np.mean(quantities[:,1])
+    E2_avg          = np.mean(quantities[:,2])
+    M2_avg          = np.mean(quantities[:,3])
+    M_abs_avg       = np.mean(quantities[:,4])
 
     # variance for E and M
     E_var               = (E2_avg - E_avg**2)/(L**2)
@@ -195,22 +196,22 @@ def twoXtwo(L, temp, runs):
 
 
 @njit(cache=True)
-def two_temps(L, n_cycles, temp):
+def two_temps(L, n_cycles, temp, states=1, begin=1):
     """
     Calculating the two temps with 2 different start conditions
     """
 
-    E       = np.zeros((2, len(temp), n_cycles))
-    Mag     = np.zeros((2, len(temp), n_cycles))
-    MagAbs  = np.zeros((2, len(temp), n_cycles))
-    SH      = np.zeros((2, len(temp), n_cycles))
-    Suscept = np.zeros((2, len(temp), n_cycles))
+    E       = np.zeros((states, len(temp), n_cycles))
+    Mag     = np.zeros((states, len(temp), n_cycles))
+    MagAbs  = np.zeros((states, len(temp), n_cycles))
+    SH      = np.zeros((states, len(temp), n_cycles))
+    Suscept = np.zeros((states, len(temp), n_cycles))
 
-    Naccept = np.zeros((2, len(temp), n_cycles))
+    Naccept = np.zeros((states, len(temp), n_cycles))
 
     ground_spin_mat = np.ones((L, L), np.int8)   # initial state (ground state)
 
-    for m in range(2):
+    for m in range(states):
         for t in range(len(temp)):
 
             #m=0 is ground state, all spin-up
@@ -218,8 +219,8 @@ def two_temps(L, n_cycles, temp):
             if m==0:
                 spin_matrix = ground_spin_mat
             else:
-                s_mat_random = np.ones((L, L), np.int8)   # a random spin orientation
-                #generate spin matrix of ones, then random indices are given 1 og -1sys
+                s_mat_random = np.ones((L, L), np.int8) # spin matrix of ones
+                #random indices switched to -1
                 for sw in range(len(s_mat_random)):
                     for sl in range(len(s_mat_random)):
                         rint = np.random.randint(-1,1)
@@ -227,11 +228,24 @@ def two_temps(L, n_cycles, temp):
                             s_mat_random[sw,sl] *= -1
                 spin_matrix = s_mat_random
 
+            quantities = MC(spin_matrix, n_cycles, temp[t], start=begin)
 
-            print("hi")#; sys.exit(1)
-            Energy, Magnetization, MagnetizationAbs, SpecificHeat, Susceptibility, Nacc \
-             = numerical_solution(spin_matrix, n_cycles, temp[t], L, abs=False)
+            norm       = 1.0/np.arange(1, n_cycles+1)
+            
+            E_avg          = np.cumsum(quantities[:,0])*norm
+            M_avg          = np.cumsum(quantities[:,1])*norm
+            E2_avg         = np.cumsum(quantities[:,2])*norm
+            M2_avg         = np.cumsum(quantities[:,3])*norm
+            M_abs_avg      = np.cumsum(quantities[:,4])*norm
+            Naccept[m,t,:] = np.cumsum(quantities[:,5])*norm
 
+            E_var            = (E2_avg - E_avg**2)/(L**2)
+            M_var            = (M2_avg - M_avg**2)/(L**2)
+            Energy           = E_avg    /(L**2)
+            Magnetization    = M_avg    /(L**2)
+            MagnetizationAbs = M_abs_avg/(L**2)
+            SpecificHeat     = E_var    /(temp[t]**2)
+            Susceptibility   = M_var    /(temp[t]) 
 
             E[m,t,:]         = Energy
             Mag[m,t,:]       = Magnetization
@@ -239,97 +253,13 @@ def two_temps(L, n_cycles, temp):
             SH[m,t,:]        = SpecificHeat
             Suscept[m,t,:]   = Susceptibility
 
-            Naccept[m,t,:]   = Nacc
-
     return E, Mag, MagAbs, SH, Suscept, Naccept
-
-def plot_MCcycles_vs_err(mc_cycles, error):
-    """Plotting error vs. number of MC cycles.
-
-    loglog or semilog?
-    Need better adjustment of plot.
-    New title, xlabel, ylabel etc.
-    """
-    plt.figure(figsize=(15, 10))
-
-    plt.semilogx(mc_cycles, error, 'bo-') # or loglog? semilog, only one axis is logarithmic
-
-    # zip joins x and y coordinates in pairs
-    for x,y in zip(mc_cycles,error):
-
-        label = f'{y:10.2e}'
-
-        plt.annotate(label, # this is the text
-                     (x,y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0,-10), # distance from text to points (x,y)
-                     color='black',
-                     weight='bold',
-                     size='smaller',
-                     rotation='0',   # plot seems weird w/angle other than 0 or 360..?
-                     va='top',       #  [ 'center' | 'top' | 'bottom' | 'baseline' ]
-                     ha='right')     #  [ 'left' | 'right' | 'center']
-
-    #what does this do? remove comments?
-    xmin = 0.50e2 #f'{np.min(mc_cycles):10.2e}'  #0.5e2
-    xmax = 1.5e7  #f'{np.max(mc_cycles):10.2e}'  #1.1e7
-    #plt.ylim(error.min(), error.max()); #plt.ylim(1e-6, 1e-3)
-    #plt.xlim(xmin, xmax)
-
-    plt.title('Error of the Mean Abs. Magnetization',fontsize=15)
-    plt.xlabel('Number of Monte-Carlo Cycles',fontsize=15)
-    plt.ylabel('error',fontsize=15)
-    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
-    plt.tight_layout()
-    plt.savefig(f'results/plots/4c/ErrorMeanMagnetizationAbs')
-    plt.show()
-
-
-def plot_expected_net_mag(L, temp, runs):
-    """
-    plotting expected net mag
-
-    the plots show that value goes to zero (expected value)
-    for large (1e7) number of mc-cycles.
-
-    inspo from rapport (u know who)...
-
-    should probably increase N...?
-    not sure what it 'should be' or why...
-    """
-
-    colors      = ['rosybrown','lightcoral','indianred','firebrick','darkred','red']
-    spin_matrix = np.ones((L, L), np.int8)
-
-    plt.figure(figsize=(10, 6))
-
-    N     = 30  # number of times to run n_cycles
-    count = 0
-
-    for n_cycles in runs:
-
-        c     = colors[count]
-        count += 1
-        for i in range(N):
-
-            E, Mag, MagAbs, SH, Suscept, Naccept = numerical_solution(spin_matrix, int(n_cycles), temp, L)
-            plt.semilogx(int(n_cycles), Mag, 'o', color=c)
-
-    plt.title('Spread of Expected Magnetic Field of Matrix', fontsize=15)
-    plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
-    plt.ylabel(r'\langle M \rangle', fontsize=15)
-    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
-    plt.savefig(f'results/plots/4c/SpreadOfExpectedMagneticField')
-    plt.show()
-
-
-
 
 
 ex_c = False
 ex_d = False
-ex_e = False
-ex_f = True
+ex_e = True
+ex_f = False
 ex_g = False
 
 
@@ -364,8 +294,8 @@ if ex_c:
     print('\n\nTable of Numerical Solutions of 2x2 Ising-Model:','\n'+'-'*48+'\n')
     print(Numericals)
 
-    error_vs_cycles        = True  #visualize error as function of MC runs
-    expected_net_magnetism = False
+    error_vs_cycles        = False  #visualize error as function of MC runs
+    expected_net_magnetism = True
 
     if error_vs_cycles:
         # Get array of MeanMagnetizationAbs for plotting
@@ -374,11 +304,11 @@ if ex_c:
 
         # Calculating the error (use f.ex. rel. error instead?)
         error = abs(numeric_MAbs-analytic_MAbs)
-        plot_MCcycles_vs_err(MC_runs, error)
+        P.plot_MCcycles_vs_err(MC_runs, error)
 
     if expected_net_magnetism:
         # Plotting expected mean magnetism
-        plot_expected_net_mag(L, temp, runs=log_scale)
+        P.plot_expected_net_mag(L, temp, runs=log_scale)
 
 
 if ex_d:
@@ -390,7 +320,7 @@ if ex_d:
     temp_arr = np.array([T1, T2])
     MC_runs  = int(1e6)
 
-    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr)
+    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr, states=2)
 
     P.plot_n_accepted(MC_runs, n_acc, T1, T2)
 
@@ -400,31 +330,71 @@ if ex_d:
 if ex_e:
     """
     Partition function:
-    It is a sum over the two possible spin values for each spon, either up +1 or down −1.
+    It is a sum over the two possible spin values for each spin, either up +1 or down −1.
     """
     L  = 20    # Number of spins
     T1 = 1.0   # [kT/J] Temperature
     T2 = 2.4   # [kT/J] Temperature
 
     temp_arr = np.array([T1, T2])
-    MC_runs  = int(1e7)
-    new_arrays = False
-    if new_arrays:
-        print("making npy files, 10^7 MC runs")
-        E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr)
-        np.save("E.npy", E)
-        np.save("Mag.npy", Mag)
-        np.save("MagAbs.npy", MagAbs)
-        np.save("SH.npy", SH)
-        np.save("Suscept.npy", Suscept)
-        np.save("n_acc.npy", n_acc)
-        print("file saved!")
-        sys.exit(1)
+    MC_runs  = 100000 #1000000
+    steady   = 10000  #100000
+    
+    
+    E, Mag, MagAbs, SH, Suscept, n_acc = two_temps(L, MC_runs, temp_arr, states=1, begin=steady)
 
-    E = np.load("E.npy")
-    SH = np.load("SH.npy")
-    lim = int(0.90*MC_runs) #last 10% of data points
+    #print(E.shape)
+    #print(E);print('')
+    #print(E[0,1,steady-1:])
+    #print(len(E[0,1,steady-1:]))
 
+    E_T1 = E[0,0,steady:]
+    E_T2 = E[0,1,steady:]
+
+    print(E_T1)
+    print(E_T2)
+
+    rounded  = E_T1.round(1)
+    rounded2 = E_T2.round(1)
+    #print(rounded)
+
+    uniques, counts = np.unique(rounded, return_counts=True)
+    uniques2, counts2 = np.unique(rounded2, return_counts=True)
+
+    plt.hist(E_T1)
+    plt.show()
+
+    plt.hist(E_T2)
+    plt.show()
+
+    plt.plot(E_T2)
+    plt.show()
+
+
+    '''
+    plt.bar(uniques, height=counts, align='center')
+    #plt.xticks(np.arange(uniques.min(), uniques.max(), 0.1))
+    plt.show()
+    plt.bar(uniques2, height=counts2, align='center')
+    #plt.xticks(np.arange(uniques.min(), uniques.max(), 0.1))
+    plt.show()
+    '''
+
+    #bins = len(counts) - 0.5
+    #plt.hist(rounded, align='mid', rwidth=2)
+    #plt.title('Some title')
+    #plt.xticks(uniques)
+    #plt.show()
+    
+
+    #plt.bar(u, b, width=0.5, align='center')
+    #plt.gca().set_xticks(u)
+    #plt.show()
+    
+
+    #lim = int(0.90*MC_runs) #last 10% of data points
+
+    '''
     E_T1 = E[0, 1, lim:-1]#*L**2
     #plt.plot(E_T1, 'o-')
     #plt.show()
@@ -433,7 +403,7 @@ if ex_e:
     print(E_T1)
 
     plt.show()
-
+    '''
 
     """
     histo = np.histogram(E_T1, bins=300)
@@ -451,10 +421,6 @@ if ex_e:
     var_2 = T2**2*Cv_mean*L**2
     print(var_2)
     """
-
-
-    #Tenkte å prøve og skrive om dette eller noe kanskje..
-    #https://github.com/siljeci/FYS4150/blob/master/Project4/CODES/prob.py
 
 if ex_f:
     """

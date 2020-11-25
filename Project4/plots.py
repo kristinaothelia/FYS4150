@@ -2,6 +2,8 @@
 Various plotting functions used in main.py
 """
 
+import sys
+
 import matplotlib.pyplot as plt
 import numpy             as np
 
@@ -37,7 +39,7 @@ def plot_expected_net_mag(L, temp, runs):
 
     plt.title('Spread of Expected Magnetic Field of Matrix', fontsize=15)
     plt.xlabel('Number of Monte-Carlo Cycles', fontsize=15)
-    plt.ylabel(r'\langle M \rangle', fontsize=15)
+    plt.ylabel(r'$\langle M \rangle$', fontsize=15)
     plt.xticks(fontsize=13);plt.yticks(fontsize=13)
     plt.savefig(f'results/plots/4c/SpreadOfExpectedMagneticField')
     plt.show()
@@ -66,14 +68,10 @@ def plot_MCcycles_vs_err(mc_cycles, error):
                      color='black',
                      weight='bold',
                      size='smaller',
-                     rotation='0',   # plot seems weird w/angle other than 0 or 360..?
+                     rotation='0',   # plot seems weird w/angle other than 0 or 360
                      va='top',       #  [ 'center' | 'top' | 'bottom' | 'baseline' ]
                      ha='right')     #  [ 'left' | 'right' | 'center']
 
-    xmin = 0.50e2 #f'{np.min(mc_cycles):10.2e}'  #0.5e2
-    xmax = 1.5e7  #f'{np.max(mc_cycles):10.2e}'  #1.1e7
-    #plt.ylim(error.min(), error.max()); #plt.ylim(1e-6, 1e-3)
-    #plt.xlim(xmin, xmax)
 
     plt.title('Error of the Mean Abs. Magnetization',fontsize=15)
     plt.xlabel('Number of Monte-Carlo Cycles',fontsize=15)
@@ -127,18 +125,12 @@ def expected_vals_two_temp(MCcycles, T1, T2, expected):
         plt.xticks(fontsize=13);plt.yticks(fontsize=13)
         plt.legend(fontsize=13)
         plt.tight_layout()
-        plt.savefig(f'results/plots/4d/expected_{save_as[i]}_{MCcycles}')
-        #plt.show()
+        plt.savefig(f'results/plots/4d/expected_{save_as[i]}_{MCcycles:.1e}.png')
+        plt.show()
 
 def plot_n_accepted(MCcycles, Naccs, T1, T2):
 
-    #print(Naccs)
-    #print(Naccs.shape)
-
-    order_T1 = Naccs[0,0,:]
-
     x  = np.linspace(1,MCcycles,MCcycles, endpoint=True).astype(np.float_)
-    na = np.linspace(1,MCcycles,MCcycles, endpoint=True)
 
     plt.figure(figsize=(7,5))
 
