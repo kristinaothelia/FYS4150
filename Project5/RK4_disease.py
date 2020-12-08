@@ -2,7 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-def RK4(x0, y0, fx, fy, n=None, dt=None, T=None):
+def RK4(b, x0, y0, fx, fy, n=None, dt=None, T=None):
+    """
+    fx = fS
+    fy = fI
+    """
 
     #setting up arrays
     x = np.zeros(n)
@@ -17,10 +21,10 @@ def RK4(x0, y0, fx, fy, n=None, dt=None, T=None):
 
     #loop for Runge-Kutta 4th Order
     for i in range(n-1):
-        kx1 = dt*fx(t[i], x[i], y[i]); ky1 = dt*fy(t[i], x[i], y[i])
-        kx2 = dt*fx(t[i] + dt/2, x[i] + kx1/2, y[i] + ky1/2); ky2 = dt*fy(t[i] + dt/2, x[i] + kx1/2, y[i] + ky1/2)
-        kx3 = dt*fx(t[i] + dt/2, x[i] + kx2/2, y[i] + ky2/2); ky3 = dt*fy(t[i] + dt/2, x[i] + kx2/2, y[i] + ky2/2)
-        kx4 = dt*fx(t[i] + dt, x[i] + kx3, y[i] + ky3); ky4 = dt*fy(t[i] + dt, x[i] + kx3, y[i] + ky3)
+        kx1 = dt*fx(t[i], x[i], y[i]); ky1 = dt*fy(t[i], x[i], y[i], b)
+        kx2 = dt*fx(t[i] + dt/2, x[i] + kx1/2, y[i] + ky1/2); ky2 = dt*fy(t[i] + dt/2, x[i] + kx1/2, y[i] + ky1/2, b)
+        kx3 = dt*fx(t[i] + dt/2, x[i] + kx2/2, y[i] + ky2/2); ky3 = dt*fy(t[i] + dt/2, x[i] + kx2/2, y[i] + ky2/2, b)
+        kx4 = dt*fx(t[i] + dt, x[i] + kx3, y[i] + ky3); ky4 = dt*fy(t[i] + dt, x[i] + kx3, y[i] + ky3, b)
 
         x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
         y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
@@ -34,26 +38,24 @@ def fS(t, S, I):
     """
     return c*(N - S - I) - a*S*I/N
 
-def fI(t, S, I):
+def fI(t, S, I, b):
     """
     Right hand side of I' = dI/dt
     """
     return a*S*I/N - b*I
 
 ###data
-a = 4    #rate of transmission
-c = 0.5  #rate of immunity loss
+a = 4               # Rate of transmission
+c = 0.5             # Rate of immunity loss
 b = 3
-"""
-bA = 1   #rate of recovery for population A
-bB = 2   #rate of recovery for population B
-bC = 3   #rate of recovery for population C
-bD = 4   #rate of recovery for population D
-"""
 
-#b_list = [bA, bB, bC, bD]  #useful for a loop?
+bA      = 1         # Rate of recovery for population A
+bB      = 2         # Rate of recovery for population B
+bC      = 3         # Rate of recovery for population C
+bD      = 4         # Rate of recovery for population D
+b_list  = [bA, bB, bC, bD]
 
-T = 100  #days
+T = 30  #days
 n = 1000
 
 N = 400  #nr of individuals in population
@@ -61,14 +63,31 @@ N = 400  #nr of individuals in population
 S_0 = 300  #initial number of susceptible
 I_0 = 100  #initial number of infected
 
-S, I, time = RK4(S_0, I_0, fS, fI, n, T=T)
+S, I, time = RK4(b, S_0, I_0, fS, fI, n, T=T)
 
 R = N - S - I
 
-plt.plot(time, S, label="S")
-plt.plot(time, I, label="I")
-plt.plot(time, R, label="R")
-plt.legend()
-plt.xlabel("time [days]")
-plt.ylabel("nr. of individuals")
-plt.show()
+def plot_SIR(time, b, S, I, R, T, method, save_plot=False):
+
+    plt.figure()
+    plt.plot(time, S, label="Susceptible")
+    plt.plot(time, I, label="Infected")
+    plt.plot(time, R, label="Recovered")
+    plt.legend(fontsize=15)
+    plt.title('??? b=%g' %b)
+    plt.xlabel("Time [days]", fontsize=15)
+    plt.ylabel("Nr. of individuals", fontsize=15)
+    plt.xticks(fontsize=13);plt.yticks(fontsize=13)
+    plt.tight_layout()
+
+    if save_plot:
+        print('\nSaving plot for method: %s, T=%g, b=%g' %(method, T, b))
+        plt.savefig('Results/SIR_%s_T[%g]_b[%g]'% (method, T, b))
+    else:
+        plt.show()
+
+
+for i in range(len(b_list)):
+    S, I, time  = RK4(b_list[i], S_0, I_0, fS, fI, n, T=T)
+    R           = N - S - I
+    plot_SIR(time, b_list[i], S, I, R, T, method='RK4', save_plot=True)
