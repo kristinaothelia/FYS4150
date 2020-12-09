@@ -12,6 +12,7 @@ import pandas            as pd
 
 import RK4_disease       as RK4
 import plots             as P
+import anna as MC  #change name
 
 
 # Hvor skal konstanter staa igjen..?
@@ -29,6 +30,7 @@ n   = 1000
 N   = 400           # Nr of individuals in population
 S_0 = 300           # Initial number of susceptible
 I_0 = 100           # Initial number of infected
+R_0 = 0             # Initial number of recovered
 
 
 if __name__ == '__main__':
@@ -60,7 +62,7 @@ if __name__ == '__main__':
         print('\nExercise A')
 
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
-        pop = ['A', 'B', 'C', 'D']
+        pop = ['A', 'B', 'C', 'D']  #titles for plots
         for i in range(len(b_list)):
             S, I, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, RK4.fS, RK4.fI, N, T, n)
             R           = N - S - I
@@ -69,6 +71,15 @@ if __name__ == '__main__':
     if exB:
 
         print('\nExercise B')
+        # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
+        pop = ['A', 'B', 'C', 'D']  #titles for plots
+        for i in range(len(b_list)):
+            #(T, N, a, b, c, S_0, I_0, R_0)
+            #(a, b, c, S_0, I_0, R_0, N, T)
+            S, I, R = MC.MC(a, b_list[i], c, S_0, I_0, R_0, N, T)
+            time = np.linspace(0, T, len(S))
+            #R           = N - S - I
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC', save_plot=True)
 
     if exC:
 

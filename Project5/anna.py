@@ -2,75 +2,88 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-def MC(T, N, a, b, c, S0, I0, R0):
-    """
-    
+
+def MC(a, b, c, S_0, I_0, R_0, N, T):
     """
 
+    """
+
+    #size of time step
     dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
 
-    time_steps = int(T/dt)
-    SIR = np.zeros((time_steps, 3))
+    #nr of time steps
+    N_time = int(T/dt)
 
-    SIR[0, :] = [S0, I0, R0]
+    #set up empty arrys
+    S = np.zeros(N_time)
+    I = np.zeros_like(S)
+    R = np.zeros_like(S)
 
+    #initalize arrays
+    S[0] = S_0
+    I[0] = I_0
+    R[0] = R_0
+
+
+    """
     a_0 = a
     w = 4*np.pi/T
     A = 2
+    """
 
 
     # time loop
-    for t in range(time_steps-1):
+    for i in range(N_time - 1):
 
-        SIR[t+1, :] = SIR[t, :]
+        S[i+1] = S[i]
+        I[i+1] = I[i]
+        R[i+1] = R[i]
 
-        N = np.sum(SIR[t, :]) # Update N in case of vital dynamics
+        #N = np.sum(SIR[t, :]) # Update N in case of vital dynamics
 
         # S -> I
-        if np.random.random() < a * SIR[t, 0] * SIR[t, 1] * dt / N:
-            SIR[t+1, 0] -= 1
-            SIR[t+1, 1] += 1
+        r_SI = np.random.random()
+        if r_SI < (a*S[i]*I[i]*dt/N):
+            S[i+1] -= 1
+            I[i+1] += 1
 
         # I -> R
-        if np.random.random() < b * SIR[t, 1] * dt:
-            SIR[t+1, 1] -= 1
-            SIR[t+1, 2] += 1
+        r_IR = np.random.random()
+        if r_IR < (b*I[i]*dt):
+            I[i+1] -= 1
+            R[i+1] += 1
 
         # R -> S
-        if np.random.random() < c * SIR[t, 2] * dt:
-            SIR[t+1, 2] -= 1
-            SIR[t+1, 0] += 1
+        r_RS = np.random.random()
+        if r_RS < (c*R[i]*dt):
+            R[i+1] -= 1
+            S[i+1] += 1
 
-    return SIR
+    return S, I, R
 
-a = 4    # rate of transmission
-c = 0.5  # rate of immunity loss
-b = 3
+A = False
+if A:
+    a = 4    # rate of transmission
+    c = 0.5  # rate of immunity loss
+    b = 1
 
-T = 30  # days
-n = 1000
+    T = 30  # days
+    n = 1e6
 
-N = 400  # nr of individuals in population
+    N = 400  # nr of individuals in population
 
-S_0 = 300  # initial number of susceptible
-I_0 = 100  # initial number of infected
-
-
-SIR = MC(T, N, a, b, c, S0=S_0, I0=I_0, R0=0)
-
-print(SIR)
-
-S = SIR[:,0]
-I = SIR[:,1]
-R = SIR[:,2]
-
-time = np.linspace(0, T, len(S))
+    S_0 = 300  # initial number of susceptible
+    I_0 = 100  # initial number of infected
 
 
-plt.plot(time, S, label="S")
-plt.plot(time, I, label="I")
-plt.plot(time, R, label="R")
-plt.legend()
-plt.xlabel("time [days]")
-plt.ylabel("nr. of individuals")
-plt.show()
+    S, I, R = MC(T, N, a, b, c, S_0=S_0, I_0=I_0, R_0=0)
+
+    time = np.linspace(0, T, len(S))
+
+    plt.plot(time, S, label="S")
+    plt.plot(time, I, label="I")
+    plt.plot(time, R, label="R")
+    plt.legend()
+    plt.xlabel("time [days]")
+    plt.ylabel("nr. of individuals")
+    plt.show()
