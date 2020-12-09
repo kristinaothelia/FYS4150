@@ -1,14 +1,14 @@
 
 import matplotlib.pyplot as plt
 
-def plot_SIR(time, b, S, I, R, T, method, save_plot=False):
+def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False):
 
     plt.figure()
     plt.plot(time, S, label="Susceptible")
     plt.plot(time, I, label="Infected")
     plt.plot(time, R, label="Recovered")
     plt.legend(fontsize=15)
-    plt.title('SIRS ??? b=%g' %b)
+    plt.title('Disease evolution in population %s \nMethod: %s. b=%g' %(pop, method, b))
     plt.xlabel("Time", fontsize=15)
     plt.ylabel("Nr. of individuals", fontsize=15)
     plt.xticks(fontsize=13);plt.yticks(fontsize=13)

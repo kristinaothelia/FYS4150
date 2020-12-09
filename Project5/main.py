@@ -60,10 +60,11 @@ if __name__ == '__main__':
         print('\nExercise A')
 
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
+        pop = ['A', 'B', 'C', 'D']
         for i in range(len(b_list)):
             S, I, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, RK4.fS, RK4.fI, N, T, n)
             R           = N - S - I
-            P.plot_SIR(time, b_list[i], S, I, R, T, method='RK4', save_plot=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4', save_plot=True)
 
     if exB:
 
