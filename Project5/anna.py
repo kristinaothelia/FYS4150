@@ -2,10 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-def MC(dt, T, N, a, b, c, S0, I0, R0):
+def MC(T, N, a, b, c, S0, I0, R0):
     """
     
     """
+
+    dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
 
     time_steps = int(T/dt)
     SIR = np.zeros((time_steps, 3))
@@ -45,7 +47,7 @@ a = 4    # rate of transmission
 c = 0.5  # rate of immunity loss
 b = 3
 
-T = 100  # days
+T = 30  # days
 n = 1000
 
 N = 400  # nr of individuals in population
@@ -53,10 +55,8 @@ N = 400  # nr of individuals in population
 S_0 = 300  # initial number of susceptible
 I_0 = 100  # initial number of infected
 
-dt  = T/n
 
-
-SIR = MC(dt, T, N, a, b, c, S0=S_0, I0=I_0, R0=0)
+SIR = MC(T, N, a, b, c, S0=S_0, I0=I_0, R0=0)
 
 print(SIR)
 
