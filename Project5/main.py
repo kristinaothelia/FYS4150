@@ -188,3 +188,19 @@ if __name__ == '__main__':
     if exE:
 
         print('\nExercise E')
+
+        # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
+        pop = ['A', 'B', 'C', 'D']  #titles for plots
+        n   = int(1e4) #nr of points for RK4 run
+        for i in range(len(b_list)):
+            S, I, R, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI, fz=RK4.fR, vaccine=True)
+            R = N-S-I
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality_seasonal', save_plot=False)
+
+        """
+        # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
+        for i in range(len(b_list)):
+            S, I, R = MC.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True)
+            time = np.linspace(0, T, len(S))
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality_season', save_plot=True)
+        """
