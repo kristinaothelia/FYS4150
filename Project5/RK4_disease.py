@@ -41,17 +41,34 @@ def RK4(a, b, c, x0, y0, fx, fy, N, T, n):
 
     return x,y,t
 
-def fS(a, c, t, S, I, N):
+# e  - birth rate
+# d  - death rate
+# dI - death rate of infected people due to the disease
+
+def fS(a, c, t, S, I, N, vital_dynamics=False): # Kan ogsaa adde if test for seasional osv...
     """
     Right hand side of S' = dS/dt
     """
-    return c*(N - S - I) - a*S*I/N
+    R = N - S - I
 
-def fI(a, b, t, S, I, N):
+    if vital_dynamics:
+        return c*R - a*S*I/N - d*S + e*N  # Dette maa du se paa!
+    else:
+        return c*R - a*S*I/N
+
+def fI(a, b, t, S, I, N, vital_dynamics=False):
     """
     Right hand side of I' = dI/dt
     """
     return a*S*I/N - b*I
+
+def fR(a, b, t, S, I, N, vital_dynamics=False): # Ikke endret ennaa
+    """
+    Right hand side of I' = dI/dt
+    """
+    return bl - cR + f
+
+
 
 '''
 ###data
