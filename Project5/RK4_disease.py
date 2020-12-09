@@ -4,8 +4,18 @@ import sys
 
 import plots as P
 
-def RK4(a, b, c, x0, y0, fx, fy, N, T, n):
+e = 0.25  #birth
+d = 0.2  #death
+dI = 0.35   #death from disease
+
+def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=False):
     """
+    4th Order Runge-Kutta method for solving a system of three coupled
+    differential equations.
+
+    Vital: True/False
+    Include death rates, birth rates and death rates due to disease.
+
     fx = fS
     fy = fI
     """
@@ -13,60 +23,117 @@ def RK4(a, b, c, x0, y0, fx, fy, N, T, n):
     #setting up arrays
     x = np.zeros(n)
     y = np.zeros(n)
+    z = np.zeros(n)
     t = np.zeros(n)
 
+    #size of time step
     dt = T/n
 
     #initialize
     x[0] = x0
     y[0] = y0
+    z[0] = z0
 
     #loop for Runge-Kutta 4th Order
-    for i in range(n-1):
-        kx1 = dt*fx(a, c, t[i], x[i], y[i], N)
-        ky1 = dt*fy(a, b, t[i], x[i], y[i], N)
+    if Vital:
+    #oppgave c
+        for i in range(n-1):
 
-        kx2 = dt*fx(a, c, t[i] + dt/2, x[i] + kx1/2, y[i] + ky1/2, N)
-        ky2 = dt*fy(a, b, t[i] + dt/2, x[i] + kx1/2, y[i] + ky1/2, N)
+            if seasonal:
+                #oppgave d
+                a0 = a_in
+                A = 4
+                #omega = 4*np.pi/T  #oscillate once per year????
+                omega = 0.5  #how to interpret?
+                a = A*np.cos(omega*t[i]) + a0
+            else:
+                a = a_in
 
-        kx3 = dt*fx(a, c, t[i] + dt/2, x[i] + kx2/2, y[i] + ky2/2, N)
-        ky3 = dt*fy(a, b, t[i] + dt/2, x[i] + kx2/2, y[i] + ky2/2, N)
+            kx1 = dt*fx(a, b, c, N, x[i], y[i], z[i], vital=True)
+            ky1 = dt*fy(a, b, c, N, x[i], y[i], z[i], vital=True)
+            kz1 = dt*fz(a, b, c, N, x[i], y[i], z[i], vital=True)
 
-        kx4 = dt*fx(a, c, t[i] + dt, x[i] + kx3, y[i] + ky3, N)
-        ky4 = dt*fy(a, b, t[i] + dt, x[i] + kx3, y[i] + ky3, N)
+            kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + ky1/2, vital=True)
+            ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, vital=True)
+            kz2 = dt*fz(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, vital=True)
 
-        x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
-        y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
-        t[i+1] = t[i] + dt
+            kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vital=True)
+            ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vital=True)
+            kz3 = dt*fz(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vital=True)
 
-    return x,y,t
+            kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vital=True)
+            ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vital=True)
+            kz4 = dt*fz(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vital=True)
+
+            x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+            y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+            z[i+1] = z[i] + (kz1 + 2*(kz2 + kz3) + kz4)/6
+            t[i+1] = t[i] + dt
+
+    else:
+        #oppgave a og b
+        for i in range(n-1):
+
+            if seasonal:
+                #oppgave d
+                a0 = a_in
+                A = 3
+                #omega = 4*np.pi/T  #oscillate once per year????
+                omega = 0.5
+                a = A*np.cos(omega*t[i]) + a0
+            else:
+                a = a_in
+            kx1 = dt*fx(a, b, c, N, x[i], y[i])
+            ky1 = dt*fy(a, b, c, N, x[i], y[i])
+
+            kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+            ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+
+            kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+            ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+
+            kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3)
+            ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3)
+
+            x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+            y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+            t[i+1] = t[i] + dt
+
+    return x,y,z,t
 
 # e  - birth rate
 # d  - death rate
 # dI - death rate of infected people due to the disease
 
-def fS(a, c, t, S, I, N, vital_dynamics=False): # Kan ogsaa adde if test for seasional osv...
+def fS(a, b, c, N, S, I, R=None, vital=False): # Kan ogsaa adde if test for seasonal osv...
     """
     Right hand side of S' = dS/dt
     """
-    R = N - S - I
-
-    if vital_dynamics:
-        return c*R - a*S*I/N - d*S + e*N  # Dette maa du se paa!
+    if vital:
+        temp = c*R - a*S*I/N - d*S + e*N
     else:
-        return c*R - a*S*I/N
+        temp = c*(N-S-I) - a*S*I/N
+    return temp
 
-def fI(a, b, t, S, I, N, vital_dynamics=False):
+def fI(a, b, c, N, S, I, R=None, vital=False):
     """
     Right hand side of I' = dI/dt
     """
-    return a*S*I/N - b*I
+    if vital:
+        temp = a*S*I/N - b*I - d*I - dI*I
+    else:
+        temp = a*S*I/N - b*I
+    return temp
 
-def fR(a, b, t, S, I, N, vital_dynamics=False): # Ikke endret ennaa
+def fR(a, b, c, N, S, I, R, vital=False): # Ikke endret ennaa
     """
     Right hand side of I' = dI/dt
     """
-    return bl - cR + f
+    if vital:
+        temp = b*I - c*R - d*R
+    else:
+        temp = 0
+    return temp
 
 
 

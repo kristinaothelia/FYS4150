@@ -7,6 +7,7 @@ def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False):
     plt.plot(time, S, label="Susceptible")
     plt.plot(time, I, label="Infected")
     plt.plot(time, R, label="Recovered")
+    plt.plot(time, (S+I+R), label="Population")
     plt.legend(fontsize=15)
     plt.title('Disease evolution in population %s \nMethod: %s. b=%g' %(pop, method, b))
     plt.xlabel("Time", fontsize=15)

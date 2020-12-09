@@ -2,22 +2,47 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
+e = 0.25  #birth
+d = 0.2  #death
+dI = 0.35   #death from disease
 
-def MC(a, b, c, S_0, I_0, R_0, N, T):
+def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
     """
 
     """
 
-    #size of time step
-    dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
+    if seasonal:
+        #oppgave d
+        a0 = a_in
+        A = 4
+        #omega = 4*np.pi/T  #oscillate once per year????
+        omega = 0.5  #how to interpret?
+        a = A*np.cos(omega*0) + a0
 
-    #nr of time steps
-    N_time = int(T/dt)
+        #size of time step
+        dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
 
-    #set up empty arrys
-    S = np.zeros(N_time)
-    I = np.zeros_like(S)
-    R = np.zeros_like(S)
+        #nr of time steps
+        N_time = int(T/dt)
+
+        #set up empty arrys
+        S = np.zeros(N_time)
+        I = np.zeros_like(S)
+        R = np.zeros_like(S)
+
+    else:
+        a = a_in
+
+        #size of time step
+        dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
+
+        #nr of time steps
+        N_time = int(T/dt)
+
+        #set up empty arrys
+        S = np.zeros(N_time)
+        I = np.zeros_like(S)
+        R = np.zeros_like(S)
 
     #initalize arrays
     S[0] = S_0
@@ -34,6 +59,16 @@ def MC(a, b, c, S_0, I_0, R_0, N, T):
 
     # time loop
     for i in range(N_time - 1):
+
+        if seasonal:
+            #oppgave d
+            a0 = a_in
+            A = 4
+            #omega = 4*np.pi/T  #oscillate once per year????
+            omega = 0.5  #how to interpret?
+            a = A*np.cos(omega*i) + a0
+        else:
+            a = a_in
 
         S[i+1] = S[i]
         I[i+1] = I[i]
@@ -59,8 +94,42 @@ def MC(a, b, c, S_0, I_0, R_0, N, T):
             R[i+1] -= 1
             S[i+1] += 1
 
+        if vitality:
+            #death rate d in general population S, I and R
+            r_dS = np.random.random()
+            if r_dS < (d*S[i]*dt):     #d*S*dt = probability of one individual dying in S category
+                S[i+1] -= 1
+
+            r_dI = np.random.random()
+            if r_dS < (d*I[i]*dt):
+                I[i+1] -= 1
+
+            r_dR = np.random.random()
+            if r_dR < (d*R[i]*dt):
+                R[i+1] -= 1
+
+            #death rate dI for infected population I
+            r_dII = np.random.random()
+            if r_dII < (dI*I[i]*dt):
+                I[i+1] -= 1
+
+            #birth rate e for general population S, I and R
+            r_eS = np.random.random()
+            if r_eS < (e*S[i]*dt):     #e*S*dt = probability of one individual being born in S category
+                S[i+1] += 1
+
+            r_eI = np.random.random()
+            if r_eS < (e*I[i]*dt):
+                I[i+1] += 1
+
+            r_eR = np.random.random()
+            if r_eR < (e*R[i]*dt):
+                R[i+1] += 1
+
     return S, I, R
 
+"""
+#kanskje fjerne hele denne?
 A = False
 if A:
     a = 4    # rate of transmission
@@ -87,3 +156,4 @@ if A:
     plt.xlabel("time [days]")
     plt.ylabel("nr. of individuals")
     plt.show()
+"""
