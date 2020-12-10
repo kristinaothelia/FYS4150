@@ -72,10 +72,12 @@ def DataFrameSolution(S_arr, I_arr, R_arr):
                                                    'font-size' : '13pt'})\
                                .set_properties(subset = pd.IndexSlice[['I'], :],\
                                                **{'color': 'red',\
-                                                  'border-color': 'white'})\
+                                                  'border-color': 'white',
+                                                  'font-size' : '13pt'})\
                                .set_properties(subset = pd.IndexSlice[['R'], :],\
                                                **{'color': 'green',\
-                                                  'border-color': 'white'})\
+                                                  'border-color': 'white',
+                                                  'font-size' : '13pt'})\
                                .set_table_styles(magnify())
     return dataframe
 
@@ -118,12 +120,11 @@ if __name__ == '__main__':
         for i in range(len(b_list)):
             S, I, _, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI)
             R  = N - S - I
-            #print(R)#; sys.exit()
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4', save_plot=True)
-            #plt.show()
 
     if exB:
 
+        # For mean/std table
         S_ABCD = []
         I_ABCD = []
         R_ABCD = []
@@ -136,12 +137,19 @@ if __name__ == '__main__':
             time = np.linspace(0, T, len(S))
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC', save_plot=True)
 
-            #index = print(np.where( (time - 6)) <error)
+            # Finding the equilibrium, decided for each population by looking
+            # at the plots. For population A-C: T=6, for D: T=10
+            if pop[i] == 'D':
+                equ = int((len(S)/12)*10)
+            else:
+                equ = int((len(S)/12)*6)
 
-            # setting '15' as time of equilibrium
-            S_ABCD.append('%.2f +/- %.2f' %(S[15], np.std(S)))
-            I_ABCD.append('%.2f +/- %.2f' %(I[15], np.std(I)))
-            R_ABCD.append('%.2f +/- %.2f' %(R[15], np.std(R)))
+            # Making a Pandas ddataframe with mean and std values for all
+            # populations after equilibrium
+
+            S_ABCD.append('%.2f +/- %.2f' %(np.mean(S[equ:]), np.std(S)))
+            I_ABCD.append('%.2f +/- %.2f' %(np.mean(I[equ:]), np.std(I)))
+            R_ABCD.append('%.2f +/- %.2f' %(np.mean(R[equ:]), np.std(R)))
 
         dataframe = DataFrameSolution(S_ABCD, I_ABCD, R_ABCD)
 
@@ -157,13 +165,13 @@ if __name__ == '__main__':
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
             S, I, R, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI, fz=RK4.fR, Vital=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality', save_plot=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality', save_plot=True, tot_pop=True)
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R = MC.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality', save_plot=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality', save_plot=True, tot_pop=True)
 
 
     if exD:
@@ -176,14 +184,14 @@ if __name__ == '__main__':
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
             S, I, R, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI, fz=RK4.fR, Vital=True, seasonal=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality_seasonal', save_plot=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality_seasonal', save_plot=True, tot_pop=True)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R = MC.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality_season', save_plot=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality_season', save_plot=True, tot_pop=True)
 
     if exE:
 
