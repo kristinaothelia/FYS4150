@@ -26,7 +26,7 @@ indigo              | '#4b0082'
 darkslateblue       | '#483D8B'
 """
 
-def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False, tot_pop=False):
+def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False, folder='', tot_pop=False):
 
     plt.figure()
     plt.plot(time, S, label="Susceptible", color='#4169E1') # Blue/Purple
@@ -43,6 +43,6 @@ def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False, tot_pop=False):
 
     if save_plot:
         print('\nSaving plot for method: %s, T=%g, b=%g' %(method, T, b))
-        plt.savefig('Results/SIRS_%s_T[%g]_b[%g]'% (method, T, b))
+        plt.savefig('Results/%s/SIRS_%s_T[%g]_b[%g]'% (folder, method, T, b))
     else:
         plt.show()

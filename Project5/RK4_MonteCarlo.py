@@ -1,14 +1,16 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import sys
+import numpy             as np
+import matplotlib.pyplot as plt
+import plots             as P
 
-import plots as P
+e  = 0.25       # Birth rate
+d  = 0.2        # Death rate
+dI = 0.35       # Death rate of infected people due to the disease
+f  = 0.5        # Vaccination rate
 
-e = 0.25  #birth
-d = 0.2  #death
-dI = 0.35   #death from disease
 
-f = 0.5  #vaccination rate
+# Runge-Kutta 4
+# ----------------------------------------------------------------------------
 
 def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=False, vaccine=False):
     """
@@ -22,32 +24,30 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
     fy = fI
     """
 
-    #setting up arrays
+    # Setting up arrays
     x = np.zeros(n)
     y = np.zeros(n)
     z = np.zeros(n)
     t = np.zeros(n)
 
-    #size of time step
+    # Size of time step
     dt = T/n
 
-    #initialize
+    # Initialize
     x[0] = x0
     y[0] = y0
     z[0] = z0
 
-    #loop for Runge-Kutta 4th Order
-    if Vital:
-    #oppgave c
+    # Loop for Runge-Kutta 4th Order
+    if Vital:     # ex. c)
         for i in range(n-1):
 
-            if seasonal:
-                #oppgave d
-                a0 = a_in
-                A = 4
+            if seasonal:    # ex. d)
+                a0    = a_in
+                A     = 4
                 #omega = 4*np.pi/T  #oscillate once per year????
                 omega = 0.5  #how to interpret?
-                a = A*np.cos(omega*t[i]) + a0
+                a     = A*np.cos(omega*t[i]) + a0
             else:
                 a = a_in
 
@@ -87,6 +87,7 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
                 a = a_in
 
             if vaccine:
+
                 kx1 = dt*fx(a, b, c, N, x[i], y[i], vaccine=True)
                 ky1 = dt*fy(a, b, c, N, x[i], y[i], vaccine=True)
 
@@ -104,6 +105,7 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
                 t[i+1] = t[i] + dt
 
             else:
+
                 kx1 = dt*fx(a, b, c, N, x[i], y[i])
                 ky1 = dt*fy(a, b, c, N, x[i], y[i])
 
@@ -122,11 +124,8 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
 
     return x,y,z,t
 
-# e  - birth rate
-# d  - death rate
-# dI - death rate of infected people due to the disease
 
-def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False): # Kan ogsaa adde if test for seasonal osv...
+def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False): 
     """
     Right hand side of S' = dS/dt
     """
@@ -137,6 +136,7 @@ def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False): # Kan ogsaa adde i
         temp = c*R - a*S*I/N - f
     else:
         temp = c*(N-S-I) - a*S*I/N
+
     return temp
 
 def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
@@ -149,6 +149,7 @@ def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
         temp = a*S*I/N - b*I
     else:
         temp = a*S*I/N - b*I
+
     return temp
 
 def fR(a, b, c, N, S, I, R, vital=False, vaccine=False): # Ikke endret ennaa
@@ -162,27 +163,130 @@ def fR(a, b, c, N, S, I, R, vital=False, vaccine=False): # Ikke endret ennaa
         temp = b*I - c*R + f
     else:
         temp = 0
+
     return temp
 
 
 
-'''
-###data
-a = 4               # Rate of transmission
-c = 0.5             # Rate of immunity loss
-b = 3
+# Monte Carlo
+# ----------------------------------------------------------------------------
 
-T = 30  #days
-n = 1000
+def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
+    """
 
-N = 400  #nr of individuals in population
+    """
 
-S_0 = 300  #initial number of susceptible
-I_0 = 100  #initial number of infected
+    if seasonal:    # ex. d)
 
-S, I, time = RK4(b, S_0, I_0, fS, fI, n, T=T)
+        a0     = a_in
+        A      = 4
+        #omega  = 4*np.pi/T  #oscillate once per year????
+        omega  = 0.5  #how to interpret?
+        a      = A*np.cos(omega*0) + a0
 
-R = N - S - I
+        # Size of time step
+        dt     = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
 
-P.plot_SIR(time, b, S, I, R, T, method='RK4')
-'''
+        # Nr of time steps
+        N_time = int(T/dt)
+
+        # Set up empty arrys
+        S = np.zeros(N_time)
+        I = np.zeros_like(S)
+        R = np.zeros_like(S)
+
+    else:
+        a  = a_in
+
+        # Size of time step
+        dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
+
+        # Nr of time steps
+        N_time = int(T/dt)
+
+        # Set up empty arrys
+        S = np.zeros(N_time)
+        I = np.zeros_like(S)
+        R = np.zeros_like(S)
+
+    #initalize arrays
+    S[0] = S_0
+    I[0] = I_0
+    R[0] = R_0
+
+
+    """
+    a_0 = a
+    w = 4*np.pi/T
+    A = 2
+    """
+
+    # time loop
+    for i in range(N_time - 1):
+
+        if seasonal:    # ex. d)
+            a0 = a_in
+            A  = 4
+            #omega = 4*np.pi/T  #oscillate once per year????
+            omega = 0.5  #how to interpret?
+            a = A*np.cos(omega*i) + a0
+        else:
+            a = a_in
+
+        S[i+1] = S[i]
+        I[i+1] = I[i]
+        R[i+1] = R[i]
+
+        #N = np.sum(SIR[t, :]) # Update N in case of vital dynamics
+
+        # S -> I
+        r_SI = np.random.random()
+        if r_SI < (a*S[i]*I[i]*dt/N):
+            S[i+1] -= 1
+            I[i+1] += 1
+
+        # I -> R
+        r_IR = np.random.random()
+        if r_IR < (b*I[i]*dt):
+            I[i+1] -= 1
+            R[i+1] += 1
+
+        # R -> S
+        r_RS = np.random.random()
+        if r_RS < (c*R[i]*dt):
+            R[i+1] -= 1
+            S[i+1] += 1
+
+        if vitality:
+            #death rate d in general population S, I and R
+            r_dS = np.random.random()
+            if r_dS < (d*S[i]*dt):     #d*S*dt = probability of one individual dying in S category
+                S[i+1] -= 1
+
+            r_dI = np.random.random()
+            if r_dS < (d*I[i]*dt):
+                I[i+1] -= 1
+
+            r_dR = np.random.random()
+            if r_dR < (d*R[i]*dt):
+                R[i+1] -= 1
+
+            #death rate dI for infected population I
+            r_dII = np.random.random()
+            if r_dII < (dI*I[i]*dt):
+                I[i+1] -= 1
+
+            #birth rate e for general population S, I and R
+            r_eS = np.random.random()
+            if r_eS < (e*S[i]*dt):     #e*S*dt = probability of one individual being born in S category
+                S[i+1] += 1
+
+            r_eI = np.random.random()
+            if r_eS < (e*I[i]*dt):
+                I[i+1] += 1
+
+            r_eR = np.random.random()
+            if r_eR < (e*R[i]*dt):
+                R[i+1] += 1
+
+    return S, I, R
