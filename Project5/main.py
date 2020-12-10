@@ -20,15 +20,16 @@ import dataframe_image as dfi
 
 # Hvor skal konstanter staa igjen..?
 
-a       = 4         # Rate of transmission
-c       = 0.5       # Rate of immunity loss
-bA      = 1         # Rate of recovery for population A
-bB      = 2         # Rate of recovery for population B
-bC      = 3         # Rate of recovery for population C
-bD      = 4         # Rate of recovery for population D
+a       = 4                     # Rate of transmission
+c       = 0.5                   # Rate of immunity loss
+bA      = 1                     # Rate of recovery for population A
+bB      = 2                     # Rate of recovery for population B
+bC      = 3                     # Rate of recovery for population C
+bD      = 4                     # Rate of recovery for population D
 b_list  = [bA, bB, bC, bD]
+pop     = ['A', 'B', 'C', 'D']  # Titles for plots
 
-T   = 12          # Days
+T   = 12            # Time [??]
 N   = 400           # Nr of individuals in population
 S_0 = 300           # Initial number of susceptible
 I_0 = 100           # Initial number of infected
@@ -44,7 +45,7 @@ def magnify():
             #dict(selector="tr:hover td:hover",
              #    props=[('max-width', '200px'),
               #          ('font-size', '12pt')])
-]
+              ]
 
 def DataFrameSolution(S_arr, I_arr, R_arr):
     """Function creating dataframe with solution values.
@@ -115,7 +116,6 @@ if __name__ == '__main__':
         print('\nExercise A')
 
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
-        pop = ['A', 'B', 'C', 'D']  #titles for plots
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
             S, I, _, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI)
@@ -131,7 +131,6 @@ if __name__ == '__main__':
 
         print('\nExercise B')
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
-        pop = ['A', 'B', 'C', 'D']  #titles for plots
         for i in range(len(b_list)):
             S, I, R = MC.MC(a, b_list[i], c, S_0, I_0, R_0, N, T)
             time = np.linspace(0, T, len(S))
@@ -161,7 +160,6 @@ if __name__ == '__main__':
         print('\nExercise C')
 
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
-        pop = ['A', 'B', 'C', 'D']  #titles for plots
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
             S, I, R, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI, fz=RK4.fR, Vital=True)
@@ -180,7 +178,6 @@ if __name__ == '__main__':
 
 
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
-        pop = ['A', 'B', 'C', 'D']  #titles for plots
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
             S, I, R, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI, fz=RK4.fR, Vital=True, seasonal=True)
@@ -196,3 +193,18 @@ if __name__ == '__main__':
     if exE:
 
         print('\nExercise E')
+
+        # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
+        n   = int(1e4) #nr of points for RK4 run
+        for i in range(len(b_list)):
+            S, I, R, time  = RK4.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=RK4.fS, fy=RK4.fI, fz=RK4.fR, vaccine=True)
+            R = N-S-I
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality_seasonal', save_plot=False)
+
+        """
+        # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
+        for i in range(len(b_list)):
+            S, I, R = MC.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True)
+            time = np.linspace(0, T, len(S))
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality_season', save_plot=True)
+        """

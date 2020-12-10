@@ -8,7 +8,9 @@ e = 0.25  #birth
 d = 0.2  #death
 dI = 0.35   #death from disease
 
-def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=False):
+f = 0.5  #vaccination rate
+
+def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=False, vaccine=False):
     """
     4th Order Runge-Kutta method for solving a system of three coupled
     differential equations.
@@ -83,21 +85,40 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
                 a = A*np.cos(omega*t[i]) + a0
             else:
                 a = a_in
-            kx1 = dt*fx(a, b, c, N, x[i], y[i])
-            ky1 = dt*fy(a, b, c, N, x[i], y[i])
 
-            kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
-            ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+            if vaccine:
+                kx1 = dt*fx(a, b, c, N, x[i], y[i], vaccine=True)
+                ky1 = dt*fy(a, b, c, N, x[i], y[i], vaccine=True)
 
-            kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
-            ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, vaccine=True)
+                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, vaccine=True)
 
-            kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3)
-            ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3)
+                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, vaccine=True)
+                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, vaccine=True)
 
-            x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
-            y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
-            t[i+1] = t[i] + dt
+                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, vaccine=True)
+                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, vaccine=True)
+
+                x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+                y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                t[i+1] = t[i] + dt
+
+            else:
+                kx1 = dt*fx(a, b, c, N, x[i], y[i])
+                ky1 = dt*fy(a, b, c, N, x[i], y[i])
+
+                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+
+                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+
+                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3)
+                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3)
+
+                x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+                y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                t[i+1] = t[i] + dt
 
     return x,y,z,t
 
@@ -105,32 +126,40 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
 # d  - death rate
 # dI - death rate of infected people due to the disease
 
-def fS(a, b, c, N, S, I, R=None, vital=False): # Kan ogsaa adde if test for seasonal osv...
+def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False): # Kan ogsaa adde if test for seasonal osv...
     """
     Right hand side of S' = dS/dt
     """
     if vital:
         temp = c*R - a*S*I/N - d*S + e*N
+    elif vaccine:
+        R = N - S - I
+        temp = c*R - a*S*I/N - f
     else:
         temp = c*(N-S-I) - a*S*I/N
     return temp
 
-def fI(a, b, c, N, S, I, R=None, vital=False):
+def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
     """
     Right hand side of I' = dI/dt
     """
     if vital:
         temp = a*S*I/N - b*I - d*I - dI*I
+    elif vaccine:
+        temp = a*S*I/N - b*I
     else:
         temp = a*S*I/N - b*I
     return temp
 
-def fR(a, b, c, N, S, I, R, vital=False): # Ikke endret ennaa
+def fR(a, b, c, N, S, I, R, vital=False, vaccine=False): # Ikke endret ennaa
     """
     Right hand side of I' = dI/dt
     """
     if vital:
         temp = b*I - c*R - d*R
+    elif vaccine:
+        R = N - S - I
+        temp = b*I - c*R + f
     else:
         temp = 0
     return temp
