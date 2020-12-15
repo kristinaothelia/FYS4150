@@ -11,7 +11,7 @@ import sys, os, time, argparse
 import matplotlib.pyplot as plt
 import numpy             as np
 import pandas            as pd
-import RK4_MonteCarlo    as Solver
+import RK4_MonteCarlo_v2   as Solver
 import plots             as P
 import dataframe_image   as dfi
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, _, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI)
+            S, I, _, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, Basic=True, fx=Solver.fS, fy=Solver.fI)
             R  = N - S - I
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4', save_plot=True, folder='5a')
 
@@ -157,11 +157,13 @@ if __name__ == '__main__':
 
         print('\nExercise C: Vital dynamics')
 
+
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
             S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vital=True)
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality', save_plot=True, folder='5c', tot_pop=True)
+
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
@@ -178,15 +180,18 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vital=True, seasonal=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality_seasonal', save_plot=True, folder='5d', tot_pop=True)
+            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Season=True)
+            R = N - S - I
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_seasonal', save_plot=True, folder='5d')
+
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True)
+            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, seasonal=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality_season', save_plot=True, folder='5d', tot_pop=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_seasonal', save_plot=True, folder='5d')
+
 
     if exE:
 
@@ -195,14 +200,13 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, vaccine=True)
-            R = N-S-I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality_seasonal', save_plot=True, folder='5e', tot_pop=True)
+            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vaccine=True)
+            #R = N-S-I
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vaccine', save_plot=True, folder='5e')
 
-        """
+
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True)
+            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vaccine=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality_season', save_plot=True, folder='5e', tot_pop=True)
-        """
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vaccine', save_plot=True, folder='5e')
