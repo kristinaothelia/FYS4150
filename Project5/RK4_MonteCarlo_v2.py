@@ -12,7 +12,7 @@ f  = 100        # Vaccination rate
 # Runge-Kutta 4
 # ----------------------------------------------------------------------------
 
-def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=False, Season=False, Vaccine=False):
+def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=False, Season=False, Vaccine=False, CombinedModel=False):
     """
     4th Order Runge-Kutta method for solving a system of three coupled
     differential equations.
@@ -164,25 +164,54 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
                 z[i+1] = N - x[i] - y[i]  #maybe add this line to basic instead of doing R = N-S-I outside
                 t[i+1] = t[i] + dt
 
+        if CombinedModel:
+
+            # NB... Vaksine er ikke med her 
+
+            for i in range(n-1):
+                #setting the transmission rate a, which varies with time
+                a0    = a_in
+                A     = 4    #max(a) = 4, min(a)= -4
+                omega = 0.5  #a is at max in beginning and end of year (winter)
+                a     = A*np.cos(omega*t[i]) + a0
+
+                kx1 = dt*fx(a, b, c, N, x[i], y[i], combined=True)
+                ky1 = dt*fy(a, b, c, N, x[i], y[i], combined=True)
+
+                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, combined=True)
+                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, combined=True)
+
+                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, combined=True)
+                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, combined=True)
+
+                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, combined=True)
+                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, combined=True)
+
+                x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+                y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                t[i+1] = t[i] + dt
+
 
     return x,y,z,t
 
 
-def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
+def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """
     Right hand side of S' = dS/dt
     """
     if vital:
         temp = c*R - a*S*I/N - d*S + e*N
     elif vaccine:
-        R = N - S - I
-        temp = c*R - a*S*I/N - f
+        R = N - S - I       # Blir denne riktig..???? Sendes ikke R inn?
+        temp = c*R - a*S*I/N - f # eller fS?
+    elif combined:
+        temp = c*R - a*S*I/N - d*S + e*N - f # eller fS?
     else:
         temp = c*(N-S-I) - a*S*I/N
 
     return temp
 
-def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
+def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """
     Right hand side of I' = dI/dt
     """
@@ -190,20 +219,24 @@ def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
         temp = a*S*I/N - b*I - d*I - dI*I
     elif vaccine:
         temp = a*S*I/N - b*I
+    elif combined:
+        temp = a*S*I/N - b*I - d*I - dI*I
     else:
         temp = a*S*I/N - b*I
 
     return temp
 
-def fR(a, b, c, N, S, I, R, vital=False, vaccine=False):
+def fR(a, b, c, N, S, I, R, vital=False, vaccine=False, combined=False):
     """
     Right hand side of I' = dI/dt
     """
     if vital:
         temp = b*I - c*R - d*R
     elif vaccine:
-        R = N - S - I
-        temp = b*I - c*R + f
+        R = N - S - I       # Blir denne riktig..???? Sendes ikke R inn?
+        temp = b*I - c*R + f # eller fS?
+    elif combined:
+        temp = b*I - c*R - d*R + f # eller fS?
     else:
         temp = 0
 

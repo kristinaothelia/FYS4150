@@ -202,11 +202,29 @@ if __name__ == '__main__':
         for i in range(len(b_list)):
             S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vaccine=True)
             #R = N-S-I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vaccine', save_plot=True, folder='5e')
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vaccine', save_plot=True, folder='5e', exE=True)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vaccine=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vaccine', save_plot=True, folder='5e')
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vaccine', save_plot=True, folder='5e', exE=True)
+
+    if exALL:
+
+        print('\nThe SIRS model with VD, SV and vaccination')
+
+        # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
+        n   = int(1e4) #nr of points for RK4 run
+        for i in range(len(b_list)):
+            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, CombinedModel=True)
+            #R = N-S-I
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vaccine', save_plot=True, folder='5e', exE=True)
+
+
+        # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
+        for i in range(len(b_list)):
+            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, CombinedModel=True)
+            time = np.linspace(0, T, len(S))
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vaccine', save_plot=True, folder='5e', exE=True)

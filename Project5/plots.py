@@ -26,14 +26,21 @@ indigo              | '#4b0082'
 darkslateblue       | '#483D8B'
 """
 
-def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False, folder='', tot_pop=False):
-
+def plot_SIR(time, b, S, I, R, T, pop, method, save_plot=False, folder='', tot_pop=False, exE=False):
+    """
+    tot_pop     | Total population line
+    exE         | Add vertical line to indicate start of vaccination
+    """
     plt.figure()
     plt.plot(time, S, label="Susceptible", color='#4169E1') # Blue/Purple
     plt.plot(time, I, label="Infected", color='#B22222')    # Red
     plt.plot(time, R, label="Recovered", color='#228B22')   # Green
+
     if tot_pop:
         plt.plot(time, (S+I+R), label="Tot. population", color='#FF4500') # '#4b0082'
+    if exE:
+        plt.axvline(6.0, linestyle="--", label="Vaccination start", color="gray")   # T/2?
+
     plt.legend(fontsize=15)
     plt.title('Disease evolution in population %s \nMethod: %s. b=%g' %(pop, method, b), fontsize=15)
     plt.xlabel("Time", fontsize=15)
