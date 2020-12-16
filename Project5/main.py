@@ -138,8 +138,10 @@ if __name__ == '__main__':
 
             # Finding the equilibrium, decided for each population by looking
             # at the plots. For population A-C: T=6, for D: T=10
-            if pop[i] == 'D':
+            if pop[i] == 'C':
                 equ = int((len(S)/12)*10)
+            elif pop[i] == 'D':
+                equ = int((len(S)/12)*9)
             else:
                 equ = int((len(S)/12)*6)
 
