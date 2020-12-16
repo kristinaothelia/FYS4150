@@ -11,7 +11,7 @@ import sys, os, time, argparse
 import matplotlib.pyplot as plt
 import numpy             as np
 import pandas            as pd
-import RK4_MonteCarlo_v2   as Solver
+import RK4_MonteCarlo_v2 as Solver
 import plots             as P
 import dataframe_image   as dfi
 
@@ -117,9 +117,9 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, _, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, Basic=True, fx=Solver.fS, fy=Solver.fI)
+            S, I, _, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, Basic=True, fx=Solver.fS, fy=Solver.fI)
             R  = N - S - I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4', save_plot=True, folder='5a')
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="Runge-Kutta 4", method='RK4', save_plot=True, folder='5a')
 
     if exB:
 
@@ -132,9 +132,9 @@ if __name__ == '__main__':
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T)
+            S, I, R, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC', save_plot=True, folder='5b')
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="Monte Carlo", method='MC', save_plot=True, folder='5b')
 
             # Finding the equilibrium, decided for each population by looking
             # at the plots. For population A-C: T=6, for D: T=10
@@ -163,15 +163,15 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vital=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vitality', save_plot=True, folder='5c', tot_pop=True)
+            S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vital=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 with vital dynamics", method='RK4_vitality', save_plot=True, folder='5c', tot_pop=True)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True)
+            S, I, R, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vitality', save_plot=True, folder='5c', tot_pop=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC with vital dynamics", method='MC_vitality', save_plot=True, folder='5c', tot_pop=True)
 
 
     if exD:
@@ -182,17 +182,17 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Season=True)
+            S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Season=True)
             R = N - S - I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_seasonal', save_plot=True, folder='5d')
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 with seasonal variation", method='RK4_seasonal', save_plot=True, folder='5d')
 
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, seasonal=True)
+            S, I, R, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, seasonal=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_seasonal', save_plot=True, folder='5d')
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC with seasonal variation", method='MC_seasonal', save_plot=True, folder='5d')
 
 
     if exE:
@@ -202,16 +202,16 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vaccine=True)
+            S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vaccine=True)
             #R = N-S-I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_vaccine', save_plot=True, folder='5e', exE=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 with vaccine", method='RK4_vaccine', save_plot=True, folder='5e', exE=True, f=f)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vaccine=True)
+            S, I, R, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vaccine=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_vaccine', save_plot=True, folder='5e', exE=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC with vaccine", method='MC_vaccine', save_plot=True, folder='5e', exE=True, f=f)
 
     if exALL:
 
@@ -220,13 +220,13 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         n   = int(1e4) #nr of points for RK4 run
         for i in range(len(b_list)):
-            S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, CombinedModel=True)
+            S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, CombinedModel=True)
             #R = N-S-I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_combined', save_plot=True, folder='CombinedModel', exE=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 Combined model", method='RK4_combined', save_plot=True, folder='CombinedModel', tot_pop=True, exE=True, f=f)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
-            S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True, vaccine=True)
+            S, I, R, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True, vaccine=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_combined', save_plot=True, folder='CombinedModel', exE=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC Combined model", method='MC_combined', save_plot=True, folder='CombinedModel', tot_pop=True, exE=True, f=f)

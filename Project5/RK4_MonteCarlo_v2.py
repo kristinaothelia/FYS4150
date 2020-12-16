@@ -6,7 +6,7 @@ import plots             as P
 e  = 0.25       # Birth rate
 d  = 0.2        # Death rate
 dI = 0.35       # Death rate of infected people due to the disease
-f  = 1        # Vaccination rate
+f  = 0.5        # Vaccination rate
 
 
 # Runge-Kutta 4
@@ -222,7 +222,7 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
 
 
 
-    return x,y,z,t
+    return x, y , z, t, f
 
 
 def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
@@ -400,4 +400,4 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
 
 
         t[i+1] = t[i] + dt
-    return S, I, R
+    return S, I, R, f
