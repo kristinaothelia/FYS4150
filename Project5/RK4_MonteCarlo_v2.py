@@ -29,9 +29,6 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
 
     Vaccine: True/False:
     Vaccines. Introduce vaccinations after a certain time.
-
-    fx = fS
-    fy = fI
     """
 
     # Setting up arrays
@@ -220,22 +217,22 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
                 t[i+1] = t[i] + dt
 
 
-
-
     return x, y , z, t, f
 
 
 def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """
     Right hand side of S' = dS/dt
+    For basic SIRS, with vital dynamics, seasonal variation, vaccine
+    and a combined model
     """
     if vital:
         temp = c*R - a*S*I/N - d*S + e*N
     elif vaccine:
-        R = N - S - I       # Blir denne riktig..???? Sendes ikke R inn?
-        temp = c*R - a*S*I/N - f*S # eller fS?
+        R = N - S - I
+        temp = c*R - a*S*I/N - f*S
     elif combined:
-        temp = c*R - a*S*I/N - d*S + e*N - f*S # eller fS?
+        temp = c*R - a*S*I/N - d*S + e*N - f*S
     else:
         temp = c*(N-S-I) - a*S*I/N
 
@@ -244,6 +241,8 @@ def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
 def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """
     Right hand side of I' = dI/dt
+    For basic SIRS, with vital dynamics, seasonal variation, vaccine
+    and a combined model
     """
     if vital:
         temp = a*S*I/N - b*I - d*I - dI*I
@@ -259,14 +258,16 @@ def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
 def fR(a, b, c, N, S, I, R, vital=False, vaccine=False, combined=False):
     """
     Right hand side of I' = dI/dt
+    For basic SIRS, with vital dynamics, seasonal variation, vaccine
+    and a combined model
     """
     if vital:
         temp = b*I - c*R - d*R
     elif vaccine:
-        R = N - S - I       # Blir denne riktig..???? Sendes ikke R inn?
-        temp = b*I - c*R + f*S # eller fS?
+        R = N - S - I
+        temp = b*I - c*R + f*S
     elif combined:
-        temp = b*I - c*R - d*R + f*S # eller fS?
+        temp = b*I - c*R - d*R + f*S
     else:
         temp = 0
 
