@@ -94,7 +94,7 @@ if __name__ == '__main__':
     exercise.add_argument('-c', '--VD',  action="store_true", help="Vital Dynamics")
     exercise.add_argument('-d', '--SV',  action="store_true", help="Seasonal Variation")
     exercise.add_argument('-e', '--VC',  action="store_true", help="Vaccination")
-    exercise.add_argument('-final', '--F',  action="store_true", help="Combination of all models")
+    exercise.add_argument('-f', '--Final',  action="store_true", help="Combination of all models")
 
     if len(sys.argv) <= 1:
         sys.argv.append('--help')
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     exC  = args.VD
     exD  = args.SV
     exE  = args.VC
-    exALL = args.F
+    exALL = args.Final
 
     print(parser.description)
 
@@ -222,11 +222,11 @@ if __name__ == '__main__':
         for i in range(len(b_list)):
             S, I, R, time  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, CombinedModel=True)
             #R = N-S-I
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_combined', save_plot=True, folder='5e', exE=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='RK4_combined', save_plot=True, folder='CombinedModel', exE=True)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True, vaccine=True)
             time = np.linspace(0, T, len(S))
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_combined', save_plot=True, folder='5e', exE=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], method='MC_combined', save_plot=True, folder='CombinedModel', exE=True)
