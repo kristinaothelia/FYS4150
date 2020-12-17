@@ -7,15 +7,18 @@ University of Oslo - UiO
 Disease Modeling
 
 
-### Usage of Script
+### **Usage of Script**
 
-#### **The Help Message:**
+#### The Help Message:
+
 
 usage: main.py [-h] [-a | -b | -c | -d | -e | -f]
 
 ------------------------------------------------------------------------
+
 FYS4150 Computational Physics: Project 5 Disease Modelling using Runge-Kutta 4
 and Monte Carlo (on SIRS model)
+
 ------------------------------------------------------------------------
 
 optional arguments:  
@@ -28,6 +31,6 @@ optional arguments:
   -f, --Final  Combination of all models  
 
 
-### **Run Script - Examples**
+**Run Script - Examples**
 
 * python main.py -a 
