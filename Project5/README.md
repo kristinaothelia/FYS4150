@@ -14,12 +14,8 @@ Disease Modeling
 
 usage: main.py [-h] [-a | -b | -c | -d | -e | -f]
 
-------------------------------------------------------------------------
-
 FYS4150 Computational Physics: Project 5 Disease Modelling using Runge-Kutta 4
 and Monte Carlo (on SIRS model)
-
-------------------------------------------------------------------------
 
 optional arguments:  
   -h, --help   show this help message and exit  
@@ -31,6 +27,6 @@ optional arguments:
   -f, --Final  Combination of all models  
 
 
-**Run Script - Examples**
+#### **Run Script - Examples**
 
 * python main.py -a 
