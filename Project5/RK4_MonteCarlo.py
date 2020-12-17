@@ -12,16 +12,23 @@ f  = 0.5        # Vaccination rate
 # Runge-Kutta 4
 # ----------------------------------------------------------------------------
 
-def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=False, vaccine=False):
+def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=False, Season=False, Vaccine=False, CombinedModel=False):
     """
     4th Order Runge-Kutta method for solving a system of three coupled
     differential equations.
 
-    Vital: True/False
-    Include death rates, birth rates and death rates due to disease.
+    Basic: True/False
+    Just the basic SIRS model. The three categories S, I and R and the rates
+    of transmission between them.
 
-    fx = fS
-    fy = fI
+    Vital: True/False
+    Vital dynamics. Include birth and death rates.
+
+    Season: True/False
+    Seasonal variation. Transmission rate a is now a function of time a(t).
+
+    Vaccine: True/False:
+    Vaccines. Introduce vaccinations after a certain time.
     """
 
     # Setting up arrays
@@ -38,19 +45,28 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
     y[0] = y0
     z[0] = z0
 
-    # Loop for Runge-Kutta 4th Order
-    if Vital:     # ex. c)
+    if Basic:  # ex. a)
+        a = a_in
         for i in range(n-1):
+            kx1 = dt*fx(a, b, c, N, x[i], y[i])
+            ky1 = dt*fy(a, b, c, N, x[i], y[i])
 
-            if seasonal:    # ex. d)
-                a0    = a_in
-                A     = 4
-                #omega = 4*np.pi/T  #oscillate once per year????
-                omega = 0.5  #how to interpret?
-                a     = A*np.cos(omega*t[i]) + a0
-            else:
-                a = a_in
+            kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+            ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
 
+            kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+            ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+
+            kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3)
+            ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3)
+
+            x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+            y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+            t[i+1] = t[i] + dt
+
+    if Vital:  # c)
+        a = a_in
+        for i in range(n-1):
             kx1 = dt*fx(a, b, c, N, x[i], y[i], z[i], vital=True)
             ky1 = dt*fy(a, b, c, N, x[i], y[i], z[i], vital=True)
             kz1 = dt*fz(a, b, c, N, x[i], y[i], z[i], vital=True)
@@ -72,36 +88,58 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
             z[i+1] = z[i] + (kz1 + 2*(kz2 + kz3) + kz4)/6
             t[i+1] = t[i] + dt
 
-    else:
-        #oppgave a og b
+
+    if Season:  # ex. d)
         for i in range(n-1):
+            #setting the transmission rate a, which varies with time
+            a0    = a_in
+            A     = 4    #max(a) = 4, min(a)= -4
+            omega = 0.5  #a is at max in beginning and end of year (winter)
+            a     = A*np.cos(omega*t[i]) + a0
 
-            if seasonal:
-                #oppgave d
-                a0 = a_in
-                A = 3
-                #omega = 4*np.pi/T  #oscillate once per year????
-                omega = 0.5
-                a = A*np.cos(omega*t[i]) + a0
-            else:
-                a = a_in
+            kx1 = dt*fx(a, b, c, N, x[i], y[i])
+            ky1 = dt*fy(a, b, c, N, x[i], y[i])
 
-            if vaccine:
+            kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
+            ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
 
-                kx1 = dt*fx(a, b, c, N, x[i], y[i], vaccine=True)
-                ky1 = dt*fy(a, b, c, N, x[i], y[i], vaccine=True)
+            kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
+            ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
 
-                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, vaccine=True)
-                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, vaccine=True)
+            kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3)
+            ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3)
 
-                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, vaccine=True)
-                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, vaccine=True)
+            x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+            y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+            t[i+1] = t[i] + dt
 
-                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, vaccine=True)
-                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, vaccine=True)
+
+    if Vaccine:
+        a = a_in
+        t_v = T/2  #start vaccination after half the total run time
+        for i in range(n-1):
+            if t[i] >= t_v:
+                #vaccinations are introduced
+
+                kx1 = dt*fx(a, b, c, N, x[i], y[i], z[i], vaccine=True)
+                ky1 = dt*fy(a, b, c, N, x[i], y[i], z[i], vaccine=True)
+                kz1 = dt*fz(a, b, c, N, x[i], y[i], z[i], vaccine=True)
+
+                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + ky1/2, vaccine=True)
+                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, vaccine=True)
+                kz2 = dt*fz(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, vaccine=True)
+
+                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vaccine=True)
+                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vaccine=True)
+                kz3 = dt*fz(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vaccine=True)
+
+                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vaccine=True)
+                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vaccine=True)
+                kz4 = dt*fz(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vaccine=True)
 
                 x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
                 y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                z[i+1] = z[i] + (kz1 + 2*(kz2 + kz3) + kz4)/6
                 t[i+1] = t[i] + dt
 
             else:
@@ -120,47 +158,116 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Vital=False, seasonal=
 
                 x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
                 y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                z[i+1] = N - x[i] - y[i]  #maybe add this line to basic instead of doing R = N-S-I outside
                 t[i+1] = t[i] + dt
 
-    return x,y,z,t
+    if CombinedModel:
+        t_v = T/2  #start vaccination after half the total run time
+        for i in range(n-1):
+            #setting the transmission rate a, which varies with time
+            a0    = a_in
+            A     = 4    #max(a) = 4, min(a)= -4
+            omega = 0.5  #a is at max in beginning and end of year (winter)
+            a     = A*np.cos(omega*t[i]) + a0
+
+            if t[i] >= t_v:  #vital + seasonal + vaccines
+
+                kx1 = dt*fx(a, b, c, N, x[i], y[i], z[i], combined=True)
+                ky1 = dt*fy(a, b, c, N, x[i], y[i], z[i], combined=True)
+                kz1 = dt*fz(a, b, c, N, x[i], y[i], z[i], combined=True)
+
+                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + ky1/2, combined=True)
+                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, combined=True)
+                kz2 = dt*fz(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, combined=True)
+
+                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, combined=True)
+                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, combined=True)
+                kz3 = dt*fz(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, combined=True)
+
+                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, combined=True)
+                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, combined=True)
+                kz4 = dt*fz(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, combined=True)
+
+                x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+                y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                z[i+1] = z[i] + (kz1 + 2*(kz2 + kz3) + kz4)/6
+                t[i+1] = t[i] + dt
+
+            else: #vital + seasonal
+
+                kx1 = dt*fx(a, b, c, N, x[i], y[i], z[i], vital=True)
+                ky1 = dt*fy(a, b, c, N, x[i], y[i], z[i], vital=True)
+                kz1 = dt*fz(a, b, c, N, x[i], y[i], z[i], vital=True)
+
+                kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + ky1/2, vital=True)
+                ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, vital=True)
+                kz2 = dt*fz(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2, z[i] + kz1/2, vital=True)
+
+                kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vital=True)
+                ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vital=True)
+                kz3 = dt*fz(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2, z[i] + kz2/2, vital=True)
+
+                kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vital=True)
+                ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vital=True)
+                kz4 = dt*fz(a, b, c, N, x[i] + kx3, y[i] + ky3, z[i] + kz3, vital=True)
+
+                x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
+                y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+                z[i+1] = z[i] + (kz1 + 2*(kz2 + kz3) + kz4)/6
+                t[i+1] = t[i] + dt
 
 
-def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False): 
+    return x, y , z, t, f
+
+
+def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """
     Right hand side of S' = dS/dt
+    For basic SIRS, with vital dynamics, seasonal variation, vaccine
+    and a combined model
     """
     if vital:
         temp = c*R - a*S*I/N - d*S + e*N
     elif vaccine:
         R = N - S - I
-        temp = c*R - a*S*I/N - f
+        temp = c*R - a*S*I/N - f*S
+    elif combined:
+        temp = c*R - a*S*I/N - d*S + e*N - f*S
     else:
         temp = c*(N-S-I) - a*S*I/N
 
     return temp
 
-def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False):
+def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """
     Right hand side of I' = dI/dt
+    For basic SIRS, with vital dynamics, seasonal variation, vaccine
+    and a combined model
     """
     if vital:
         temp = a*S*I/N - b*I - d*I - dI*I
     elif vaccine:
         temp = a*S*I/N - b*I
+    elif combined:
+        temp = a*S*I/N - b*I - d*I - dI*I
     else:
         temp = a*S*I/N - b*I
 
     return temp
 
-def fR(a, b, c, N, S, I, R, vital=False, vaccine=False): # Ikke endret ennaa
+def fR(a, b, c, N, S, I, R, vital=False, vaccine=False, combined=False):
     """
     Right hand side of I' = dI/dt
+    For basic SIRS, with vital dynamics, seasonal variation, vaccine
+    and a combined model
     """
     if vital:
         temp = b*I - c*R - d*R
     elif vaccine:
         R = N - S - I
-        temp = b*I - c*R + f
+        temp = b*I - c*R + f*S
+    elif combined:
+        temp = b*I - c*R - d*R + f*S
     else:
         temp = 0
 
@@ -171,7 +278,7 @@ def fR(a, b, c, N, S, I, R, vital=False, vaccine=False): # Ikke endret ennaa
 # Monte Carlo
 # ----------------------------------------------------------------------------
 
-def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
+def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=False):
     """
 
     """
@@ -194,6 +301,7 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
         S = np.zeros(N_time)
         I = np.zeros_like(S)
         R = np.zeros_like(S)
+        t = np.zeros_like(S)
 
     else:
         a  = a_in
@@ -208,18 +316,13 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
         S = np.zeros(N_time)
         I = np.zeros_like(S)
         R = np.zeros_like(S)
+        t = np.zeros_like(S)
 
     #initalize arrays
     S[0] = S_0
     I[0] = I_0
     R[0] = R_0
-
-
-    """
-    a_0 = a
-    w = 4*np.pi/T
-    A = 2
-    """
+    t[0] = 0
 
     # time loop
     for i in range(N_time - 1):
@@ -227,17 +330,14 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
         if seasonal:    # ex. d)
             a0 = a_in
             A  = 4
-            #omega = 4*np.pi/T  #oscillate once per year????
             omega = 0.5  #how to interpret?
-            a = A*np.cos(omega*i) + a0
+            a = A*np.cos(omega*t[i]) + a0
         else:
             a = a_in
 
         S[i+1] = S[i]
         I[i+1] = I[i]
         R[i+1] = R[i]
-
-        #N = np.sum(SIR[t, :]) # Update N in case of vital dynamics
 
         # S -> I
         r_SI = np.random.random()
@@ -258,6 +358,7 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
             S[i+1] += 1
 
         if vitality:
+
             #death rate d in general population S, I and R
             r_dS = np.random.random()
             if r_dS < (d*S[i]*dt):     #d*S*dt = probability of one individual dying in S category
@@ -289,4 +390,15 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False):
             if r_eR < (e*R[i]*dt):
                 R[i+1] += 1
 
-    return S, I, R
+
+        if vaccine:
+            tv = T/2
+            if t[i] >= tv:
+                r_v = np.random.random()
+                if r_v < (f*S[i]*dt):  #f*S*dt = probability of one individual in S getting a vaccine
+                    S[i+1] -= 1
+                    R[i+1] += 1
+
+
+        t[i+1] = t[i] + dt
+    return S, I, R, f

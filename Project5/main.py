@@ -11,7 +11,7 @@ import sys, os, time, argparse
 import matplotlib.pyplot as plt
 import numpy             as np
 import pandas            as pd
-import RK4_MonteCarlo_v2 as Solver
+import RK4_MonteCarlo    as Solver
 import plots             as P
 import dataframe_image   as dfi
 
