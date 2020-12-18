@@ -6,8 +6,8 @@ University of Oslo - UiO
 
 #### Project 2: Eigenvalue problems - From the equations of a buckling beam to Schröedinger’s equation for two electrons in a 3Dharmonic oscillator well
 
-#### Project 3 - Building a numerical model for the Solar system using ordinary differential equations
+#### Project 3: Building a numerical model for the Solar system using ordinary differential equations
 
-#### Project 4 - Studies of phase transitions in magnetic systems 
+#### Project 4: Studies of phase transitions in magnetic systems 
 
-#### Project 5 - Disease modeling
+#### Project 5: Disease modeling
