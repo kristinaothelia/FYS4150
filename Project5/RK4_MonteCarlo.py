@@ -61,25 +61,22 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
     if Basic:  # ex. a)
         a = a_in
         for i in range(n-1):
+
             kx1 = dt*fx(a, b, c, N, x[i], y[i])
             ky1 = dt*fy(a, b, c, N, x[i], y[i])
-            kz1 = dt*fz(a, b, c, N, x[i], y[i])
 
             kx2 = dt*fx(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
             ky2 = dt*fy(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
-            kz2 = dt*fz(a, b, c, N, x[i] + kx1/2, y[i] + ky1/2)
 
             kx3 = dt*fx(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
             ky3 = dt*fy(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
-            kz3 = dt*fz(a, b, c, N, x[i] + kx2/2, y[i] + ky2/2)
 
             kx4 = dt*fx(a, b, c, N, x[i] + kx3, y[i] + ky3)
             ky4 = dt*fy(a, b, c, N, x[i] + kx3, y[i] + ky3)
-            kz4 = dt*fz(a, b, c, N, x[i] + kx3, y[i] + ky3)
 
             x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
             y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
-            z[i+1] = z[i] + (kz1 + 2*(ky2 + ky3) + ky4)/6
+            z[i+1] = N - x[i] - y[i]
 
             t[i+1] = t[i] + dt
 
@@ -129,6 +126,7 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
 
             x[i+1] = x[i] + (kx1 + 2*(kx2 + kx3) + kx4)/6
             y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
+            z[i+1] = N - x[i] - y[i]
             t[i+1] = t[i] + dt
     
     if Vaccine:
@@ -313,9 +311,13 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
 
     # Size of time step
     dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
+    #dt = 0.00001
 
     # Nr of time steps
     N_time = int(T/dt)
+
+    print(dt)
+    print(N_time)
 
     # Set up empty arrys
     S = np.zeros(N_time)
@@ -344,20 +346,25 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
         I[i+1] = I[i]
         R[i+1] = R[i]
 
+        rdm = np.random.random()  # only draw random number once
+
         # S to I
-        r_SI = np.random.random()
+        #r_SI = np.random.random()
+        r_SI = rdm
         if r_SI < (a*S[i]*I[i]*dt/N):
             S[i+1] -= 1
             I[i+1] += 1
 
         # I to R
-        r_IR = np.random.random()
+        #r_IR = np.random.random()
+        r_IR = rdm
         if r_IR < (b*I[i]*dt):
             I[i+1] -= 1
             R[i+1] += 1
 
         # R to S
-        r_RS = np.random.random()
+        #r_RS = np.random.random()
+        r_RS = rdm
         if r_RS < (c*R[i]*dt):
             R[i+1] -= 1
             S[i+1] += 1
