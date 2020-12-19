@@ -142,13 +142,13 @@ if __name__ == '__main__':
             # population by looking at different plots.
 
             if pop[i] == 'A':
-                equ = int((len(S)/12)*7)
-            if pop[i] == 'B':
                 equ = int((len(S)/12)*8)
+            if pop[i] == 'B':
+                equ = int((len(S)/12)*9)
             if pop[i] == 'C':
                 equ = int((len(S)/12)*10)
             else:
-                equ = int((len(S)/12)*3)
+                equ = int((len(S)/12)*10)
 
             # Making a Pandas dataframe with mean and std values for all
             # populations after equilibrium

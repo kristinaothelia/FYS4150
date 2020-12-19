@@ -311,7 +311,6 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
 
     # Size of time step
     dt = np.min([4/(a*N), 1/(b*N), 1/(c*N)])
-    #dt = 0.00001
 
     # Nr of time steps
     N_time = int(T/dt)
