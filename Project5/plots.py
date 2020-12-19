@@ -27,10 +27,6 @@ darkslateblue       | '#483D8B'
 """
 
 def plot_SIR(time, b, S, I, R, T, pop, title_method, method, save_plot=False, folder='', tot_pop=False, exE=False, f=None):
-    """
-    tot_pop     | Total population line
-    exE         | Add vertical line to indicate start of vaccination
-    """
 
     if exE:
         plt.figure(figsize=(8.8, 4.8))
