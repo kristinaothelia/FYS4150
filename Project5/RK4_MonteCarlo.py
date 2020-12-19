@@ -316,9 +316,6 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
     # Nr of time steps
     N_time = int(T/dt)
 
-    print(dt)
-    print(N_time)
-
     # Set up empty arrys
     S = np.zeros(N_time)
     I = np.zeros_like(S)
@@ -371,41 +368,51 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
 
         if vitality:
 
+            rdm1 = np.random.random()  
+
             #death rate d in general population S, I and R
-            r_dS = rdm #np.random.random()
+            #r_dS = np.random.random()
+            r_dS = rdm1
             if r_dS < (d*S[i]*dt):     #d*S*dt = probability of one individual dying in S category
                 S[i+1] -= 1
 
-            r_dI = rdm #np.random.random()
+            #r_dI = rdm #np.random.random()
+            r_dI = rdm1 #rdm #np.random.random()
             if r_dS < (d*I[i]*dt):
                 I[i+1] -= 1
 
-            r_dR = rdm #np.random.random()
+            #r_dR = rdm #np.random.random()
+            r_dR = rdm1 #rdm #np.random.random()
             if r_dR < (d*R[i]*dt):
                 R[i+1] -= 1
 
             #death rate dI for infected population I
-            r_dII = rdm #np.random.random()
+            #r_dII = rdm #np.random.random()
+            r_dII = rdm1 #rdm #np.random.random()
             if r_dII < (dI*I[i]*dt):
                 I[i+1] -= 1
 
             #birth rate e for general population S, I and R
-            r_eS = rdm #np.random.random()
+            #r_eS = np.random.random()
+            r_eS = rdm1 #rdm #np.random.random()
             if r_eS < (e*S[i]*dt):     #e*S*dt = probability of one individual being born in S category
                 S[i+1] += 1
 
-            r_eI = rdm #np.random.random()
+            #r_eI = rdm  #np.random.random()
+            r_eI = rdm1 #rdm #np.random.random()
             if r_eS < (e*I[i]*dt):
                 I[i+1] += 1
 
-            r_eR = rdm #np.random.random()
+            #r_eR = rdm #np.random.random()
+            r_eR = rdm1 #rdm #np.random.random()
             if r_eR < (e*R[i]*dt):
                 R[i+1] += 1
 
         if vaccine:
             tv = T/2
             if t[i] >= tv:
-                r_v = rdm #np.random.random()
+                #rdm2 =np.random.random()
+                r_v  = rdm #rdm2 #np.random.random()
                 if r_v < (f*S[i]*dt):  #f*S*dt = probability of one individual in S getting a vaccine
                     S[i+1] -= 1
                     R[i+1] += 1

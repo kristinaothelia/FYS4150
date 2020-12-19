@@ -111,13 +111,17 @@ if __name__ == '__main__':
 
     if exA:
 
-        print('\nExercise A: Runge-Kutta 4')
+        print('\nExercise A: Runge-Kutta 4 \n')
+
+        print(f'{"S":>12s}{"I":>10s}{"R":>10s}{"Sum":>10s}','\n'+'='*42)
 
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, Basic=True, fx=Solver.fS, fy=Solver.fI)
-            print(I[-20:])
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="Runge-Kutta 4", method='RK4', save_plot=False, folder='5a')
+
+            SUM = S[-1]+I[-1]+R[-1]
+            print(f"{pop[i]:>2s}{S[-1]:10.2f}{I[-1]:10.2f}{R[-1]:10.2f}{SUM:10.2f}")
 
     if exB:
 
@@ -134,8 +138,9 @@ if __name__ == '__main__':
             S, I, R, time, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T)
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="Monte Carlo", method='MC', save_plot=False, folder='5b')
 
-            # Finding the equilibrium, decided for each population by looking
-            # at the plots. For population A-C: T=6, for D: T=10
+            # Finding the equilibrium, decided for each 
+            # population by looking at different plots.
+
             if pop[i] == 'A':
                 equ = int((len(S)/12)*7)
             if pop[i] == 'B':
@@ -165,13 +170,13 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, Vital=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 with vital dynamics", method='RK4_vitality', save_plot=False, folder='5c', tot_pop=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 with vital dynamics", method='RK4_vitality', save_plot=True, folder='5c', tot_pop=True)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R, time, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC with vital dynamics", method='MC_vitality', save_plot=False, folder='5c', tot_pop=True)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC with vital dynamics", method='MC_vitality', save_plot=True, folder='5c', tot_pop=True)
 
     if exD:
 
@@ -210,10 +215,10 @@ if __name__ == '__main__':
         # Make RK4 simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, fx=Solver.fS, fy=Solver.fI, fz=Solver.fR, CombinedModel=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 Combined model", method='RK4_combined', save_plot=False, folder='CombinedModel', tot_pop=True, exE=True, f=f)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="RK4 Combined model", method='RK4_combined', save_plot=True, folder='CombinedModel', tot_pop=True, exE=True, f=f)
 
 
         # Make MC simulation for 4 populations, with b=[bA, bB, bC, bD]
         for i in range(len(b_list)):
             S, I, R, time, f = Solver.MC(a, b_list[i], c, S_0, I_0, R_0, N, T, vitality=True, seasonal=True, vaccine=True)
-            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC Combined model", method='MC_combined', save_plot=False, folder='CombinedModel', tot_pop=True, exE=True, f=f)
+            P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="MC Combined model", method='MC_combined', save_plot=True, folder='CombinedModel', tot_pop=True, exE=True, f=f)
