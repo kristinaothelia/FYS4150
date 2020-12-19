@@ -27,6 +27,7 @@ darkslateblue       | '#483D8B'
 """
 
 def plot_SIR(time, b, S, I, R, T, pop, title_method, method, save_plot=False, folder='', tot_pop=False, exE=False, f=None):
+    """Funcion to plot the development of a disease with susceptibles, infected and recovred"""
 
     if exE:
         plt.figure(figsize=(8.8, 4.8))
@@ -41,7 +42,7 @@ def plot_SIR(time, b, S, I, R, T, pop, title_method, method, save_plot=False, fo
         plt.plot(time, (S+I+R), label="Tot. population", color='#FF4500') # '#4b0082'
 
     if exE:
-        plt.axvline(6.0, linestyle="--", label="Vaccination start \nf=%.1f" %f, color="gray")   # T/2?
+        plt.axvline(6.0, linestyle="--", label="Vaccination start \nf=%.1f" %f, color="gray") # line T/2
         plt.legend(bbox_to_anchor=(1,0.5), loc='center left', fontsize=15)
     else:
         plt.legend(fontsize=15)

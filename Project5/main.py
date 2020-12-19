@@ -4,7 +4,8 @@ FYS4150 Computational Physics: Project 5
 Disease Modelling using Runge-Kutta 4 and Monte Carlo (on SIRS model)
 ------------------------------------------------------------------------
 """
-# Note: Need to pip install dataframe_image
+
+# Note: You may need to pip install dataframe_image
 
 import sys, os, time, argparse
 
@@ -97,17 +98,17 @@ if __name__ == '__main__':
     if len(sys.argv) <= 1:
         sys.argv.append('--help')
 
-    args = parser.parse_args()
-    exA  = args.RK4
-    exB  = args.MC
-    exC  = args.VD
-    exD  = args.SV
-    exE  = args.VC
+    args  = parser.parse_args()
+    exA   = args.RK4
+    exB   = args.MC
+    exC   = args.VD
+    exD   = args.SV
+    exE   = args.VC
     exALL = args.Final
 
     print(parser.description)
 
-    n = int(1e4) #nr of points for RK4 run
+    n = int(1e4) #nr of points for RK4 simulation
 
     if exA:
 
@@ -120,6 +121,8 @@ if __name__ == '__main__':
             S, I, R, time, f  = Solver.RK4(a, b_list[i], c, S_0, I_0, R_0, N, T, n, Basic=True, fx=Solver.fS, fy=Solver.fI)
             P.plot_SIR(time, b_list[i], S, I, R, T, pop[i], title_method="Runge-Kutta 4", method='RK4', save_plot=False, folder='5a')
 
+            # Printing the last values (at equilibrium)
+            # Summing up the values to check that population is constant
             SUM = S[-1]+I[-1]+R[-1]
             print(f"{pop[i]:>2s}{S[-1]:10.2f}{I[-1]:10.2f}{R[-1]:10.2f}{SUM:10.2f}")
 
