@@ -128,7 +128,7 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
             y[i+1] = y[i] + (ky1 + 2*(ky2 + ky3) + ky4)/6
             z[i+1] = N - x[i] - y[i]
             t[i+1] = t[i] + dt
-    
+
     if Vaccine:
         a = a_in
         t_v = T/2  #start vaccination after half the total run time
@@ -237,7 +237,7 @@ def RK4(a_in, b, c, x0, y0, z0, N, T, n, fx, fy, fz=None, Basic=False, Vital=Fal
 def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """Right hand side of S' = dS/dt
 
-    For basic SIRS, vital dynamics, 
+    For basic SIRS, vital dynamics,
     seasonal variation, vaccine and a combined model
     """
 
@@ -256,7 +256,7 @@ def fS(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
 def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
     """Right hand side of I' = dI/dt
 
-    For basic SIRS, with vital dynamics, 
+    For basic SIRS, with vital dynamics,
     seasonal variation, vaccine and a combined model
     """
 
@@ -274,7 +274,7 @@ def fI(a, b, c, N, S, I, R=None, vital=False, vaccine=False, combined=False):
 def fR(a, b, c, N, S, I, R, vital=False, vaccine=False, combined=False):
     """Right hand side of I' = dI/dt
 
-    For basic SIRS, with vital dynamics, 
+    For basic SIRS, with vital dynamics,
     seasonal variation, vaccine and a combined model
     """
 
@@ -372,44 +372,44 @@ def MC(a_in, b, c, S_0, I_0, R_0, N, T, vitality=False, seasonal=False, vaccine=
         if vitality:
 
             #death rate d in general population S, I and R
-            r_dS = np.random.random()
+            r_dS = rdm #np.random.random()
             if r_dS < (d*S[i]*dt):     #d*S*dt = probability of one individual dying in S category
                 S[i+1] -= 1
 
-            r_dI = np.random.random()
+            r_dI = rdm #np.random.random()
             if r_dS < (d*I[i]*dt):
                 I[i+1] -= 1
 
-            r_dR = np.random.random()
+            r_dR = rdm #np.random.random()
             if r_dR < (d*R[i]*dt):
                 R[i+1] -= 1
 
             #death rate dI for infected population I
-            r_dII = np.random.random()
+            r_dII = rdm #np.random.random()
             if r_dII < (dI*I[i]*dt):
                 I[i+1] -= 1
 
             #birth rate e for general population S, I and R
-            r_eS = np.random.random()
+            r_eS = rdm #np.random.random()
             if r_eS < (e*S[i]*dt):     #e*S*dt = probability of one individual being born in S category
                 S[i+1] += 1
 
-            r_eI = np.random.random()
+            r_eI = rdm #np.random.random()
             if r_eS < (e*I[i]*dt):
                 I[i+1] += 1
 
-            r_eR = np.random.random()
+            r_eR = rdm #np.random.random()
             if r_eR < (e*R[i]*dt):
                 R[i+1] += 1
 
         if vaccine:
             tv = T/2
             if t[i] >= tv:
-                r_v = np.random.random()
+                r_v = rdm #np.random.random()
                 if r_v < (f*S[i]*dt):  #f*S*dt = probability of one individual in S getting a vaccine
                     S[i+1] -= 1
                     R[i+1] += 1
 
-        t[i+1] = t[i] + dt 
+        t[i+1] = t[i] + dt
 
     return S, I, R, t, f

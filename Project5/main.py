@@ -15,7 +15,7 @@ import RK4_MonteCarlo    as Solver
 import plots             as P
 import dataframe_image   as dfi
 
-from numba import njit 
+from numba import njit
 
 # ----------------------------------------------------------------------------
 
@@ -47,13 +47,13 @@ def DataFrameSolution(S_arr, I_arr, R_arr):
     This function take in 3 lists of equal length,
     where each list contains the mean value + standard deviation
     of susceptibles, infected and recovered for different populations.
-    The function creates and returns a dataframe. 
+    The function creates and returns a dataframe.
 
     Parameters
     ----------
     S_arr : list
-    I_arr : list 
-    R_arr : list 
+    I_arr : list
+    R_arr : list
 
     Returns
     -------
